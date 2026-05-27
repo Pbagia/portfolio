@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Cross Blue Shield — Case Study | Prina Bagia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
+
+  :root{
+    --bone:#FBF9F4; --ivory:#F3EFE6; --sage:#9CA98C; --deep-sage:#6F7A5E;
+    --clay:#8A6253; --deep-clay:#6F4E42; --clay-tint:#E4D8D0;
+    --soft-black:#2E2C28; --warm-grey:#8A867D; --hairline:#D9D4C7;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Jost','Helvetica Neue',sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{ font-family:var(--sans); font-weight:300; color:var(--soft-black);
+    background:var(--bone); line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; }
+  ::selection{ background:var(--sage); color:var(--bone); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 7vw; }
+  @media(min-width:900px){ .wrap{ padding:0 64px; } }
+  .narrow{ max-width:760px; }
+
+  .eyebrow{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.34em; text-transform:uppercase; color:var(--deep-sage); }
+  h1,h2,h3{ font-family:var(--serif); font-weight:500; letter-spacing:.01em; }
+  .reveal{ opacity:0; transform:translateY(26px);
+    transition:opacity 1s cubic-bezier(.2,.6,.2,1), transform 1s cubic-bezier(.2,.6,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- NAV ---------- */
+  nav{ position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 7vw; background:rgba(251,249,244,.93);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline); }
+  @media(min-width:900px){ nav{ padding:15px 64px; } }
+  .nav-logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav-logo .nm{ font-family:var(--serif); font-weight:500; font-size:21px;
+    color:var(--soft-black); letter-spacing:.04em; }
+  .nav-back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    text-decoration:none; display:inline-flex; align-items:center; gap:9px;
+    transition:color .25s; }
+  .nav-back:hover{ color:var(--deep-clay); }
+  .nav-back .ar{ transition:transform .3s; }
+  .nav-back:hover .ar{ transform:translateX(-4px); }
+
+  /* ---------- HERO ---------- */
+  header{ padding:150px 0 70px; }
+  .hero-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    margin-bottom:20px; }
+  h1.title{ font-size:clamp(38px,5.6vw,68px); line-height:1.06; font-weight:500;
+    max-width:18ch; }
+  h1.title em{ font-style:italic; color:var(--deep-sage); }
+  .hero-sub{ font-family:var(--sans); font-weight:300;
+    font-size:clamp(15px,1.7vw,18px); color:#43403A; max-width:54ch;
+    margin-top:24px; line-height:1.75; }
+
+  /* ---------- META STRIP ---------- */
+  .meta{ border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline); margin-top:54px; }
+  .meta-grid{ display:grid; gap:0; }
+  @media(min-width:680px){ .meta-grid{ grid-template-columns:repeat(4,1fr); } }
+  .meta-cell{ padding:26px 0; }
+  @media(min-width:680px){ .meta-cell{ padding:30px 28px 30px 0; } }
+  .meta-cell + .meta-cell{ border-top:1px solid var(--hairline); }
+  @media(min-width:680px){ .meta-cell + .meta-cell{ border-top:0;
+    border-left:1px solid var(--hairline); padding-left:28px; } }
+  .meta-k{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-clay); }
+  .meta-v{ font-family:var(--serif); font-size:18px; color:var(--soft-black);
+    margin-top:7px; line-height:1.3; }
+
+  /* ---------- SECTION ---------- */
+  section{ padding:clamp(56px,8vh,90px) 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:18px; }
+  .sec-head .idx{ font-family:var(--serif); font-style:italic; font-size:17px;
+    color:var(--clay); }
+  h2.sec-title{ font-size:clamp(27px,3.4vw,40px); line-height:1.12;
+    max-width:20ch; }
+  h2.sec-title em{ font-style:italic; color:var(--deep-sage); }
+  p.body{ font-size:clamp(15px,1.6vw,16.5px); color:#43403A; line-height:1.8;
+    margin-top:16px; }
+  p.body strong{ font-weight:500; color:var(--soft-black); }
+
+  /* two-column intro block */
+  .cols{ display:grid; gap:30px; margin-top:10px; }
+  @media(min-width:760px){ .cols{ grid-template-columns:repeat(3,1fr);
+    gap:36px; } }
+  .col h3{ font-size:21px; color:var(--soft-black); }
+  .col .kicker{ font-family:var(--serif); font-style:italic; font-size:15px;
+    color:var(--clay); }
+  .col p{ font-family:var(--sans); font-weight:300; font-size:14.5px;
+    color:#43403A; line-height:1.74; margin-top:9px; }
+
+  /* alt background block */
+  .band{ background:var(--ivory); }
+  .band-dark{ background:var(--soft-black); color:var(--bone); }
+  .band-dark .eyebrow{ color:var(--sage); }
+  .band-dark h2.sec-title{ color:var(--bone); }
+  .band-dark h2.sec-title em{ color:var(--sage); }
+  .band-dark p.body{ color:#D8D3C8; }
+  .band-dark p.body strong{ color:var(--bone); }
+  .band-dark .sec-head .idx{ color:var(--clay); }
+
+  /* goal callout */
+  .goal{ display:flex; gap:16px; margin-top:24px; padding:22px 26px;
+    background:var(--bone); border:1px solid var(--hairline);
+    border-left:3px solid var(--sage); border-radius:0 4px 4px 0; }
+  .band .goal{ background:#fff; }
+  .goal .lbl{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    flex:none; padding-top:3px; }
+  .goal p{ font-family:var(--serif); font-style:italic; font-size:18px;
+    color:var(--soft-black); line-height:1.45; }
+
+  /* tag row */
+  .tags{ display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+  .tag{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--deep-sage);
+    border:1px solid var(--hairline); border-radius:20px; padding:7px 15px; }
+
+  /* ---------- IMAGE FIGURE ---------- */
+  figure{ margin-top:36px; }
+  .figframe{ border-radius:5px; overflow:hidden; border:1px solid var(--hairline);
+    background:#fff; }
+  .figframe img{ width:100%; height:auto; display:block; }
+  figcaption{ font-family:var(--sans); font-weight:300; font-size:13px;
+    color:var(--warm-grey); margin-top:14px; text-align:center;
+    letter-spacing:.02em; }
+  figcaption strong{ font-weight:500; color:var(--deep-sage); }
+
+  /* ---------- CAROUSEL ---------- */
+  .carousel{ margin-top:32px; }
+  .carousel-stage{ position:relative; border-radius:5px; overflow:hidden;
+    border:1px solid var(--hairline); background:var(--bone);
+    height:70vh; max-height:680px; min-height:380px; }
+  .carousel-track{ position:relative; height:100%; }
+  .carousel-slide{ display:none; height:100%; }
+  .carousel-slide.current{ display:flex; align-items:flex-start;
+    justify-content:center; }
+  /* Wireframes carousel: centre the wide Search slide (#2) vertically */
+  #wfCarousel .carousel-slide:nth-child(2).current{ align-items:center; }
+  /* Design-system carousel: centre every slide — these are reference docs */
+  #dsCarousel .carousel-slide.current{ align-items:center; }
+  /* Table-system carousel: centre every slide — varied product screens */
+  #tblCarousel .carousel-slide.current{ align-items:center; }
+  .carousel-slide img{ max-width:100%; max-height:100%;
+    width:auto; height:auto; object-fit:contain; display:block; }
+  .carousel-arrow{ position:absolute; top:50%; transform:translateY(-50%);
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--hairline);
+    background:rgba(251,249,244,.94); color:var(--soft-black); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    transition:background .25s, color .25s; z-index:2; }
+  .carousel-arrow:hover{ background:var(--soft-black); color:var(--bone); }
+  .carousel-arrow.prev{ left:16px; }
+  .carousel-arrow.next{ right:16px; }
+  .carousel-meta{ display:flex; justify-content:space-between;
+    align-items:baseline; gap:18px; margin-top:14px; flex-wrap:wrap; }
+  .carousel-caption{ font-family:var(--sans); font-weight:300; font-size:13px;
+    color:var(--warm-grey); letter-spacing:.02em; }
+  .carousel-caption strong{ font-weight:500; color:var(--deep-sage); }
+  .carousel-counter{ font-family:var(--serif); font-style:italic; font-size:15px;
+    color:var(--clay); flex:none; }
+  .carousel-thumbs{ display:flex; gap:12px; margin-top:16px; overflow-x:auto;
+    padding-bottom:8px; scrollbar-width:thin;
+    scrollbar-color:var(--hairline) transparent; }
+  .carousel-thumbs::-webkit-scrollbar{ height:6px; }
+  .carousel-thumbs::-webkit-scrollbar-thumb{ background:var(--hairline);
+    border-radius:3px; }
+  .carousel-thumb{ flex:none; width:128px; height:84px; border-radius:3px;
+    overflow:hidden; border:1px solid var(--hairline); cursor:pointer;
+    background:#fff; padding:0; transition:border-color .25s, opacity .25s;
+    opacity:.6; }
+  .carousel-thumb img{ width:100%; height:100%; object-fit:cover;
+    object-position:center top; display:block; }
+  .carousel-thumb:hover{ opacity:.85; }
+  .carousel-thumb.active{ opacity:1; border-color:var(--deep-sage);
+    border-width:2px; }
+
+  /* ---------- STATS GRID (Impact section) ---------- */
+  .stats{ display:grid; gap:1px; margin-top:34px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08); }
+  @media(min-width:620px){ .stats{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:920px){ .stats{ grid-template-columns:repeat(4,1fr); } }
+  .stat{ background:var(--soft-black); padding:28px 24px; }
+  .stat .sn{ font-family:var(--serif); font-weight:500; font-size:34px;
+    color:var(--sage); line-height:1.1; }
+  .stat .sl{ font-family:var(--sans); font-weight:400; font-size:13px;
+    color:#D8D3C8; margin-top:10px; line-height:1.5; }
+
+  /* ---------- NEXT / FOOTER ---------- */
+  .nextnav{ border-top:1px solid var(--hairline); padding:46px 0; }
+  .nextnav .wrap{ display:flex; justify-content:space-between;
+    align-items:center; gap:20px; flex-wrap:wrap; }
+  .nextnav a{ text-decoration:none; }
+  .nextnav .back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    display:inline-flex; align-items:center; gap:9px; transition:color .25s; }
+  .nextnav .back:hover{ color:var(--deep-clay); }
+  .nextnav .cta{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
+    background:var(--soft-black); padding:15px 28px; border-radius:3px;
+    transition:background .3s; }
+  .nextnav .cta:hover{ background:var(--deep-clay); }
+
+  footer{ background:var(--soft-black); border-top:1px solid rgba(255,255,255,.1);
+    padding:34px 0; }
+  .foot-row{ display:flex; flex-direction:column; gap:14px; align-items:center;
+    text-align:center; }
+  @media(min-width:680px){ .foot-row{ flex-direction:row;
+    justify-content:space-between; } }
+  .foot-row span, .foot-row a{ font-family:var(--sans); font-weight:300;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--warm-grey); text-decoration:none; }
+  .foot-row a:hover{ color:var(--sage); }
+</style>
+</head>
+<body>
+
+<!-- petal mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="petalmark">
+      <path d="M40 6 A34 34 0 1 1 39.9 6" fill="none" stroke="#9CA98C"
+        stroke-width="1.8" stroke-dasharray="150 64" stroke-dashoffset="-43"/>
+      <g fill="none" stroke="#B98E80" stroke-width="2.4"
+        transform="translate(0,1) scale(0.86) translate(6.5,6.5)">
+        <path d="M40 40 C26 30 26 14 40 8 C54 14 54 30 40 40 Z"/>
+        <path d="M40 40 C54 30 70 38 72 52 C62 60 46 54 40 40 Z"/>
+        <path d="M40 40 C46 54 38 70 24 72 C16 62 22 46 40 40 Z"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <a href="portfolio.html" class="nav-logo" aria-label="Prina Bagia home">
+    <svg width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
+    <span class="nm">Prina Bagia</span>
+  </a>
+  <a href="work.html" class="nav-back"><span class="ar">←</span> All work</a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header>
+  <div class="wrap">
+    <div class="hero-tag reveal">UX / UI · Enterprise SaaS · Healthcare</div>
+    <h1 class="title reveal" style="transition-delay:.08s">
+      Blue Cross Blue Shield — a claims platform <em>built to replace a legacy.</em>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.16s">
+      Designing a new enterprise SaaS healthcare claims platform for HCSC —
+      a direct replacement for the legacy BlueChip 1.0 system, covering claims
+      registration, search, summary, and the daily work of claims teams.
+    </p>
+  </div>
+  <div class="wrap">
+    <div class="meta reveal" style="transition-delay:.24s">
+      <div class="meta-grid">
+        <div class="meta-cell">
+          <div class="meta-k">Company</div>
+          <div class="meta-v">Health Care Service Corp<br>— BCBS of Illinois</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Role</div>
+          <div class="meta-v">UX / UI Designer</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Tools</div>
+          <div class="meta-v">Figma, Sketch, Jira</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Scope</div>
+          <div class="meta-v">Responsive desktop<br>application</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= OVERVIEW ================= -->
+<section style="padding-bottom:48px;">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">01</span>
+        <div class="eyebrow">Overview</div></div>
+      <h2 class="sec-title">Modernizing claims <em>for a major insurer.</em></h2>
+    </div>
+    <div class="cols">
+      <div class="col reveal">
+        <div class="kicker">Who they are</div>
+        <h3>HCSC — BCBS of Illinois</h3>
+        <p>Health Care Service Corporation is the parent of Blue Cross Blue
+          Shield of Illinois — one of the largest health insurers in the
+          country. They set out to replace BlueChip 1.0, the legacy claims
+          system that the entire claims operation ran on.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.08s">
+        <div class="kicker">My role</div>
+        <h3>Sole UX/UI Designer</h3>
+        <p>I was the sole UX/UI designer on the program — partnering with
+          Epic Owners, Business Analysts, and engineering leads, and working
+          across 8 epics and 200+ user stories with 50+ stakeholders in an
+          agile environment.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.16s">
+        <div class="kicker">The challenge</div>
+        <h3>Replacing a legacy</h3>
+        <p>BlueChip 1.0 had decades of behaviour baked into it. The new
+          platform needed to absorb that complexity while giving claims teams
+          a faster, clearer interface — and a design system that could scale
+          across every app in the suite.</p>
+      </div>
+    </div>
+    <div class="tags reveal" style="margin-bottom:0;">
+      <span class="tag">Enterprise SaaS</span>
+      <span class="tag">Healthcare</span>
+      <span class="tag">Claims Platform</span>
+      <span class="tag">Design Systems</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HERO IMAGE ================= -->
+<section style="padding-top:0; padding-bottom:clamp(40px,7vh,80px);">
+  <div class="wrap">
+    <figure class="reveal" style="margin-top:8px;">
+      <div class="figframe">
+        <img src="images/bcbs-hero.png" alt="The BCBS claims platform — overview of key screens">
+      </div>
+      <figcaption><strong>The Platform</strong> — Claim Summary, Search
+        Results, Line Item Detail, Search, Registration, My Dashboard
+        (Claims), My Dashboard (Non-Claim).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= WIREFRAMES ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">02</span>
+        <div class="eyebrow">Wireframes</div></div>
+      <h2 class="sec-title">Mapping every flow <em>from intake to resolution.</em></h2>
+      <p class="body narrow">Across the platform I delivered 750+ wireframes
+        spanning 8 epics and 200+ user stories. Each flow was structured to
+        give claims teams a clear path through complex, high-stakes work —
+        from registration and search through to the daily dashboard view.</p>
+    </div>
+
+    <div class="goal reveal">
+      <span class="lbl">Goal</span>
+      <p>Replace BlueChip 1.0 with a faster, clearer workspace — reducing
+        training time and error rates for claims teams.</p>
+    </div>
+
+    <div class="carousel reveal" id="wfCarousel">
+      <div class="carousel-stage">
+        <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+        <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+        <div class="carousel-track">
+          <div class="carousel-slide current"><img src="images/bcbs-wf-claim-summary.jpg" alt="Claim Summary wireframe assortment — Summary, Patient, Provider, Billing Provider, Claim Details, BlueCard, Services and Service Line"></div>
+          <div class="carousel-slide"><img src="images/bcbs-wf-search.jpg" alt="Search wireframes — search type variations including DCN, Non-Claim Inventory, SCCF, Subscriber ID and Unique Claim ID"></div>
+          <div class="carousel-slide"><img src="images/bcbs-wf-dashboard.jpg" alt="My Dashboard wireframes — empty state, claims queue, customize columns, tech time, and full dashboard with SIRF and Non-Claim"></div>
+        </div>
+      </div>
+      <div class="carousel-meta">
+        <div class="carousel-caption" id="wfCaption">
+          <strong>Claim Summary</strong> — the full claim file laid out across Summary, Patient, Provider, Billing, Claim Details, BlueCard and Services.</div>
+        <div class="carousel-counter" id="wfCounter">01 / 03</div>
+      </div>
+      <div class="carousel-thumbs" id="wfThumbs">
+        <button class="carousel-thumb active"><img src="images/bcbs-wf-claim-summary.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-wf-search.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-wf-dashboard.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DESIGN SYSTEM ================= -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">03</span>
+        <div class="eyebrow">Design system</div></div>
+      <h2 class="sec-title">A component library <em>built to scale.</em></h2>
+      <p class="body narrow">I built the design system and component library
+        from the ground up — covering buttons, notifications and badges, page
+        titles and breadcrumbs, alerts and warnings, and the patterns the
+        platform was built on. The system gave every app in the suite a
+        consistent foundation and made handoff to engineering predictable.</p>
+    </div>
+
+    <div class="carousel reveal" id="dsCarousel">
+      <div class="carousel-stage">
+        <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+        <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+        <div class="carousel-track">
+          <div class="carousel-slide current"><img src="images/bcbs-ds-07-buttons.jpg" alt="Buttons — primary, secondary, tertiary and danger across all states"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-01-data-table.jpg" alt="Data Table — placement, sizing, frozen-column variations and mass-selection bar"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-02-modal.png" alt="Modal — informational, warning and error variants with 1, 2 and 3 buttons; claim action modal"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-03-content-switcher.png" alt="Content Switcher — individual and built component states"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-04-checkbox.png" alt="Checkbox — enabled, selected, partial, focused and disabled states"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-05-cards.png" alt="Card & Tile — workspace, tab and tile variations with header options"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-06-segmented.png" alt="Segmented Button — enabled, hover, selected and open-menu states"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-08-page-title.jpg" alt="Page Title & Breadcrumb — placement, sizing and link variations"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-09-badges.jpg" alt="Provider Notification & Badges — white badge, badge with link, value badge and draggable variants"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-10-notifications.jpg" alt="Alert Notifications, Toast, Technical Banner and Exceptions Banner"></div>
+          <div class="carousel-slide"><img src="images/bcbs-ds-11-accordion.jpg" alt="Accordion — open and closed states with badges, links and icon options"></div>
+        </div>
+      </div>
+      <div class="carousel-meta">
+        <div class="carousel-caption" id="dsCaption">
+          <strong>Buttons</strong> — primary, secondary, tertiary and danger across enabled, hover, focus and selected.</div>
+        <div class="carousel-counter" id="dsCounter">01 / 11</div>
+      </div>
+      <div class="carousel-thumbs" id="dsThumbs">
+        <button class="carousel-thumb active"><img src="images/bcbs-ds-07-buttons.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-01-data-table.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-02-modal.png" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-03-content-switcher.png" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-04-checkbox.png" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-05-cards.png" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-06-segmented.png" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-08-page-title.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-09-badges.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-10-notifications.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-ds-11-accordion.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CUSTOM TABLE SYSTEM ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">04</span>
+        <div class="eyebrow">Custom table system</div></div>
+      <h2 class="sec-title">A repeatable framework <em>for complex data.</em></h2>
+      <p class="body narrow">Claims work runs on dense, configurable tables —
+        one of the hardest UI patterns in enterprise design. I researched and
+        prototyped multiple directions before landing on a scalable custom
+        table system that balanced technical feasibility with usability,
+        giving the team one framework to reuse across the product.</p>
+    </div>
+    <div class="carousel reveal" id="tblCarousel">
+      <div class="carousel-stage">
+        <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+        <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+        <div class="carousel-track">
+          <div class="carousel-slide current"><img src="images/bcbs-ds-01-data-table.jpg" alt="Data Table reference — placement, sizing, frozen-column variants, mass selection and the build guide"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-01-institutional-calculator.jpg" alt="Institutional Calculator — table inside a modal with editable line-level fields"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-02-card-table.jpg" alt="Total Rendering Providers — table rendered as expandable provider cards"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-03-key-values.jpg" alt="Edit Key Values — vertical key/value table with editable inputs"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-04-search-results.jpg" alt="Search Results — family member and claims tables in a single results view"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-05-search-results-expanded.jpg" alt="Search Results expanded — wide claims table with horizontal scroll and frozen columns"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-06-non-claim.jpg" alt="Non-Claim Inventory — long page with overview, notes and three attachment tables"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-07-invalid-rejected.jpg" alt="Invalid & Rejected RF Dashboard — table with status and error columns"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-08-mle-search.jpg" alt="MLE Search Results — multi-result table with hyperlinked IDs"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-09-tech-time.jpg" alt="My Dashboard — Tech Time and Non-Claim Tech Time tables"></div>
+          <div class="carousel-slide"><img src="images/bcbs-tbl-10-on-hold.jpg" alt="My Dashboard — On Hold view with claim/hold age indicators and tooltips"></div>
+        </div>
+      </div>
+      <div class="carousel-meta">
+        <div class="carousel-caption" id="tblCaption">
+          <strong>The framework</strong> — placement, sizing, frozen-column variants, mass selection and a build guide for the team.</div>
+        <div class="carousel-counter" id="tblCounter">01 / 11</div>
+      </div>
+      <div class="carousel-thumbs" id="tblThumbs">
+        <button class="carousel-thumb active"><img src="images/bcbs-ds-01-data-table.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-01-institutional-calculator.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-02-card-table.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-03-key-values.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-04-search-results.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-05-search-results-expanded.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-06-non-claim.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-07-invalid-rejected.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-08-mle-search.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-09-tech-time.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/bcbs-tbl-10-on-hold.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IMPACT ================= -->
+<section class="band-dark">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">05</span>
+        <div class="eyebrow">Impact</div></div>
+      <h2 class="sec-title">Delivered at scale, <em>recognized across the org.</em></h2>
+      <p class="body narrow">The new platform reduced training time and error
+        rates for claims teams, replaced BlueChip 1.0 across the workflows it
+        covered, and consistently delivered into production sprint after
+        sprint.</p>
+    </div>
+
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="sn">750+</div>
+        <div class="sl">Wireframes delivered across the platform.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">200+</div>
+        <div class="sl">User stories shipped across 8 epics.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">50+</div>
+        <div class="sl">Stakeholders across product, engineering &amp; business.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">6×</div>
+        <div class="sl">Stellar Award — six consecutive quarters.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEXT NAV ================= -->
+<div class="nextnav">
+  <div class="wrap">
+    <a href="work.html" class="back"><span>←</span> All work</a>
+    <a href="portfolio.html#contact" class="cta">Get in touch</a>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <span>Prina Bagia — Product Designer · UX / UI</span>
+      <a href="portfolio.html">← Back to home</a>
+      <span>© 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    const reveals = Array.prototype.slice.call(
+      document.querySelectorAll('.reveal'));
+    if(!reveals.length) return;
+    function check(){
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for(let i = reveals.length - 1; i >= 0; i--){
+        const el = reveals[i];
+        const r = el.getBoundingClientRect();
+        if(r.top < vh * 0.92 && r.bottom > 0){
+          el.classList.add('in');
+          reveals.splice(i, 1);
+        }
+      }
+      if(!reveals.length){
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+    }
+    let ticking = false;
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ check(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    check();
+  })();
+
+  /* ---------- CAROUSEL FACTORY ---------- */
+  function buildCarousel(rootId, captionId, counterId, captions){
+    const root = document.getElementById(rootId);
+    if(!root) return;
+    const slides  = root.querySelectorAll('.carousel-slide');
+    const thumbs  = root.querySelectorAll('.carousel-thumb');
+    const caption = document.getElementById(captionId);
+    const counter = document.getElementById(counterId);
+    const total   = slides.length;
+    let idx = 0;
+
+    function go(n){
+      idx = (n + total) % total;
+      slides.forEach((s,i) => s.classList.toggle('current', i===idx));
+      thumbs.forEach((t,i) => t.classList.toggle('active', i===idx));
+      if(caption) caption.innerHTML = captions[idx] || '';
+      if(counter) counter.textContent =
+        String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+      const at = thumbs[idx];
+      if(at && at.parentElement){
+        const strip = at.parentElement;
+        const target = at.offsetLeft - (strip.clientWidth - at.clientWidth) / 2;
+        strip.scrollTo({left: target, behavior: 'smooth'});
+      }
+    }
+    root.querySelector('.carousel-arrow.prev').addEventListener('click', () => go(idx-1));
+    root.querySelector('.carousel-arrow.next').addEventListener('click', () => go(idx+1));
+    thumbs.forEach((t,i) => t.addEventListener('click', () => go(i)));
+    document.addEventListener('keydown', (e) => {
+      const r = root.getBoundingClientRect();
+      if(r.top < window.innerHeight && r.bottom > 0){
+        if(e.key === 'ArrowLeft')  go(idx-1);
+        if(e.key === 'ArrowRight') go(idx+1);
+      }
+    });
+    go(0);
+  }
+
+  buildCarousel('wfCarousel', 'wfCaption', 'wfCounter', [
+    '<strong>Claim Summary</strong> — the full claim file laid out across Summary, Patient, Provider, Billing, Claim Details, BlueCard and Services.',
+    '<strong>Search</strong> — every search type a claims team works with: DCN, Non-Claim Inventory, SCCF, Subscriber ID and Unique Claim ID.',
+    '<strong>My Dashboard</strong> — the daily home base, with customizable columns, tech-time tracking and split queues for Claims, SIRF and Non-Claim.'
+  ]);
+
+  buildCarousel('tblCarousel', 'tblCaption', 'tblCounter', [
+    '<strong>The framework</strong> — placement, sizing, frozen-column variants, mass selection and a build guide for the team.',
+    '<strong>Institutional Calculator</strong> — the table system inside a modal, with editable line-level fields.',
+    '<strong>Total Rendering Providers</strong> — the same framework rendered as expandable provider cards.',
+    '<strong>Edit Key Values</strong> — a vertical key/value variant with mixed inputs and dropdowns.',
+    '<strong>Search Results</strong> — family member and claims results in a single page.',
+    '<strong>Search Results — expanded</strong> — the wide claims table, horizontal scroll with frozen columns.',
+    '<strong>Non-Claim Inventory</strong> — long-form page composing several tables together.',
+    '<strong>Invalid &amp; Rejected RF Dashboard</strong> — operational table with status and error columns.',
+    '<strong>MLE Search Results</strong> — compact multi-result view with hyperlinked IDs.',
+    '<strong>Tech Time</strong> — claim and non-claim tech-time tables on the daily dashboard.',
+    '<strong>On Hold</strong> — claims with age indicators and tooltipped deadline warnings.'
+  ]);
+
+  buildCarousel('dsCarousel', 'dsCaption', 'dsCounter', [
+    '<strong>Buttons</strong> — primary, secondary, tertiary and danger across enabled, hover, focus and selected.',
+    '<strong>Data Table</strong> — placement, sizing, frozen-column variants, mass selection and a build guide for the team.',
+    '<strong>Modal</strong> — informational, warning and error variants across 1, 2 and 3 buttons; with claim-action modals.',
+    '<strong>Content Switcher</strong> — individual and built component, across enabled, hover, focused and disabled.',
+    '<strong>Checkbox</strong> — enabled, selected, partial, focused and disabled, with and without labels.',
+    '<strong>Card &amp; Tile</strong> — workspace cards, tab cards and tiles across header and icon variations.',
+    '<strong>Segmented Button</strong> — enabled, hover, selected and open-menu states for global navigation.',
+    '<strong>Page Title &amp; Breadcrumb</strong> — placement and sizing for headers, with link variations.',
+    '<strong>Provider Notification &amp; Badges</strong> — white badge, badge with link, value badge and draggable variants.',
+    '<strong>Alert Notifications</strong> — banners, toasts, technical banners and exceptions banner.',
+    '<strong>Accordion</strong> — open and closed states with badges, links and icon options.'
+  ]);
+</script>
+
+<script>
+  /* Ensure the case study opens at the top with the main title */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('load', function(){ window.scrollTo(0, 0); });
+</script>
+</body>
+</html>
