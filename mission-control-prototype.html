@@ -1,0 +1,3607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>APOGEE DYNAMICS · HELIOS-9 Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ---- Apogee Dynamics light-mode palette: near-monochrome, calm, modern ---- */
+    --paper:     #fbfaf8;   /* soft warm off-white canvas */
+    --surface:   #ffffff;   /* crisp white panels/cards */
+    --surface-2: #f4f3f1;   /* subtle raised/inset fills */
+    --surface-3: #ecebe8;   /* hover fills */
+
+    --ink:       #15161a;   /* near-black primary text */
+    --ink-2:     #4a4d55;   /* secondary text */
+    --ink-3:     #8a8d94;   /* tertiary / muted */
+    --ink-4:     #b6b8bd;   /* faint labels */
+
+    --line:      #e4e3df;   /* hairline borders */
+    --line-2:    #d4d3ce;   /* stronger borders */
+
+    /* active / focus / selected — monochrome ink */
+    --live:      #15161a;   /* ink: live / active / selected states */
+    --live-soft: #ecebe8;   /* neutral soft fill for focus rings */
+    /* ===== STATUS SYSTEM — standard ops convention ===== */
+    --ok:        #1f9d57;   /* GREEN  · nominal / good-to-go */
+    --ok-soft:   #e7f5ec;
+    --warn:      #e0a012;   /* YELLOW · caution */
+    --warn-soft: #fcf3dc;
+    --crit:      #dc3b32;   /* RED    · error / issue / critical */
+    --crit-soft: #fbe8e7;
+
+    --shadow-sm: 0 1px 2px rgba(20,22,26,0.04), 0 1px 3px rgba(20,22,26,0.06);
+    --shadow-md: 0 2px 8px rgba(20,22,26,0.06), 0 8px 24px rgba(20,22,26,0.08);
+    --shadow-lg: 0 12px 40px rgba(20,22,26,0.14);
+
+    --radius:    8px;
+    --radius-sm: 5px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .chrome { font-family: 'Inter', sans-serif; letter-spacing: 0.04em; }
+  .mono   { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-feature-settings: "tnum"; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 6px; border: 3px solid var(--paper); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+  @keyframes blink { 50% { opacity: 0.35; } }
+  @keyframes soft-pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: 0.55; transform: scale(0.88); }
+  }
+
+  /* ============================ APP SHELL ============================ */
+  .app {
+    display: grid;
+    grid-template-rows: 38px 56px 42px 1fr 32px;
+    grid-template-columns: 300px 1fr;
+    grid-template-areas:
+      "globalnav globalnav"
+      "topbar topbar"
+      "tabs tabs"
+      "sidebar canvas"
+      "statusbar statusbar";
+    height: 100vh;
+  }
+
+  /* ============================ GLOBAL NAV ============================ */
+  /* slim bar linking back to the portfolio — sits above the app header */
+  .globalnav {
+    grid-area: globalnav;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    z-index: 20;
+  }
+  .globalnav a { text-decoration: none; }
+  .globalnav .gn-back {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--surface); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 5px 10px; border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.22);
+    transition: background 0.14s, border-color 0.14s;
+  }
+  .globalnav .gn-back:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.4);
+  }
+  .globalnav .gn-back svg { width: 12px; height: 12px; }
+  .globalnav .gn-context {
+    color: rgba(255,255,255,0.5); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .globalnav .gn-links {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .globalnav .gn-links a {
+    color: rgba(255,255,255,0.62); font-size: 11px; font-weight: 500;
+    padding: 5px 9px; border-radius: 5px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .globalnav .gn-links a:hover {
+    color: var(--surface); background: rgba(255,255,255,0.1);
+  }
+
+  /* ============================ TOP BAR ============================ */
+  /* entire header uses monospace; layout tuned so nothing overlaps */
+  .topbar {
+    grid-area: topbar;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center;
+    padding: 0 18px; gap: 16px;
+    position: relative; z-index: 10;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    overflow: hidden;
+  }
+  .topbar * { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  .brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+  .brand-mark {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-mark svg { width: 24px; height: 24px; }
+  .brand-text {
+    font-weight: 700; letter-spacing: 0.12em;
+    font-size: 13px; color: var(--ink); white-space: nowrap;
+  }
+  .brand-divider { width: 1px; height: 22px; background: var(--line-2); flex-shrink: 0; }
+
+  .mission-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 11px;
+    background: var(--surface-2);
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+  .mission-pill .label {
+    font-size: 9px; color: var(--ink-3); letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600; white-space: nowrap;
+  }
+  .mission-pill .value {
+    font-size: 11px; color: var(--ink); font-weight: 600;
+    letter-spacing: 0.01em; white-space: nowrap;
+  }
+
+  .status-row { display: flex; gap: 6px; flex-shrink: 0; }
+  .status-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-size: 10px;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  .status-chip .led {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ok);
+    flex-shrink: 0;
+  }
+  /* OK / GREEN */
+  .status-chip.ok   { background: var(--ok-soft);   border-color: transparent; }
+  .status-chip.ok   .led { background: var(--ok); }
+  .status-chip.ok   .value { color: var(--ok); }
+  /* CAUTION / YELLOW */
+  .status-chip.warn { background: var(--warn-soft); border-color: transparent; }
+  .status-chip.warn .led { background: var(--warn); }
+  .status-chip.warn .value { color: #9a6f08; }
+  /* ERROR / RED */
+  .status-chip.crit { background: var(--crit-soft); border-color: transparent; }
+  .status-chip.crit .led { background: var(--crit); animation: blink 1.2s infinite; }
+  .status-chip.crit .value { color: var(--crit); }
+  .status-chip .label {
+    color: var(--ink-3); letter-spacing: 0.05em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .status-chip .value { color: var(--ink-2); font-weight: 600; }
+
+  .spacer { flex: 1; min-width: 8px; }
+
+  .utc-clock {
+    display: flex; flex-direction: column; align-items: flex-end;
+    line-height: 1.3; flex-shrink: 0;
+  }
+  .utc-clock .label {
+    font-size: 8px; color: var(--ink-4); letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 600; white-space: nowrap;
+  }
+  .utc-clock .value {
+    font-size: 13px; color: var(--ink); font-weight: 500;
+    letter-spacing: 0.01em; white-space: nowrap;
+  }
+
+  .op-badge {
+    display: flex; align-items: center; gap: 9px;
+    padding-left: 16px; border-left: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .op-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--surface); font-weight: 700;
+    letter-spacing: 0.02em; flex-shrink: 0;
+  }
+  .op-info { line-height: 1.35; }
+  .op-info .role {
+    font-size: 8px; color: var(--ink-4); letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600; white-space: nowrap;
+  }
+  .op-info .name { font-size: 11px; color: var(--ink); font-weight: 500; white-space: nowrap; }
+
+  /* ============================ DASHBOARD TABS ============================ */
+  .tabs-bar {
+    grid-area: tabs;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center;
+    padding: 0 12px; gap: 4px;
+    position: relative; z-index: 9;
+  }
+  .dash-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 8px 7px 13px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.01em;
+    color: var(--ink-3);
+    transition: all 0.14s ease;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .dash-tab .tab-label { white-space: nowrap; }
+  .dash-tab:hover { color: var(--ink); background: var(--surface-2); }
+  .dash-tab.active {
+    color: var(--ink);
+    background: var(--surface-2);
+    font-weight: 600;
+  }
+  .dash-tab .tab-led {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-4);
+  }
+  .dash-tab.active .tab-led { background: var(--live); }
+  .dash-tab .tab-close {
+    width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; color: var(--ink-4); font-size: 14px; line-height: 1;
+    transition: all 0.12s;
+  }
+  .dash-tab .tab-close:hover { background: var(--crit-soft); color: var(--crit); }
+  .dash-tab .tab-name-input {
+    background: var(--surface); border: 1px solid var(--live); color: var(--ink);
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    width: 130px; outline: none; padding: 3px 6px; border-radius: 4px;
+  }
+  .tab-add {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; background: transparent;
+    border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer;
+    color: var(--ink-3); font-size: 16px; line-height: 1;
+    transition: all 0.12s;
+  }
+  .tab-add:hover { color: var(--ink); border-color: var(--line-2); background: var(--surface-2); }
+  .tabs-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .tab-tool-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); cursor: pointer;
+    color: var(--ink-2); font-family: 'Inter', sans-serif;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.01em;
+    padding: 6px 11px; transition: all 0.12s;
+  }
+  .tab-tool-btn:hover { border-color: var(--line-2); color: var(--ink); background: var(--surface-2); }
+  .tab-tool-btn svg { width: 13px; height: 13px; }
+
+  /* ============================ SIDEBAR ============================ */
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 16px 16px 12px;
+    display: flex; flex-direction: column; gap: 11px;
+  }
+  .sidebar-title {
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.1em; color: var(--ink-3);
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .sidebar-title .count { color: var(--ink); font-weight: 600; letter-spacing: 0; font-size: 12px; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-2); border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 8px 10px;
+    transition: all 0.14s;
+  }
+  .search-box:focus-within { background: var(--surface); border-color: var(--live); box-shadow: 0 0 0 3px var(--live-soft); }
+  .search-box svg { color: var(--ink-4); flex-shrink: 0; }
+  .search-box input {
+    background: none; border: none; outline: none; color: var(--ink);
+    font-family: inherit; font-size: 12px; width: 100%;
+  }
+  .search-box input::placeholder { color: var(--ink-4); }
+  .search-box .clear-x {
+    font-size: 15px; color: var(--ink-4); cursor: pointer; line-height: 1;
+  }
+  .search-box .clear-x:hover { color: var(--crit); }
+  /* regex-mode toggle */
+  .search-box .regex-toggle {
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 600; line-height: 1;
+    color: var(--ink-4);
+    background: transparent; border: 1px solid var(--line-2);
+    border-radius: 4px; cursor: pointer;
+    padding: 3px 5px; transition: all 0.12s;
+  }
+  .search-box .regex-toggle:hover { color: var(--ink-2); border-color: var(--ink-4); }
+  .search-box .regex-toggle.active {
+    color: var(--surface); background: var(--ink); border-color: var(--ink);
+  }
+  /* invalid-regex state on the box */
+  .search-box.regex-error { border-color: var(--crit); box-shadow: 0 0 0 3px var(--crit-soft); }
+  .search-box.regex-error:focus-within { border-color: var(--crit); box-shadow: 0 0 0 3px var(--crit-soft); }
+
+  /* small hint line under the search box */
+  .search-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; letter-spacing: 0.02em;
+    color: var(--ink-4); padding: 5px 2px 0;
+    min-height: 0; display: none;
+  }
+  .search-hint.show { display: block; }
+  .search-hint.error { color: var(--crit); }
+  .search-hint b { color: var(--ink-2); font-weight: 600; }
+
+  .sidebar-hint {
+    font-size: 10px; color: var(--ink-3); letter-spacing: 0.01em;
+    padding: 0 16px 12px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .sidebar-hint svg { width: 13px; height: 13px; color: var(--ink-4); flex-shrink: 0; }
+
+  /* sidebar tabs — All Channels / Presets */
+  .sidebar-tabs {
+    display: flex; gap: 2px; padding: 0 16px 8px;
+  }
+  .sb-tab {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--surface-2); border: 1px solid transparent;
+    border-radius: var(--radius-sm); cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+    color: var(--ink-3); padding: 7px 8px; transition: all 0.12s;
+  }
+  .sb-tab:hover { color: var(--ink); }
+  .sb-tab.active { background: var(--ink); color: var(--surface); }
+  .sb-tab .sb-tab-count {
+    background: var(--line-2); color: var(--ink-2);
+    border-radius: 100px; font-size: 9px; padding: 0 5px; font-weight: 700;
+  }
+  .sb-tab.active .sb-tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+  .dict-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+  .dict {
+    border-radius: var(--radius-sm);
+    margin-bottom: 2px;
+  }
+  .dict.hidden { display: none; }
+  .dict-header {
+    display: grid; grid-template-columns: 14px 1fr auto auto;
+    align-items: center; gap: 10px; padding: 9px 8px; cursor: pointer;
+    border-radius: var(--radius-sm); transition: background 0.12s;
+  }
+  .dict-header:hover { background: var(--surface-2); }
+  .dict-header .caret {
+    width: 7px; height: 7px;
+    border-right: 1.6px solid var(--ink-3); border-bottom: 1.6px solid var(--ink-3);
+    transform: rotate(45deg) translate(-1px,-1px); transition: transform 0.16s;
+  }
+  .dict.collapsed .dict-header .caret { transform: rotate(-45deg) translate(-1px,1px); }
+  .dict-name {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.01em; color: var(--ink);
+  }
+  .dict-code { font-size: 10px; color: var(--ink-4); letter-spacing: 0.02em; margin-top: 1px; }
+  .dict-status-led {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ok);
+  }
+  .dict-status-led.warn { background: var(--warn); }
+  .dict-status-led.crit { background: var(--crit); animation: blink 1.2s infinite; }
+  .dict-status-led.idle { background: var(--ink-4); }
+  .dict-status-led.live {
+    background: var(--ink); position: relative;
+  }
+  .dict-status-led.live::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1px solid var(--ink); animation: ring-pulse 2.2s infinite;
+  }
+
+  .channel-list { display: flex; flex-direction: column; padding: 0 0 6px; }
+  .dict.collapsed .channel-list { display: none; }
+
+  .channel {
+    display: grid; grid-template-columns: 16px 1fr auto;
+    align-items: center; gap: 9px;
+    padding: 7px 10px 7px 24px; cursor: grab;
+    font-size: 12px; color: var(--ink-2); position: relative;
+    border-radius: var(--radius-sm);
+    transition: all 0.1s; user-select: none;
+  }
+  .channel.hidden { display: none; }
+  .channel:hover { background: var(--surface-2); color: var(--ink); }
+  .channel:active { cursor: grabbing; }
+  .channel.dragging { opacity: 0.4; }
+  .channel .ch-icon {
+    width: 13px; height: 13px; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-4);
+  }
+  .channel:hover .ch-icon { color: var(--ink-3); }
+  .channel .ch-icon svg { width: 13px; height: 13px; }
+  .channel-tag {
+    font-size: 10px; color: var(--ink-4); text-align: right;
+    letter-spacing: 0.01em; font-feature-settings: "tnum";
+  }
+  .channel .ch-name {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  }
+  .channel[data-type="stream"] .ch-icon { color: var(--live); }
+  .channel[data-type="image"] .ch-icon { color: var(--ink-2); }
+
+  .add-channel-row { margin: 4px 10px 6px 24px; }
+  .add-channel-btn {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: transparent; border: 1px dashed var(--line-2);
+    border-radius: var(--radius-sm); cursor: pointer;
+    color: var(--ink-3); font-size: 10px; letter-spacing: 0.02em;
+    font-family: 'Inter', sans-serif; font-weight: 500; padding: 6px;
+    transition: all 0.12s;
+  }
+  .add-channel-btn:hover { border-color: var(--live); color: var(--live); background: var(--live-soft); }
+
+  .no-results {
+    padding: 32px 16px; text-align: center; color: var(--ink-4);
+    font-size: 11px; display: none;
+  }
+  .no-results.show { display: block; }
+
+  .preset-empty {
+    padding: 36px 22px; text-align: center; color: var(--ink-4);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .preset-empty svg { width: 30px; height: 30px; color: var(--line-2); }
+  .preset-empty .pe-title { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+  .preset-empty .pe-sub { font-size: 10px; line-height: 1.6; }
+
+  /* a preset channel row carries its calc count */
+  .channel .ch-preset-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px; font-weight: 700;
+    background: var(--ink); color: var(--surface);
+    border-radius: 100px; padding: 1px 5px; margin-left: 4px;
+  }
+
+  /* ============================ CANVAS / WORKSPACE ============================ */
+  .canvas {
+    grid-area: canvas;
+    background: var(--paper);
+    position: relative; overflow: hidden;
+  }
+  .canvas::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle, rgba(20,22,26,0.05) 1px, transparent 1px) 0 0 / 28px 28px;
+    pointer-events: none;
+  }
+  .workspace { position: absolute; inset: 0; overflow: auto; }
+  .workspace.drop-active {
+    background: var(--live-soft);
+  }
+
+  /* 3x3 grid overlay — slot guides */
+  .grid-overlay {
+    position: absolute; pointer-events: none;
+    z-index: 0;
+  }
+  .grid-slot {
+    position: absolute;
+    border: 1px dashed var(--line-2);
+    border-radius: var(--radius);
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .grid-slot .slot-num {
+    position: absolute; top: 8px; left: 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--ink-4); font-weight: 600; letter-spacing: 0.04em;
+  }
+  /* slot highlighted as the drop target */
+  .grid-slot.target {
+    border-color: var(--live); border-style: solid;
+    background: var(--live-soft);
+  }
+  .grid-slot.target .slot-num { color: var(--live); }
+  /* hide grid overlay once it's not useful — toggled by JS */
+  .grid-overlay.dim .grid-slot { border-color: var(--line); opacity: 0.5; }
+
+
+  /* empty state */
+  .empty-state {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; pointer-events: none; text-align: center;
+  }
+  .empty-state.hidden { display: none; }
+  .empty-state .es-icon {
+    width: 60px; height: 60px; border-radius: 14px;
+    border: 1.5px dashed var(--line-2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-4);
+  }
+  .empty-state .es-icon svg { width: 26px; height: 26px; }
+  .empty-state .es-title {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 16px;
+    letter-spacing: 0.01em; color: var(--ink);
+  }
+  .empty-state .es-sub { font-size: 12px; color: var(--ink-3); max-width: 340px; line-height: 1.6; }
+  .empty-state .es-arrow {
+    position: absolute; left: 22px; top: 50%;
+    color: var(--ink-4); font-size: 11px; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Inter', sans-serif; font-weight: 500;
+  }
+
+  /* ============================ WIDGET PANEL ============================ */
+  .panel {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column;
+    min-width: 220px; min-height: 140px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.16s, border-color 0.16s;
+  }
+  .panel:hover { box-shadow: var(--shadow-md); }
+  .panel.selected {
+    border-color: var(--live);
+    box-shadow: var(--shadow-md), 0 0 0 3px var(--live-soft);
+  }
+  .panel.dragging { opacity: 0.92; cursor: grabbing; z-index: 500 !important; box-shadow: var(--shadow-lg); }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 10px 10px 14px;
+    border-bottom: 1px solid var(--line);
+    cursor: move; flex-shrink: 0;
+  }
+  .panel-title {
+    display: flex; align-items: center; gap: 9px;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 12px; color: var(--ink);
+    overflow: hidden;
+  }
+  .panel-title .ptype {
+    font-size: 8px; font-weight: 700; color: var(--ink-3);
+    padding: 2px 6px; border-radius: 100px;
+    background: var(--surface-2);
+    letter-spacing: 0.08em; flex-shrink: 0;
+  }
+  .panel-title .ptype.stream { color: var(--live); background: var(--live-soft); }
+  .panel-title .ptype.image  { color: var(--ink); background: var(--surface-3); }
+  .panel-title .pname {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500;
+  }
+  .panel-actions { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+  .panel-btn {
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--ink-4); border-radius: 5px; transition: all 0.12s;
+  }
+  .panel-btn:hover { color: var(--ink); background: var(--surface-2); }
+  .panel-btn svg { width: 14px; height: 14px; }
+  .panel-btn.close-btn:hover { color: var(--crit); background: var(--crit-soft); }
+
+  .panel-body { flex: 1; padding: 14px; position: relative; overflow: hidden; }
+
+  .panel-note-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--ink); color: var(--surface);
+    font-size: 8px; font-weight: 700; padding: 2px 6px;
+    border-radius: 100px; letter-spacing: 0.04em; display: none;
+    z-index: 5;
+  }
+  .panel-note-badge.show { display: block; }
+
+  /* ---------- calculation strip on a widget ---------- */
+  .panel-calcs { flex-shrink: 0; }
+  .panel-calcs.has-calcs {
+    border-top: 1px solid var(--line);
+    background: var(--surface-2);
+    padding: 8px 12px 10px;
+    max-height: 132px; overflow-y: auto;
+  }
+  .panel-calcs .pc-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin-bottom: 6px;
+  }
+  .panel-calcs .pc-head svg { width: 11px; height: 11px; }
+  .panel-calcs .pc-count {
+    background: var(--ink); color: var(--surface);
+    border-radius: 100px; padding: 0 5px; font-size: 8px;
+  }
+  .panel-calcs .pc-list { display: flex; flex-direction: column; gap: 4px; }
+  .panel-calcs .pc-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 5px 8px;
+  }
+  .panel-calcs .pc-name {
+    font-size: 10px; color: var(--ink-2); font-weight: 500;
+    display: flex; align-items: center; gap: 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .panel-calcs .pc-star { color: var(--warn); font-size: 9px; }
+  .panel-calcs .pc-value {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    font-weight: 600; color: var(--ink); flex-shrink: 0; margin-left: 8px;
+  }
+
+  /* ---------- calculation modal internals ---------- */
+  .calc-desc {
+    font-size: 10px; color: var(--ink-3); line-height: 1.5;
+    margin: -8px 0 14px;
+  }
+  .calc-param-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .calc-field { display: flex; flex-direction: column; gap: 4px; }
+  .calc-field .cf-label {
+    font-size: 9px; color: var(--ink-3); font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .calc-field .cf-input {
+    background: var(--surface-2); border: 1px solid transparent;
+    border-radius: var(--radius-sm); padding: 7px 9px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink);
+    outline: none; margin: 0;
+  }
+  .calc-field .cf-input:focus { background: var(--surface); border-color: var(--live); }
+
+  .calc-preview {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--ink); border-radius: var(--radius-sm);
+    padding: 10px 14px; margin-bottom: 14px;
+  }
+  .calc-preview .cp-label {
+    font-size: 9px; color: rgba(255,255,255,0.6); font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .calc-preview .cp-value {
+    font-family: 'IBM Plex Mono', monospace; font-size: 15px;
+    font-weight: 600; color: #fff;
+  }
+
+  .calc-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 4px 0 14px; color: var(--ink-4); font-size: 10px;
+  }
+  .calc-divider::before, .calc-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--line);
+  }
+  .calc-manual-cta {
+    width: 100%; display: flex; align-items: center; justify-content: center;
+    gap: 8px; margin-bottom: 16px;
+  }
+  .calc-manual-cta svg { width: 13px; height: 13px; }
+  .calc-manual-cta.active {
+    background: var(--ink); color: var(--surface); border-color: var(--ink);
+  }
+
+  .calc-preset-block {
+    border-top: 1px solid var(--line); padding-top: 14px;
+  }
+  .calc-preset-block label { margin-bottom: 10px; }
+  .calc-preset-block input[type=checkbox] { accent-color: var(--ink); cursor: pointer; }
+
+  .calc-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .calc-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 100px; padding: 4px 8px 4px 10px;
+    font-size: 10px; color: var(--ink-2); font-weight: 500;
+  }
+  .calc-chip-star { color: var(--warn); }
+  .calc-chip-x {
+    cursor: pointer; color: var(--ink-4); font-size: 13px; line-height: 1;
+  }
+  .calc-chip-x:hover { color: var(--crit); }
+
+  .resize-handle {
+    position: absolute; right: 2px; bottom: 2px;
+    width: 16px; height: 16px; cursor: nwse-resize;
+    color: var(--ink-4);
+  }
+  .resize-handle::after {
+    content: ""; position: absolute; right: 3px; bottom: 3px;
+    width: 7px; height: 7px;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  }
+  .resize-handle:hover { color: var(--live); }
+
+  /* three-dot menu */
+  .panel-menu {
+    position: absolute; min-width: 210px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    z-index: 2000; padding: 6px;
+  }
+  .panel-menu .menu-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 10px; cursor: pointer; border-radius: var(--radius-sm);
+    font-size: 12px; color: var(--ink-2); font-weight: 500;
+  }
+  .panel-menu .menu-item:hover { background: var(--surface-2); color: var(--ink); }
+  .panel-menu .menu-item svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--ink-3); }
+  .panel-menu .menu-item:hover svg { color: var(--ink); }
+  .panel-menu .menu-sep { height: 1px; background: var(--line); margin: 5px 8px; }
+  .panel-menu .menu-item.danger { color: var(--crit); }
+  .panel-menu .menu-item.danger svg { color: var(--crit); }
+  .panel-menu .menu-item.danger:hover { background: var(--crit-soft); }
+
+  /* ============================ WIDGET CONTENT TYPES ============================ */
+  .w-numeric { display: flex; flex-direction: column; height: 100%; justify-content: center; gap: 10px; }
+  .w-numeric .big-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 42px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.02em; line-height: 1;
+    display: flex; align-items: baseline; gap: 6px;
+    font-feature-settings: "tnum";
+  }
+  .w-numeric.warn .big-value { color: var(--warn); }
+  .w-numeric .big-value .unit { font-size: 15px; color: var(--ink-3); font-weight: 500; }
+  .w-numeric .meta-row {
+    display: flex; justify-content: space-between; align-items: center; font-size: 10px;
+    color: var(--ink-3); letter-spacing: 0.01em; font-weight: 500; gap: 8px;
+  }
+  .w-numeric .meta-row .trend { color: var(--ink-2); white-space: nowrap; }
+  .w-numeric .meta-row .health-tag {
+    font-weight: 700; letter-spacing: 0.03em; white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  }
+  .w-numeric .meta-row .health-tag.ok   { color: var(--ok); }
+  .w-numeric .meta-row .health-tag.warn { color: #9a6f08; }
+  .w-numeric .meta-row .health-tag.crit { color: var(--crit); }
+  .w-numeric .spark { width: 100%; height: 44px; }
+
+  .w-plot { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .w-plot .plot-legend { display: flex; gap: 12px; font-size: 9px; flex-wrap: wrap; align-items: center; }
+  .w-plot .plot-legend .lg { display: flex; align-items: center; gap: 5px; color: var(--ink-2); font-weight: 500; }
+  .w-plot .plot-legend .sw { width: 12px; height: 2px; border-radius: 2px; }
+  .w-plot .plot-legend .lim-key { color: var(--ink-3); }
+  .w-plot .plot-legend .lim-key .dotk { width: 7px; height: 7px; border-radius: 50%; }
+  .w-plot .plot-legend .breach-flag {
+    color: var(--crit); font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px; letter-spacing: 0.02em; margin-left: auto;
+  }
+  .w-plot .plot-frame { flex: 1; position: relative; width: 100%; min-height: 0; }
+  .w-plot .plot-frame svg { width: 100%; height: 100%; display: block; }
+  .w-plot .plot-labels { position: absolute; inset: 0; pointer-events: none; }
+  .w-plot .lim-label {
+    position: absolute; right: 3px; transform: translateY(-50%);
+    font-family: 'IBM Plex Mono', monospace; font-size: 8px; font-weight: 700;
+    letter-spacing: 0.02em; padding: 1px 4px; border-radius: 3px;
+    background: var(--surface); white-space: nowrap; line-height: 1.3;
+  }
+  .w-plot .lim-label.crit { color: var(--crit); box-shadow: 0 0 0 1px var(--crit-soft); }
+  .w-plot .lim-label.warn { color: #9a6f08; box-shadow: 0 0 0 1px var(--warn-soft); }
+
+  .w-stream {
+    width: 100%; height: 100%;
+    background: var(--surface-3); border-radius: var(--radius-sm);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .w-stream .stream-noise { display: none; }
+  .w-stream .stream-grad {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 38% 32%, rgba(47,109,240,0.10), transparent 58%),
+      radial-gradient(ellipse at 72% 74%, rgba(20,22,26,0.06), transparent 55%);
+  }
+  .w-stream .stream-center { position: relative; text-align: center; z-index: 2; }
+  .w-stream .stream-ring {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    margin: 0 auto 12px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .w-stream .stream-ring::before {
+    content: ""; position: absolute; inset: -7px; border-radius: 50%;
+    border: 1.5px solid var(--live); opacity: 0.4;
+    animation: ring-pulse 2.4s infinite;
+  }
+  @keyframes ring-pulse { 0%{transform:scale(1);opacity:0.5;} 100%{transform:scale(1.5);opacity:0;} }
+  .w-stream .stream-ring .play-tri {
+    width: 0; height: 0; border-left: 13px solid var(--live);
+    border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+    margin-left: 4px;
+  }
+  .w-stream .stream-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500;
+    color: var(--ink); letter-spacing: 0.01em;
+  }
+  .w-stream .stream-sub { font-size: 10px; color: var(--ink-3); margin-top: 4px; }
+  .w-stream .stream-rec {
+    position: absolute; top: 10px; left: 10px;
+    display: flex; align-items: center; gap: 6px; z-index: 3;
+    font-size: 9px; color: var(--crit); letter-spacing: 0.06em; font-weight: 700;
+    background: var(--surface); padding: 3px 8px; border-radius: 100px;
+    box-shadow: var(--shadow-sm);
+  }
+  .w-stream .stream-rec .rdot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--crit);
+    animation: blink 1.4s infinite;
+  }
+  .w-stream .stream-time {
+    position: absolute; bottom: 10px; right: 12px; z-index: 3;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--ink-2); letter-spacing: 0.02em;
+    background: var(--surface); padding: 2px 7px; border-radius: 100px;
+    box-shadow: var(--shadow-sm);
+  }
+  .w-stream .stream-res {
+    position: absolute; bottom: 10px; left: 12px; z-index: 3;
+    font-size: 9px; color: var(--ink-3); letter-spacing: 0.04em; font-weight: 600;
+  }
+
+  .w-image { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 7px; }
+  .w-image .img-main {
+    flex: 1; background: var(--surface-3); border-radius: var(--radius-sm);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .w-image .img-render { position: absolute; inset: 0; }
+  .w-image .img-meta {
+    position: absolute; bottom: 8px; left: 10px; right: 10px;
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--surface); letter-spacing: 0.02em; z-index: 2;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .w-image .img-frame-label {
+    position: absolute; top: 8px; left: 10px; z-index: 2;
+    font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600;
+    letter-spacing: 0.06em; color: var(--ink);
+    background: var(--surface); padding: 3px 7px; border-radius: 100px;
+    box-shadow: var(--shadow-sm);
+  }
+  .w-image .img-thumbs { display: flex; gap: 6px; height: 42px; }
+  .w-image .thumb {
+    flex: 1; background: var(--surface-3); border-radius: 4px;
+    border: 1.5px solid transparent;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: border-color 0.12s;
+  }
+  .w-image .thumb:hover { border-color: var(--line-2); }
+  .w-image .thumb.active { border-color: var(--live); }
+
+  .w-status { display: flex; flex-direction: column; gap: 8px; height: 100%; justify-content: center; }
+  .w-status .strow {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 12px; background: var(--surface-2); border-radius: var(--radius-sm);
+  }
+  .w-status .strow .sk {
+    font-size: 10px; color: var(--ink-3); letter-spacing: 0.04em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .w-status .strow .sv {
+    font-size: 12px; color: var(--ink); font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .w-status .strow .sv::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ink-4); flex-shrink: 0;
+  }
+  .w-status .strow .sv.ok   { color: var(--ok); }
+  .w-status .strow .sv.ok::before   { background: var(--ok); }
+  .w-status .strow .sv.warn { color: #9a6f08; }
+  .w-status .strow .sv.warn::before { background: var(--warn); }
+  .w-status .strow .sv.crit { color: var(--crit); }
+  .w-status .strow .sv.crit::before { background: var(--crit); animation: blink 1.2s infinite; }
+  .w-status .strow.crit { background: var(--crit-soft); }
+  .w-status .strow.warn { background: var(--warn-soft); }
+
+  .w-table { width: 100%; height: 100%; overflow: auto; }
+  .w-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .w-table th {
+    text-align: left; padding: 7px 9px; color: var(--ink-3);
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; font-size: 9px;
+    border-bottom: 1px solid var(--line); position: sticky; top: 0;
+    background: var(--surface);
+  }
+  .w-table td {
+    padding: 7px 9px; border-bottom: 1px solid var(--line); color: var(--ink-2);
+    font-family: 'IBM Plex Mono', monospace; font-feature-settings: "tnum";
+  }
+  .w-table tr:last-child td { border-bottom: none; }
+  .w-table td .tv-ok { color: var(--ok); }
+  .w-table td .tv-warn { color: var(--warn); }
+
+  /* ============================ NOTES DRAWER ============================ */
+  .notes-drawer {
+    position: fixed; top: 98px; right: 0; bottom: 32px;
+    width: 380px;
+    background: var(--surface);
+    border-left: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+    z-index: 1500;
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.24s cubic-bezier(0.4,0,0.2,1);
+  }
+  .notes-drawer.open { transform: translateX(0); }
+  .notes-header {
+    padding: 16px 18px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .notes-header .nh-title {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px;
+    letter-spacing: 0.01em; color: var(--ink);
+    display: flex; align-items: center; gap: 9px;
+  }
+  .notes-header .nh-title svg { width: 16px; height: 16px; color: var(--ink-2); }
+  .notes-close {
+    background: transparent; border: none; cursor: pointer;
+    color: var(--ink-4); width: 26px; height: 26px; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; border-radius: 5px;
+  }
+  .notes-close:hover { color: var(--crit); background: var(--crit-soft); }
+
+  .note-compose {
+    padding: 14px 18px; border-bottom: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .note-compose .nc-scope { display: flex; gap: 5px; }
+  .nc-scope-btn {
+    flex: 1;
+    background: var(--surface-2); border: 1px solid transparent; cursor: pointer;
+    color: var(--ink-3); font-size: 10px; letter-spacing: 0.01em; font-weight: 600;
+    padding: 6px 4px; border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif; transition: all 0.12s;
+  }
+  .nc-scope-btn:hover { color: var(--ink); }
+  .nc-scope-btn.active { background: var(--ink); color: var(--surface); }
+  .note-compose textarea {
+    background: var(--surface-2); border: 1px solid transparent; color: var(--ink);
+    font-family: inherit; font-size: 12px; padding: 10px; resize: none;
+    height: 72px; outline: none; line-height: 1.55; border-radius: var(--radius-sm);
+    transition: all 0.14s;
+  }
+  .note-compose textarea:focus { background: var(--surface); border-color: var(--live); box-shadow: 0 0 0 3px var(--live-soft); }
+  .note-compose textarea::placeholder { color: var(--ink-4); }
+  .note-compose .nc-actions {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .note-compose .nc-ts {
+    font-size: 10px; color: var(--ink-3); letter-spacing: 0.01em;
+  }
+  .note-compose .nc-ts b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .nc-submit {
+    background: var(--ink); border: none; cursor: pointer;
+    color: var(--surface); font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.01em; padding: 8px 16px; border-radius: var(--radius-sm);
+    transition: opacity 0.12s;
+  }
+  .nc-submit:hover { opacity: 0.85; }
+
+  .notes-list { flex: 1; overflow-y: auto; padding: 12px 18px; }
+  .notes-list .nl-empty {
+    text-align: center; color: var(--ink-4); font-size: 11px;
+    padding: 36px 12px; line-height: 1.6;
+  }
+  .note-item {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 11px 12px; margin-bottom: 9px;
+    position: relative;
+    transition: border-color 0.12s;
+  }
+  .note-item:hover { border-color: var(--line-2); }
+  .note-item .ni-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .note-item .ni-ts {
+    font-size: 10px; color: var(--ink-2); letter-spacing: 0.01em;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 500;
+  }
+  .note-item .ni-scope {
+    font-size: 8px; color: var(--surface); background: var(--ink);
+    padding: 2px 7px; letter-spacing: 0.06em; text-transform: uppercase;
+    font-family: 'Inter', sans-serif; font-weight: 700; border-radius: 100px;
+  }
+  .note-item .ni-scope.mission { background: var(--ink); }
+  .note-item .ni-scope.dashboard { background: var(--live); }
+  .note-item .ni-scope.channel { background: var(--ink-2); }
+  .note-item .ni-body { font-size: 12px; color: var(--ink); line-height: 1.55; }
+  .note-item .ni-del {
+    position: absolute; top: 8px; right: 8px;
+    cursor: pointer; color: var(--ink-4); font-size: 14px; line-height: 1;
+    opacity: 0; transition: opacity 0.12s;
+  }
+  .note-item:hover .ni-del { opacity: 1; }
+  .note-item .ni-del:hover { color: var(--crit); }
+  .note-item .ni-met { font-size: 9px; color: var(--ink-4); letter-spacing: 0.01em; margin-top: 6px; }
+
+  /* ============================ STATUS BAR ============================ */
+  .statusbar {
+    grid-area: statusbar;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 18px;
+    font-size: 10px; color: var(--ink-3);
+    letter-spacing: 0.01em;
+    overflow: hidden; white-space: nowrap;
+  }
+  .statusbar .sb-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+  .statusbar .sb-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4); }
+  .statusbar .sb-item .dot.live { background: var(--ink); position: relative; }
+  .statusbar .sb-item .dot.live::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1px solid var(--ink); animation: ring-pulse 2.2s infinite;
+  }
+  .statusbar .sb-item .dot.note { background: var(--ink-2); }
+  .statusbar .sb-item b { color: var(--ink); font-weight: 600; }
+  .statusbar .sb-spacer { flex: 1; }
+  .statusbar .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ============================ MODALS ============================ */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 3000;
+    background: rgba(20,22,26,0.32);
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 480px; max-width: 92vw; max-height: 86vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 18px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head .mh-title {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
+    letter-spacing: 0.01em; color: var(--ink);
+  }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-foot {
+    padding: 14px 20px; border-top: 1px solid var(--line);
+    display: flex; justify-content: flex-end; gap: 9px;
+  }
+  .modal label {
+    display: block; font-size: 10px; color: var(--ink-3);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+  }
+  .modal input[type=text], .modal select {
+    width: 100%; background: var(--surface-2); border: 1px solid transparent;
+    color: var(--ink); font-family: inherit; font-size: 13px;
+    padding: 10px 12px; outline: none; margin-bottom: 16px; border-radius: var(--radius-sm);
+    transition: all 0.14s;
+  }
+  .modal input[type=text]:focus, .modal select:focus {
+    background: var(--surface); border-color: var(--live); box-shadow: 0 0 0 3px var(--live-soft);
+  }
+  .btn {
+    background: var(--surface); border: 1px solid var(--line); cursor: pointer;
+    color: var(--ink-2); font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 11px; letter-spacing: 0.01em;
+    padding: 9px 16px; border-radius: var(--radius-sm); transition: all 0.12s;
+  }
+  .btn:hover { border-color: var(--line-2); color: var(--ink); background: var(--surface-2); }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+  .btn.primary:hover { opacity: 0.85; background: var(--ink); }
+  .btn.danger { border-color: var(--crit); color: var(--crit); }
+  .btn.danger:hover { background: var(--crit-soft); }
+
+  .preset-grid { display: flex; flex-direction: column; gap: 9px; }
+  .preset-card {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface);
+    padding: 13px 14px; cursor: pointer; display: flex;
+    align-items: center; gap: 13px; transition: all 0.12s;
+  }
+  .preset-card:hover { border-color: var(--live); box-shadow: var(--shadow-sm); }
+  .preset-card .pc-icon {
+    width: 38px; height: 38px; border-radius: var(--radius-sm);
+    background: var(--surface-2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2);
+  }
+  .preset-card .pc-icon svg { width: 18px; height: 18px; }
+  .preset-card .pc-info { flex: 1; }
+  .preset-card .pc-name {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px;
+    letter-spacing: 0.01em; color: var(--ink);
+  }
+  .preset-card .pc-desc { font-size: 10px; color: var(--ink-3); margin-top: 3px; }
+  .preset-card .pc-count {
+    font-size: 9px; color: var(--ink-2); letter-spacing: 0.04em; font-weight: 700;
+    background: var(--surface-2); padding: 4px 8px; border-radius: 100px;
+  }
+
+  .picker-list { max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  .picker-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-2);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .picker-item:last-child { border-bottom: none; }
+  .picker-item:hover { background: var(--surface-2); color: var(--ink); }
+  .picker-item .pi-type {
+    font-size: 8px; padding: 2px 6px; border-radius: 100px;
+    background: var(--surface-3); color: var(--ink-3); letter-spacing: 0.06em;
+    font-family: 'Inter', sans-serif; font-weight: 700;
+  }
+  .picker-item .pi-type.stream { color: var(--live); background: var(--live-soft); }
+  .picker-item .pi-type.image  { color: var(--ink); background: var(--surface-3); }
+  .picker-item .pi-tag { margin-left: auto; font-size: 10px; color: var(--ink-4); }
+
+  .toast-wrap {
+    position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%);
+    z-index: 4000; display: flex; flex-direction: column; gap: 7px; align-items: center;
+  }
+  .toast {
+    background: var(--ink); color: var(--surface);
+    padding: 10px 18px; font-size: 11px; font-weight: 500;
+    letter-spacing: 0.01em; box-shadow: var(--shadow-lg); border-radius: 100px;
+    animation: toast-in 0.22s ease;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4);
+  }
+  .toast.success::before { background: var(--ok); }
+  .toast.warn::before { background: var(--warn); }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+
+  .drag-ghost {
+    position: fixed; pointer-events: none; z-index: 5000;
+    background: var(--ink); border: none;
+    padding: 7px 13px; font-size: 11px; font-weight: 500; color: var(--surface);
+    letter-spacing: 0.01em; box-shadow: var(--shadow-lg); border-radius: 100px;
+    display: none;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  /* ============================ RESPONSIVE / MOBILE ============================ */
+  /* hamburger button — hidden on desktop, shown on mobile */
+  .nav-toggle {
+    display: none;
+    width: 32px; height: 32px;
+    align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); cursor: pointer; color: var(--ink);
+    flex-shrink: 0;
+  }
+  .nav-toggle svg { width: 16px; height: 16px; }
+  /* scrim behind the mobile sidebar drawer */
+  .nav-scrim {
+    display: none;
+    position: fixed; inset: 0; z-index: 1400;
+    background: rgba(20,22,26,0.4);
+  }
+  .nav-scrim.show { display: block; }
+
+  /* ----- TABLET: ≤ 1100px — tighten header, narrower sidebar ----- */
+  @media (max-width: 1100px) {
+    .app { grid-template-columns: 250px 1fr; }
+    .status-chip .label { display: none; }
+    .mission-pill .label { display: none; }
+  }
+
+  /* ----- MOBILE: ≤ 860px — collapse sidebar, stack widgets ----- */
+  @media (max-width: 860px) {
+    .app {
+      grid-template-rows: 38px 56px 42px 1fr 32px;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "globalnav"
+        "topbar"
+        "tabs"
+        "canvas"
+        "statusbar";
+    }
+    /* global nav: drop the middle context label on small screens */
+    .globalnav { padding: 0 12px; }
+    .globalnav .gn-context { display: none; }
+    .globalnav .gn-links a { padding: 5px 7px; }
+    /* sidebar becomes an off-canvas drawer */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: 280px; z-index: 1450;
+      transform: translateX(-100%);
+      transition: transform 0.24s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: var(--shadow-lg);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .nav-toggle { display: flex; }
+
+    /* header: drop the chips & pill that won't fit */
+    .status-row { display: none; }
+    .mission-pill { display: none; }
+    .topbar { padding: 0 12px; gap: 10px; }
+    .brand-text { font-size: 11px; }
+    .brand-divider { display: none; }
+    .utc-clock .label { display: none; }
+    .op-info { display: none; }
+    .op-badge { padding-left: 10px; }
+
+    /* tabs row scrolls horizontally */
+    .tabs-bar { overflow-x: auto; }
+    .tabs-right .tab-tool-btn span:not(#notes-badge) { display: none; }
+    .tab-tool-btn { padding: 6px 8px; }
+
+    /* WORKSPACE: widgets stack into one scrolling column */
+    .grid-overlay { display: none; }            /* no grid on mobile */
+    .workspace.mobile-stack {
+      /* stay absolutely positioned (bounded height) so it scrolls internally */
+      display: flex; flex-direction: column;
+      gap: 12px; padding: 12px;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .workspace.mobile-stack .panel {
+      position: static !important;
+      left: auto !important; top: auto !important;
+      width: 100% !important;
+      height: 280px !important;
+      flex-shrink: 0;
+    }
+    .workspace.mobile-stack .resize-handle { display: none; }
+    .workspace.mobile-stack .panel-header { cursor: default; }
+    .workspace.mobile-stack .empty-state { position: absolute; }
+
+    /* empty state arrow hidden (no left nav visible) */
+    .empty-state .es-arrow { display: none; }
+
+    /* statusbar: keep only the essentials on mobile */
+    .statusbar { gap: 12px; padding: 0 12px; font-size: 9px; }
+    .statusbar .sb-item.sb-hide-mobile { display: none; }
+
+    /* notes drawer full-width on mobile */
+    .notes-drawer { width: 100%; top: 0; bottom: 0; }
+
+    /* modals fit small screens */
+    .modal { width: 94vw; }
+  }
+
+  @media (max-width: 500px) {
+    .utc-clock { display: none; }
+    .topbar { gap: 8px; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================ GLOBAL NAV ============================ -->
+  <nav class="globalnav">
+    <a href="index.html" class="gn-back">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M13 8H3M7 4L3 8l4 4"/>
+      </svg>
+      Back to Portfolio
+    </a>
+    <span class="gn-context">Prina Bagia · Case Study Prototype</span>
+    <div class="gn-links">
+      <a href="index.html">Home</a>
+      <a href="work.html">Work</a>
+      <a href="case-mission-control.html">Case Study</a>
+    </div>
+  </nav>
+
+  <!-- ============================ TOP BAR ============================ -->
+  <header class="topbar">
+    <button class="nav-toggle" id="nav-toggle" title="Channels menu">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M2 4h12M2 8h12M2 12h12"/>
+      </svg>
+    </button>
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none">
+          <ellipse cx="12" cy="12" rx="10" ry="5.4" transform="rotate(-32 12 12)"
+                   stroke="var(--ink)" stroke-width="1.6"/>
+          <circle cx="12" cy="12" r="3" fill="var(--ink)"/>
+          <circle cx="20.2" cy="6.6" r="1.9" fill="var(--ink)"/>
+        </svg>
+      </div>
+      <span class="brand-text">APOGEE&nbsp;DYNAMICS</span>
+      <div class="brand-divider"></div>
+    </div>
+    <div class="mission-pill">
+      <span class="label">MISSION</span>
+      <span class="value">HELIOS-9 · VENUS TRANSFER</span>
+    </div>
+    <div class="status-row">
+      <div class="status-chip ok"><span class="led"></span><span class="label">FLIGHT</span><span class="value">NOMINAL</span></div>
+      <div class="status-chip ok"><span class="led"></span><span class="label">DSN</span><span class="value">LOCKED</span></div>
+      <div class="status-chip warn"><span class="led"></span><span class="label">THERMAL</span><span class="value">CAUTION</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="utc-clock">
+      <span class="label">UTC · MET T+142D 09:14</span>
+      <span class="value" id="utc-clock">2026-05-25 14:32:18Z</span>
+    </div>
+    <div class="op-badge">
+      <div class="op-avatar">DM</div>
+      <div class="op-info">
+        <div class="role">FLIGHT DIR</div>
+        <div class="name">D. Mehta</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================ DASHBOARD TABS ============================ -->
+  <nav class="tabs-bar" id="tabs-bar">
+    <!-- tabs injected by JS -->
+    <button class="tab-add" id="tab-add" title="New dashboard">+</button>
+    <div class="tabs-right">
+      <button class="tab-tool-btn" id="btn-presets" title="Load a preset mission dashboard">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5"/></svg>
+        Presets
+      </button>
+      <button class="tab-tool-btn" id="btn-notes" title="Open mission log / notes">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M6 7h5M6 10h5"/></svg>
+        Mission Log <span id="notes-badge" style="color:var(--ink-2);font-weight:600"></span>
+      </button>
+      <button class="tab-tool-btn" id="btn-export-all" title="Export all visible channels as CSV">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12v2h10v-2"/></svg>
+        Export CSV
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <span>Telemetry Channels</span>
+        <span class="count" id="ch-count">2,847</span>
+      </div>
+      <div class="search-box" id="search-box">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="m11 11 4 4"/></svg>
+        <input type="text" id="ch-search" placeholder="Search channels & dictionaries…" spellcheck="false" autocomplete="off" />
+        <button class="regex-toggle" id="regex-toggle" title="Toggle regular-expression search">.&#42;</button>
+        <span class="clear-x" id="search-clear" style="display:none">×</span>
+      </div>
+      <div class="search-hint" id="search-hint"></div>
+    </div>
+    <div class="sidebar-tabs" id="sidebar-tabs">
+      <button class="sb-tab active" data-sbtab="all">All Channels</button>
+      <button class="sb-tab" data-sbtab="presets">
+        Presets <span class="sb-tab-count" id="preset-tab-count">0</span>
+      </button>
+    </div>
+    <div class="sidebar-hint" id="sidebar-hint-all">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+      Drag any channel onto the workspace to add it
+    </div>
+    <div class="sidebar-hint" id="sidebar-hint-presets" style="display:none">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>
+      Channels with saved preset calculations — reusable
+    </div>
+    <div class="dict-list" id="dict-list"><!-- dictionaries injected by JS --></div>
+    <div class="dict-list" id="preset-list" style="display:none"><!-- preset channels --></div>
+    <div class="no-results" id="no-results">NO CHANNELS MATCH SEARCH</div>
+  </aside>
+
+  <!-- ============================ CANVAS ============================ -->
+  <main class="canvas">
+    <div class="workspace" id="workspace">
+      <div class="grid-overlay" id="grid-overlay"><!-- 9 slot guides injected by JS --></div>
+      <div class="empty-state" id="empty-state">
+        <div class="es-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/>
+            <rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>
+          </svg>
+        </div>
+        <div class="es-title">Empty Workspace</div>
+        <div class="es-sub">Drag telemetry channels from the left panel to begin building this dashboard, or load a preset from the Presets menu.</div>
+        <div class="es-arrow">◀ Channels Dictionary</div>
+      </div>
+      <!-- widget panels injected by JS -->
+    </div>
+  </main>
+
+  <!-- ============================ STATUS BAR ============================ -->
+  <footer class="statusbar">
+    <div class="sb-item"><span class="dot live"></span> <span>Streaming</span> <b id="sb-stream">0</b> <span>channels</span></div>
+    <div class="sb-item"><span class="dot"></span> <span>Dashboard</span> <b id="sb-dash">—</b></div>
+    <div class="sb-item"><span class="dot note"></span> <span>Notes</span> <b id="sb-notes">0</b></div>
+    <div class="sb-spacer"></div>
+    <div class="sb-item sb-hide-mobile"><span>Buffer · 2h retained · 47.3 MB</span></div>
+    <div class="sb-item"><span id="sb-clock">14:32:18 UTC</span></div>
+  </footer>
+
+</div>
+
+<!-- ============================ NOTES DRAWER ============================ -->
+<aside class="notes-drawer" id="notes-drawer">
+  <div class="notes-header">
+    <div class="nh-title">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M6 7h5M6 10h5"/></svg>
+      Mission Log
+    </div>
+    <button class="notes-close" id="notes-close">×</button>
+  </div>
+  <div class="note-compose">
+    <div class="nc-scope" id="nc-scope">
+      <button class="nc-scope-btn active" data-scope="mission">Mission</button>
+      <button class="nc-scope-btn" data-scope="dashboard">Dashboard</button>
+      <button class="nc-scope-btn" data-scope="channel">Channel/Widget</button>
+    </div>
+    <select id="nc-channel-select" style="display:none; width:100%; background:var(--surface-2); border:1px solid transparent; color:var(--ink); border-radius:5px; font-family:inherit; font-size:11px; padding:6px; outline:none;"></select>
+    <textarea id="nc-text" placeholder="Log an observation, anomaly, or correlation note…"></textarea>
+    <div class="nc-actions">
+      <span class="nc-ts">Timestamp <b id="nc-ts">14:32:18 UTC</b></span>
+      <button class="nc-submit" id="nc-submit">+ Add Note</button>
+    </div>
+  </div>
+  <div class="notes-list" id="notes-list"></div>
+</aside>
+
+<!-- ============================ MODALS ============================ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="nav-scrim" id="nav-scrim"></div>
+<div class="toast-wrap" id="toast-wrap"></div>
+<div class="drag-ghost" id="drag-ghost"></div>
+
+<script>
+/* ========================================================================
+   HELIOS-9 MISSION CONTROL — Interactive Prototype
+   ======================================================================== */
+
+/* ---------- CHANNEL DICTIONARY DATA ---------- */
+const DICTIONARIES = [
+  { id:'prop', name:'Propulsion', code:'PROP', total:412, led:'',
+    channels:[
+      {id:'main_engine_thrust_n', name:'main_engine_thrust_n', tag:'N', type:'numeric'},
+      {id:'rcs_chamber_pressure', name:'rcs_chamber_pressure', tag:'kPa', type:'numeric'},
+      {id:'fuel_mass_remaining', name:'fuel_mass_remaining', tag:'kg', type:'numeric'},
+      {id:'ox_mass_remaining', name:'ox_mass_remaining', tag:'kg', type:'numeric'},
+      {id:'mixture_ratio', name:'mixture_ratio', tag:'—', type:'plot'},
+    ]},
+  { id:'eclss', name:'ECLSS', code:'LIFE', total:318, led:'',
+    channels:[
+      {id:'cabin_pressure_total', name:'cabin_pressure_total', tag:'kPa', type:'numeric'},
+      {id:'o2_partial_pressure', name:'o2_partial_pressure', tag:'kPa', type:'numeric'},
+      {id:'co2_partial_pressure', name:'co2_partial_pressure', tag:'mmHg', type:'numeric'},
+      {id:'humidity_relative', name:'humidity_relative', tag:'%', type:'numeric'},
+      {id:'cabin_temp_avg', name:'cabin_temp_avg', tag:'°C', type:'plot'},
+    ]},
+  { id:'pwr', name:'Power', code:'PWR', total:286, led:'',
+    channels:[
+      {id:'main_bus_voltage_a', name:'main_bus_voltage_a', tag:'V', type:'plot'},
+      {id:'main_bus_voltage_b', name:'main_bus_voltage_b', tag:'V', type:'plot'},
+      {id:'solar_array_current', name:'solar_array_current', tag:'A', type:'numeric'},
+      {id:'battery_soc', name:'battery_soc', tag:'%', type:'numeric'},
+    ]},
+  { id:'gnc', name:'GNC', code:'NAV', total:541, led:'',
+    channels:[
+      {id:'attitude_quaternion_q0', name:'attitude_quaternion_q0', tag:'—', type:'numeric'},
+      {id:'angular_velocity_x', name:'angular_velocity_x', tag:'°/s', type:'plot'},
+      {id:'state_vector_position', name:'state_vector_position', tag:'km', type:'table'},
+      {id:'delta_v_remaining', name:'delta_v_remaining', tag:'m/s', type:'numeric'},
+    ]},
+  { id:'thm', name:'Thermal', code:'THM', total:224, led:'warn',
+    channels:[
+      {id:'radiator_temp_a', name:'radiator_temp_a', tag:'°C', type:'numeric'},
+      {id:'radiator_temp_b', name:'radiator_temp_b', tag:'°C', type:'numeric'},
+      {id:'rad_panel_status', name:'rad_panel_status', tag:'—', type:'status'},
+    ]},
+  { id:'com', name:'Communications', code:'COM', total:196, led:'',
+    channels:[
+      {id:'x_band_signal_dbm', name:'x_band_signal_dbm', tag:'dBm', type:'plot'},
+      {id:'dsn_link_status', name:'dsn_link_status', tag:'—', type:'status'},
+      {id:'uplink_bitrate', name:'uplink_bitrate', tag:'kbps', type:'numeric'},
+    ]},
+  { id:'pld', name:'Payload', code:'PLD', total:870, led:'idle',
+    channels:[
+      {id:'science_buffer_pct', name:'science_buffer_pct', tag:'%', type:'numeric'},
+      {id:'instrument_state', name:'instrument_state', tag:'—', type:'status'},
+    ]},
+  /* --- NEW: LIVE STREAM dictionary --- */
+  { id:'stream', name:'Live Streams', code:'STRM', total:8, led:'live',
+    channels:[
+      {id:'cam_forward_hd', name:'cam_forward_hd', tag:'1080p', type:'stream'},
+      {id:'cam_docking_port', name:'cam_docking_port', tag:'720p', type:'stream'},
+      {id:'cam_solar_array', name:'cam_solar_array', tag:'1080p', type:'stream'},
+      {id:'cam_payload_bay', name:'cam_payload_bay', tag:'4K', type:'stream'},
+      {id:'cam_engine_nozzle', name:'cam_engine_nozzle', tag:'720p', type:'stream'},
+    ]},
+  /* --- NEW: STATIC IMAGES dictionary --- */
+  { id:'images', name:'Static Images', code:'IMG', total:1240, led:'',
+    channels:[
+      {id:'img_venus_approach', name:'img_venus_approach', tag:'IMG', type:'image'},
+      {id:'img_star_tracker', name:'img_star_tracker', tag:'IMG', type:'image'},
+      {id:'img_thermal_scan', name:'img_thermal_scan', tag:'IMG', type:'image'},
+      {id:'img_radiator_inspect', name:'img_radiator_inspect', tag:'IMG', type:'image'},
+      {id:'img_solar_panel_diag', name:'img_solar_panel_diag', tag:'IMG', type:'image'},
+    ]},
+];
+
+/* flat channel lookup */
+const CHANNEL_INDEX = {};
+DICTIONARIES.forEach(d => d.channels.forEach(c => {
+  CHANNEL_INDEX[c.id] = Object.assign({}, c, {dictId:d.id, dictName:d.name});
+}));
+
+/* ---------- APPLICATION STATE ---------- */
+let STATE = {
+  dashboards: [],      // {id, name, widgets:[]}
+  activeDash: null,    // id
+  notes: [],           // {id, ts, metId, scope, target, text}
+  widgetSeq: 1,
+  dashSeq: 1,
+  /* preset calculations saved per channel id:
+     { channelId: [ {id, name, type, def, unit} , ... ] }
+     channels appearing here show up in the sidebar "Presets" tab */
+  presetCalcs: {},
+};
+
+/* ============================================================
+   CALCULATION LIBRARY
+   "type" → how the calc derives a value from a channel's series.
+   def carries the parameters a given type needs.
+   ============================================================ */
+const CALC_TYPES = [
+  { id:'rate_of_change', name:'Rate of Change',      unit:'/s',
+    desc:'Change in value per second over the window',
+    params:[{key:'window', label:'Window (samples)', type:'number', def:10}] },
+  { id:'moving_average', name:'Moving Average',      unit:'',
+    desc:'Mean of the last N samples',
+    params:[{key:'window', label:'Window (samples)', type:'number', def:10}] },
+  { id:'min_max',        name:'Min / Max (window)',  unit:'',
+    desc:'Lowest and highest value in the window',
+    params:[{key:'window', label:'Window (samples)', type:'number', def:20}] },
+  { id:'std_dev',        name:'Standard Deviation',  unit:'σ',
+    desc:'Statistical spread over the window',
+    params:[{key:'window', label:'Window (samples)', type:'number', def:20}] },
+  { id:'delta_limit',    name:'Delta to Limit',      unit:'',
+    desc:'Distance from the current value to a chosen limit',
+    params:[{key:'limit', label:'Limit type', type:'select',
+             options:['redHi','orangeHi','greenHi','greenLo','orangeLo','redLo'], def:'redHi'}] },
+  { id:'integral',       name:'Accumulated Total',   unit:'·s',
+    desc:'Integral (running sum) of the value over time',
+    params:[{key:'window', label:'Window (samples)', type:'number', def:30}] },
+  { id:'scale_offset',   name:'Scale & Offset',      unit:'',
+    desc:'Linear transform:  value × scale + offset',
+    params:[{key:'scale', label:'Scale (×)', type:'number', def:1},
+            {key:'offset', label:'Offset (+)', type:'number', def:0}] },
+  { id:'expression',     name:'Custom Expression',   unit:'',
+    desc:'Free-form formula — use x for the channel value',
+    params:[{key:'expr', label:'Expression  (x = value)', type:'text', def:'x * 1.0'}] },
+];
+function calcType(id){ return CALC_TYPES.find(t=>t.id===id); }
+
+/* evaluate a calculation against a channel's numeric series → {value, label} */
+function evalCalc(calc, ch){
+  const s = SAMPLE[ch] || {};
+  const series = seriesFor(ch, 40, 'calc');
+  const cur = (s.num!=null) ? s.num : (series[series.length-1]||0);
+  const d = calc.def || {};
+  const win = Math.max(2, Math.min(series.length, +d.window||10));
+  const tail = series.slice(-win);
+  let v = 0;
+  try {
+    switch(calc.type){
+      case 'rate_of_change':
+        v = (tail[tail.length-1]-tail[0]) / win; break;
+      case 'moving_average':
+        v = tail.reduce((a,b)=>a+b,0)/tail.length; break;
+      case 'min_max':
+        return { value: Math.min(...tail).toFixed(2)+' / '+Math.max(...tail).toFixed(2), label:'min / max' };
+      case 'std_dev': {
+        const m=tail.reduce((a,b)=>a+b,0)/tail.length;
+        v=Math.sqrt(tail.reduce((a,b)=>a+(b-m)**2,0)/tail.length); break;
+      }
+      case 'delta_limit': {
+        const lim=(s.limits||{})[d.limit];
+        v = (lim!=null) ? (cur-lim) : NaN; break;
+      }
+      case 'integral':
+        v = tail.reduce((a,b)=>a+b,0); break;
+      case 'scale_offset':
+        v = cur*(+d.scale||1)+(+d.offset||0); break;
+      case 'expression': {
+        const expr=String(d.expr||'x').replace(/[^-+*/().\sxX0-9eE^%]/g,'');
+        v = Function('x','"use strict";return ('+expr.replace(/\^/g,'**')+')')(cur);
+        break;
+      }
+      default: v = cur;
+    }
+  } catch(err){ return { value:'ERR', label:'calc error' }; }
+  if(typeof v==='number' && !isFinite(v)) return { value:'—', label:'n/a' };
+  return { value:(typeof v==='number'?v.toFixed(3):v), label:'' };
+}
+
+/* sample telemetry values per channel for widget rendering */
+/* Each entry: v(display), num(numeric), unit, range(label), trend
+   limits: {redLo,orangeLo,greenLo,greenHi,orangeHi,redHi} — any may be null.
+   axis:  {lo,hi} numeric range for plotting the y-axis. */
+const SAMPLE = {
+  main_engine_thrust_n:{v:'0.0', num:0, warn:false, range:'ARMED · OFF', trend:'— STBL',
+    axis:{lo:0,hi:500}, limits:{}},
+  rcs_chamber_pressure:{v:'318', num:318, unit:'kPa', range:'280–340', trend:'▲ 2',
+    axis:{lo:240,hi:380}, limits:{redLo:255,orangeLo:270,greenLo:280,greenHi:340,orangeHi:355,redHi:370}},
+  fuel_mass_remaining:{v:'1,284', num:1284, unit:'kg', range:'LOAD 1640', trend:'▼ 0.3',
+    axis:{lo:0,hi:1640}, limits:{redLo:200,orangeLo:450,greenLo:700}},
+  ox_mass_remaining:{v:'2,041', num:2041, unit:'kg', range:'LOAD 2620', trend:'▼ 0.4',
+    axis:{lo:0,hi:2620}, limits:{redLo:320,orangeLo:700,greenLo:1100}},
+  mixture_ratio:{v:'1.59', num:1.59, range:'1.55–1.62', trend:'— STBL',
+    axis:{lo:1.45,hi:1.72}, limits:{redLo:1.48,orangeLo:1.52,greenLo:1.55,greenHi:1.62,orangeHi:1.66,redHi:1.69}},
+  cabin_pressure_total:{v:'101.3', num:101.3, unit:'kPa', range:'NOMINAL', trend:'— STBL',
+    axis:{lo:95,hi:108}, limits:{redLo:96.5,orangeLo:98,greenLo:99.5,greenHi:103,orangeHi:105,redHi:106.5}},
+  o2_partial_pressure:{v:'21.4', num:21.4, unit:'kPa', range:'21.1–21.7', trend:'▲ 0.02',
+    axis:{lo:19.5,hi:23.5}, limits:{redLo:20.0,orangeLo:20.6,greenLo:21.1,greenHi:21.7,orangeHi:22.4,redHi:23.0}},
+  co2_partial_pressure:{v:'3.8', num:3.8, unit:'mmHg', range:'< 7.6 LIM', trend:'▼ 0.1',
+    axis:{lo:0,hi:9}, limits:{greenHi:5.0,orangeHi:6.5,redHi:7.6}},
+  humidity_relative:{v:'68.2', num:68.2, unit:'%RH', range:'UP LIMIT 70', trend:'▲ 0.4',
+    axis:{lo:30,hi:80}, limits:{redLo:35,orangeLo:42,greenLo:48,greenHi:62,orangeHi:70,redHi:75}},
+  cabin_temp_avg:{v:'22.6', num:22.6, unit:'°C', range:'21–24', trend:'— STBL',
+    axis:{lo:16,hi:30}, limits:{redLo:17,orangeLo:19,greenLo:21,greenHi:24,orangeHi:26,redHi:28}},
+  main_bus_voltage_a:{v:'28.43', num:28.43, unit:'V', range:'27.5–29.5', trend:'▲ 0.01',
+    axis:{lo:26,hi:31}, limits:{redLo:26.5,orangeLo:27.0,greenLo:27.5,greenHi:29.5,orangeHi:30.0,redHi:30.5}},
+  main_bus_voltage_b:{v:'28.41', num:28.41, unit:'V', range:'27.5–29.5', trend:'▲ 0.01',
+    axis:{lo:26,hi:31}, limits:{redLo:26.5,orangeLo:27.0,greenLo:27.5,greenHi:29.5,orangeHi:30.0,redHi:30.5}},
+  solar_array_current:{v:'142.7', num:142.7, unit:'A', range:'PEAK 168', trend:'▲ 1.2',
+    axis:{lo:0,hi:180}, limits:{redLo:40,orangeLo:75,greenLo:110}},
+  battery_soc:{v:'94.8', num:94.8, unit:'%', range:'> 40 LIM', trend:'▲ 0.1',
+    axis:{lo:0,hi:100}, limits:{redLo:20,orangeLo:40,greenLo:60}},
+  attitude_quaternion_q0:{v:'0.9994', num:0.9994, range:'NORMALIZED', trend:'— STBL',
+    axis:{lo:0.99,hi:1.0}, limits:{}},
+  angular_velocity_x:{v:'0.012', num:0.012, unit:'°/s', range:'< 0.5 LIM', trend:'— STBL',
+    axis:{lo:-0.6,hi:0.6}, limits:{redLo:-0.5,orangeLo:-0.35,greenLo:-0.2,greenHi:0.2,orangeHi:0.35,redHi:0.5}},
+  state_vector_position:{v:'TABLE', warn:false},
+  delta_v_remaining:{v:'1,847', num:1847, unit:'m/s', range:'BUDGET 2100', trend:'— STBL',
+    axis:{lo:0,hi:2100}, limits:{redLo:300,orangeLo:600,greenLo:1000}},
+  radiator_temp_a:{v:'4.2', num:4.2, unit:'°C', range:'-10 to 40', trend:'▲ 0.3',
+    axis:{lo:-20,hi:70}, limits:{redLo:-15,orangeLo:-5,greenLo:5,greenHi:40,orangeHi:52,redHi:60}},
+  radiator_temp_b:{v:'61.8', num:61.8, unit:'°C', range:'UP LIMIT 60', trend:'▲ 1.1',
+    axis:{lo:-20,hi:70}, limits:{redLo:-15,orangeLo:-5,greenLo:5,greenHi:40,orangeHi:52,redHi:60}},
+  rad_panel_status:{v:'STATUS', warn:true},
+  x_band_signal_dbm:{v:'-118.4', num:-118.4, unit:'dBm', range:'> -135 LIM', trend:'▲ 0.6',
+    axis:{lo:-145,hi:-100}, limits:{redLo:-138,orangeLo:-130,greenLo:-122}},
+  dsn_link_status:{v:'STATUS', warn:false},
+  uplink_bitrate:{v:'256', num:256, unit:'kbps', range:'MAX 512', trend:'— STBL',
+    axis:{lo:0,hi:512}, limits:{redLo:32,orangeLo:96,greenLo:160}},
+  science_buffer_pct:{v:'34.1', num:34.1, unit:'%', range:'< 90 LIM', trend:'▲ 0.8',
+    axis:{lo:0,hi:100}, limits:{greenHi:70,orangeHi:90,redHi:96}},
+  instrument_state:{v:'STATUS', warn:false},
+};
+
+/* classify a numeric value against its limits → 'ok' | 'warn' | 'crit' */
+function healthOf(ch){
+  const s = SAMPLE[ch];
+  if(!s || s.num==null || !s.limits) return 'ok';
+  const L = s.limits, v = s.num;
+  if((L.redHi!=null && v>=L.redHi) || (L.redLo!=null && v<=L.redLo)) return 'crit';
+  if((L.orangeHi!=null && v>=L.orangeHi) || (L.orangeLo!=null && v<=L.orangeLo)) return 'warn';
+  return 'ok';
+}
+
+/* ---------- PRESET DASHBOARDS ---------- */
+/* presets place channels into grid slots 0-8 (3x3, row-major) */
+const PRESETS = [
+  { name:'Power & Thermal Watch',
+    desc:'Bus voltages, solar input, radiator temps',
+    channels:[
+      {ch:'main_bus_voltage_a', slot:0},
+      {ch:'solar_array_current', slot:1},
+      {ch:'battery_soc',         slot:3},
+      {ch:'radiator_temp_a',     slot:4},
+      {ch:'radiator_temp_b',     slot:5},
+    ]},
+  { name:'ECLSS — Crew Survival',
+    desc:'Cabin atmosphere and life support',
+    channels:[
+      {ch:'cabin_pressure_total', slot:0},
+      {ch:'o2_partial_pressure',  slot:1},
+      {ch:'co2_partial_pressure', slot:2},
+      {ch:'humidity_relative',    slot:3},
+      {ch:'cabin_temp_avg',       slot:4},
+    ]},
+  { name:'Venus Approach — Imaging',
+    desc:'Live camera feeds + captured science frames',
+    channels:[
+      {ch:'cam_forward_hd',    slot:0},
+      {ch:'img_venus_approach',slot:1},
+      {ch:'cam_payload_bay',   slot:3},
+      {ch:'x_band_signal_dbm', slot:4},
+    ]},
+];
+
+/* ---------- UTILITY ---------- */
+function uid(p){ return p + '_' + Math.random().toString(36).slice(2,8); }
+function nowUTC(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())} UTC`;
+}
+function nowFull(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}Z`;
+}
+function metStamp(){
+  /* fake mission elapsed time tied to wall clock seconds */
+  const base = 142*86400 + 9*3600 + 14*60;
+  const t = base + Math.floor(Date.now()/1000)%600;
+  const d=Math.floor(t/86400), h=Math.floor(t%86400/3600), m=Math.floor(t%3600/60), s=t%60;
+  const p=n=>String(n).padStart(2,'0');
+  return `T+${d}D ${p(h)}:${p(m)}:${p(s)}`;
+}
+function toast(msg, kind){
+  const w=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className='toast'+(kind?' '+kind:'');
+  el.textContent=msg;
+  w.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2600);
+}
+function activeDashboard(){ return STATE.dashboards.find(d=>d.id===STATE.activeDash); }
+
+/* ---------- ICONS ---------- */
+const ICON = {
+  numeric:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 11l3-5 3 3 4-6"/></svg>',
+  plot:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13L6 8l3 2 5-7"/><path d="M2 2v12h12"/></svg>',
+  table:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10"/><path d="M2 7h12M7 3v10"/></svg>',
+  status:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2"/></svg>',
+  stream:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="9" height="8"/><path d="M11 7l3-2v6l-3-2"/></svg>',
+  image:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10"/><circle cx="6" cy="6.5" r="1.3"/><path d="M2 11l3.5-3 3 2.5L11 8l3 3"/></svg>',
+};
+
+/* ============================================================
+   SIDEBAR — render channel dictionary
+   ============================================================ */
+function renderSidebar(){
+  const list = document.getElementById('dict-list');
+  list.innerHTML = '';
+  DICTIONARIES.forEach((d, di) => {
+    const dict = document.createElement('div');
+    dict.className = 'dict' + (di>4 && d.id!=='stream' && d.id!=='images' ? ' collapsed' : '');
+    dict.dataset.dictId = d.id;
+    dict.innerHTML = `
+      <div class="dict-header">
+        <div class="caret"></div>
+        <div>
+          <div class="dict-name">${d.name}</div>
+          <div class="dict-code">${d.code} · ${d.total} channels</div>
+        </div>
+        <div class="dict-status-led ${d.led}"></div>
+      </div>
+      <div class="channel-list">
+        ${d.channels.map(c=>`
+          <div class="channel" draggable="true" data-ch="${c.id}" data-type="${c.type}">
+            <span class="ch-icon">${ICON[c.type]||''}</span>
+            <span class="ch-name" title="${c.name}">${c.name}</span>
+            <span class="channel-tag">${c.tag}</span>
+          </div>`).join('')}
+        <div class="add-channel-row">
+          <button class="add-channel-btn" data-dict="${d.id}">+ Add channel to ${d.code}</button>
+        </div>
+      </div>`;
+    list.appendChild(dict);
+  });
+  wireSidebar();
+  updateChannelCount();
+  renderPresetList();
+}
+
+/* ---------- PRESETS TAB — channels with saved preset calculations ---------- */
+function renderPresetList(){
+  const list = document.getElementById('preset-list');
+  const count = Object.keys(STATE.presetCalcs).filter(ch=>(STATE.presetCalcs[ch]||[]).length).length;
+  document.getElementById('preset-tab-count').textContent = count;
+
+  if(!count){
+    list.innerHTML = `
+      <div class="preset-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 9h8M8 13h5"/><path d="M16 15v3M14.5 16.5h3"/></svg>
+        <div class="pe-title">No preset calculations yet</div>
+        <div class="pe-sub">Add a calculation to any channel widget and tick “Save as Preset Calculation.” It will appear here, ready to reuse.</div>
+      </div>`;
+    return;
+  }
+
+  /* group preset channels by their dictionary */
+  const byDict = {};
+  Object.keys(STATE.presetCalcs).forEach(chId=>{
+    const calcs = STATE.presetCalcs[chId]||[];
+    if(!calcs.length) return;
+    const c = CHANNEL_INDEX[chId];
+    if(!c) return;
+    (byDict[c.dictId] = byDict[c.dictId] || []).push({ch:c, calcs});
+  });
+
+  list.innerHTML = Object.keys(byDict).map(dictId=>{
+    const d = DICTIONARIES.find(x=>x.id===dictId);
+    return `
+      <div class="dict" data-dict-id="${dictId}">
+        <div class="dict-header">
+          <div class="caret"></div>
+          <div>
+            <div class="dict-name">${d?d.name:dictId}</div>
+            <div class="dict-code">${d?d.code:''} · ${byDict[dictId].length} preset channel${byDict[dictId].length>1?'s':''}</div>
+          </div>
+          <div class="dict-status-led"></div>
+        </div>
+        <div class="channel-list">
+          ${byDict[dictId].map(({ch,calcs})=>`
+            <div class="channel" draggable="true" data-ch="${ch.id}" data-type="${ch.type}" data-preset="1">
+              <span class="ch-icon">${ICON[ch.type]||''}</span>
+              <span class="ch-name" title="${ch.name} · ${calcs.length} preset calc">${ch.name}</span>
+              <span class="ch-preset-badge" title="${calcs.map(c=>c.name).join(', ')}">★ ${calcs.length}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  /* wire collapse + drag for the preset list */
+  list.querySelectorAll('.dict-header').forEach(h=>{
+    h.addEventListener('click', ()=> h.parentElement.classList.toggle('collapsed'));
+  });
+  list.querySelectorAll('.channel').forEach(ch=>{
+    ch.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', ch.dataset.ch);
+      e.dataTransfer.effectAllowed='copy';
+      ch.classList.add('dragging');
+      const img=new Image(); img.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+      e.dataTransfer.setDragImage(img,0,0);
+      showGhost(CHANNEL_INDEX[ch.dataset.ch].name+' ★');
+    });
+    ch.addEventListener('drag', e=>{ if(e.clientX) moveGhost(e.clientX,e.clientY); });
+    ch.addEventListener('dragend', ()=>{ ch.classList.remove('dragging'); hideGhost(); });
+    ch.addEventListener('dblclick', ()=> addWidget(ch.dataset.ch));
+  });
+}
+
+/* ---------- sidebar tab switching ---------- */
+function wireSidebarTabs(){
+  document.querySelectorAll('.sb-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      const which = tab.dataset.sbtab;
+      document.querySelectorAll('.sb-tab').forEach(t=>t.classList.toggle('active', t===tab));
+      const showPresets = which==='presets';
+      document.getElementById('dict-list').style.display    = showPresets?'none':'';
+      document.getElementById('preset-list').style.display  = showPresets?'':'none';
+      document.getElementById('sidebar-hint-all').style.display     = showPresets?'none':'';
+      document.getElementById('sidebar-hint-presets').style.display = showPresets?'':'none';
+      /* search applies to the All tab only */
+      document.getElementById('search-box').style.opacity = showPresets?'0.5':'1';
+      document.getElementById('search-box').style.pointerEvents = showPresets?'none':'';
+    });
+  });
+}
+
+function updateChannelCount(){
+  const total = DICTIONARIES.reduce((s,d)=>s+d.channels.length,0);
+  document.getElementById('ch-count').textContent =
+    DICTIONARIES.reduce((s,d)=>s+d.total,0).toLocaleString();
+}
+
+function wireSidebar(){
+  /* collapse toggles */
+  document.querySelectorAll('.dict-header').forEach(h=>{
+    h.addEventListener('click', ()=> h.parentElement.classList.toggle('collapsed'));
+  });
+  /* drag start on channels */
+  document.querySelectorAll('.channel').forEach(ch=>{
+    ch.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', ch.dataset.ch);
+      e.dataTransfer.effectAllowed='copy';
+      ch.classList.add('dragging');
+      const img=new Image(); img.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+      e.dataTransfer.setDragImage(img,0,0);
+      showGhost(CHANNEL_INDEX[ch.dataset.ch].name);
+    });
+    ch.addEventListener('drag', e=>{ if(e.clientX) moveGhost(e.clientX,e.clientY); });
+    ch.addEventListener('dragend', ()=>{ ch.classList.remove('dragging'); hideGhost(); });
+    /* double-click also adds to centre */
+    ch.addEventListener('dblclick', ()=>{
+      addWidget(ch.dataset.ch);
+    });
+  });
+  /* add-channel buttons */
+  document.querySelectorAll('.add-channel-btn').forEach(b=>{
+    b.addEventListener('click', ()=> openAddChannelModal(b.dataset.dict));
+  });
+}
+
+/* drag ghost follow */
+const ghost=document.getElementById('drag-ghost');
+function showGhost(txt){ ghost.textContent='+ '+txt; ghost.style.display='block'; }
+function moveGhost(x,y){ ghost.style.left=(x+14)+'px'; ghost.style.top=(y+10)+'px'; }
+function hideGhost(){ ghost.style.display='none'; }
+
+/* ---------- SEARCH ---------- */
+let SEARCH_REGEX_MODE = false;
+let _searchWired = false;
+let _runSearchFn = null;          /* exposed so renderSidebar can re-filter */
+
+function wireSearch(){
+  /* the search box DOM persists across sidebar rebuilds; only wire once.
+     subsequent calls just re-apply the active filter to the new channels. */
+  if(_searchWired){
+    if(_runSearchFn) _runSearchFn();
+    return;
+  }
+  _searchWired = true;
+
+  const inp   = document.getElementById('ch-search');
+  const clear = document.getElementById('search-clear');
+  const box   = document.getElementById('search-box');
+  const toggle= document.getElementById('regex-toggle');
+  const hint  = document.getElementById('search-hint');
+
+  /* build a matcher fn for the current query + mode.
+     returns {test:fn} on success, or {error:msg} for an invalid regex. */
+  function buildMatcher(q){
+    if(!q) return { test: ()=>true, empty:true };
+    if(SEARCH_REGEX_MODE){
+      try {
+        const re = new RegExp(q, 'i');         /* case-insensitive */
+        return { test: s => re.test(s) };
+      } catch(err){
+        return { error: err.message.replace(/^.*?:\s*/,'') };
+      }
+    }
+    /* plain substring (case-insensitive) */
+    const lq = q.toLowerCase();
+    return { test: s => s.toLowerCase().includes(lq) };
+  }
+
+  function runSearch(){
+    const q = inp.value.trim();
+    clear.style.display = q ? 'block' : 'none';
+    const m = buildMatcher(q);
+
+    /* invalid regex — flag the box, show the error, leave list as-is */
+    if(m.error){
+      box.classList.add('regex-error');
+      hint.className = 'search-hint show error';
+      hint.innerHTML = '⚠ Invalid regex · ' + m.error;
+      return;
+    }
+    box.classList.remove('regex-error');
+
+    let anyVisible=false, matchCount=0;
+    document.querySelectorAll('.dict').forEach(dict=>{
+      const d = DICTIONARIES.find(x=>x.id===dict.dataset.dictId);
+      const dictMatch = !m.empty && (m.test(d.name) || m.test(d.code));
+      let chVisible=0;
+      dict.querySelectorAll('.channel').forEach(ch=>{
+        const cName = CHANNEL_INDEX[ch.dataset.ch].name;
+        const show = m.empty || dictMatch || m.test(cName);
+        ch.classList.toggle('hidden', !show);
+        if(show && !m.empty){ chVisible++; matchCount++; }
+        else if(show){ chVisible++; }
+      });
+      const showDict = m.empty || dictMatch || chVisible>0;
+      dict.classList.toggle('hidden', !showDict);
+      if(showDict){ anyVisible=true; if(!m.empty) dict.classList.remove('collapsed'); }
+    });
+    document.getElementById('no-results').classList.toggle('show', !anyVisible);
+
+    /* hint line: match count in regex mode, or a usage tip when empty */
+    if(m.empty){
+      if(SEARCH_REGEX_MODE){
+        hint.className = 'search-hint show';
+        hint.innerHTML = 'Regex mode · try <b>^cam</b>, <b>temp$</b>, <b>volt|curr</b>';
+      } else {
+        hint.className = 'search-hint';
+        hint.textContent = '';
+      }
+    } else {
+      hint.className = 'search-hint show';
+      const mode = SEARCH_REGEX_MODE ? 'regex' : 'text';
+      hint.innerHTML = `<b>${matchCount}</b> channel${matchCount===1?'':'s'} match · ${mode} search`;
+    }
+  }
+
+  inp.addEventListener('input', runSearch);
+  _runSearchFn = runSearch;       /* allow re-filtering after sidebar rebuilds */
+
+  /* toggle regex mode on/off */
+  toggle.addEventListener('click', ()=>{
+    SEARCH_REGEX_MODE = !SEARCH_REGEX_MODE;
+    toggle.classList.toggle('active', SEARCH_REGEX_MODE);
+    inp.placeholder = SEARCH_REGEX_MODE
+      ? 'Regex search  (e.g. ^cam|temp$)…'
+      : 'Search channels & dictionaries…';
+    toast(SEARCH_REGEX_MODE ? 'Regex search enabled' : 'Regex search off');
+    inp.focus();
+    runSearch();
+  });
+
+  clear.addEventListener('click', ()=>{
+    inp.value='';
+    runSearch();
+    inp.focus();
+  });
+
+  /* cmd/ctrl K focus */
+  document.addEventListener('keydown', e=>{
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){
+      e.preventDefault();
+      inp.focus();
+    }
+  });
+}
+
+/* ============================================================
+   WIDGET CONTENT RENDERERS
+   ============================================================ */
+/* generate N numeric samples for a channel, drifting around its current value.
+   Returns array of numbers in the channel's real units. */
+function seriesFor(ch, n, seedSalt){
+  const s = SAMPLE[ch] || {};
+  const base = (s.num!=null) ? s.num : 50;
+  const axis = s.axis || {lo:0,hi:100};
+  const span = (axis.hi - axis.lo) || 100;
+  let rng = (ch + (seedSalt||'')).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const rand = ()=>{ rng=(rng*9301+49297)%233280; return rng/233280; };
+  const out = [];
+  let v = base - (rand()-0.5)*span*0.12;
+  for(let i=0;i<n;i++){
+    v += (rand()-0.48) * span * 0.05;          /* random walk */
+    v += (base - v) * 0.08;                     /* gentle pull toward current value */
+    out.push(v);
+  }
+  out[n-1] = base;                              /* last point = the live value */
+  return out;
+}
+
+/* map a numeric series to an SVG polyline path within a w×h box, given axis */
+function seriesPath(values, axis, w, h, closed){
+  const span = (axis.hi - axis.lo) || 1;
+  const step = w / (values.length - 1);
+  const pts = values.map((v,i)=>{
+    const x = i*step;
+    const y = h - ((v - axis.lo)/span) * h;
+    return [x, Math.max(2, Math.min(h-2, y))];
+  });
+  let d = 'M ' + pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L ');
+  if(closed) d += ` L ${w},${h} L 0,${h} Z`;
+  return d;
+}
+/* y-coordinate for a limit value */
+function limY(val, axis, h){
+  const span=(axis.hi-axis.lo)||1;
+  return h - ((val-axis.lo)/span)*h;
+}
+
+function renderWidgetBody(ch){
+  const c=CHANNEL_INDEX[ch], s=SAMPLE[ch]||{v:'—'};
+  switch(c.type){
+    case 'numeric': {
+      const health = healthOf(ch);                    /* ok | warn | crit */
+      const COLOR = {ok:'#1f9d57', warn:'#e0a012', crit:'#dc3b32'}[health];
+      const vals = seriesFor(ch, 28);
+      const axis = s.axis || {lo:0,hi:100};
+      const sp = seriesPath(vals, axis, 240, 40);
+      const spFill = seriesPath(vals, axis, 240, 40, true);
+      /* mark any points that breach the red limit */
+      const L = s.limits || {};
+      let pts = '';
+      vals.forEach((v,i)=>{
+        const breach = (L.redHi!=null && v>=L.redHi) || (L.redLo!=null && v<=L.redLo);
+        if(breach){
+          const x=(i/(vals.length-1))*240, y=Math.max(3,Math.min(37,limY(v,axis,40)));
+          pts += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#dc3b32"/>`;
+        }
+      });
+      return `<div class="w-numeric ${health}">
+        <div class="big-value" style="color:${COLOR}">${s.v}${s.unit?`<span class="unit">${s.unit}</span>`:''}</div>
+        <svg class="spark" viewBox="0 0 240 44" preserveAspectRatio="none">
+          <path d="${spFill}" fill="${COLOR}" opacity="0.08"/>
+          <path d="${sp}" fill="none" stroke="${COLOR}" stroke-width="1.8" stroke-linejoin="round"/>
+          ${pts}
+        </svg>
+        <div class="meta-row">
+          <span class="health-tag ${health}">${health==='crit'?'● RED LIMIT':health==='warn'?'● CAUTION':'● NOMINAL'}</span>
+          <span>${s.range||''}</span>
+          <span class="trend">${s.trend||''}</span>
+        </div>
+      </div>`;
+    }
+    case 'plot': {
+      const axis = s.axis || {lo:0,hi:100};
+      const L = s.limits || {};
+      const W=300, H=150;
+      const vals = seriesFor(ch, 40, 'a');
+      const path = seriesPath(vals, axis, W, H);
+      /* limit LINES drawn in the stretched SVG (lines distort fine) */
+      const limLine = (val,color,dashed)=>{
+        if(val==null) return '';
+        const y=limY(val,axis,H);
+        if(y<1||y>H-1) return '';
+        return `<line x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}"
+          stroke="${color}" stroke-width="1.3" ${dashed?'stroke-dasharray="6,4"':''} opacity="0.9"/>`;
+      };
+      /* limit LABELS as HTML chips positioned by % — crisp, never distorted */
+      const limLabel=(val,cls,txt)=>{
+        if(val==null) return '';
+        const y=limY(val,axis,H);
+        if(y<6||y>H-6) return '';
+        return `<span class="lim-label ${cls}" style="top:${(y/H*100).toFixed(1)}%">${txt}</span>`;
+      };
+      let greenBand='';
+      if(L.greenLo!=null || L.greenHi!=null){
+        const yTop=limY(L.greenHi!=null?L.greenHi:axis.hi,axis,H);
+        const yBot=limY(L.greenLo!=null?L.greenLo:axis.lo,axis,H);
+        greenBand=`<rect x="0" y="${Math.max(0,yTop).toFixed(1)}" width="${W}"
+          height="${Math.max(0,(yBot-yTop)).toFixed(1)}" fill="#1f9d57" opacity="0.08"/>`;
+      }
+      /* red-limit crossing points */
+      let pts='', breachCount=0;
+      vals.forEach((v,i)=>{
+        const breach=(L.redHi!=null&&v>=L.redHi)||(L.redLo!=null&&v<=L.redLo);
+        if(breach){
+          breachCount++;
+          const x=(i/(vals.length-1))*W, y=Math.max(3,Math.min(H-3,limY(v,axis,H)));
+          pts+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="#dc3b32" stroke="#fff" stroke-width="1.2"/>`;
+        }
+      });
+      return `<div class="w-plot">
+        <div class="plot-legend">
+          <div class="lg"><span class="sw" style="background:#15161a"></span>${c.name}</div>
+          <div class="lg lim-key"><span class="dotk" style="background:#1f9d57"></span>Nominal</div>
+          <div class="lg lim-key"><span class="dotk" style="background:#e0a012"></span>Caution</div>
+          <div class="lg lim-key"><span class="dotk" style="background:#dc3b32"></span>Red Limit</div>
+          ${breachCount?`<div class="lg breach-flag">▲ ${breachCount} RED BREACH${breachCount>1?'ES':''}</div>`:''}
+        </div>
+        <div class="plot-frame">
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+            <defs><pattern id="pg_${ch}" width="50" height="37" patternUnits="userSpaceOnUse">
+              <path d="M50 0 L0 0 0 37" fill="none" stroke="#e4e3df" stroke-width="1"/>
+            </pattern></defs>
+            <rect width="${W}" height="${H}" fill="url(#pg_${ch})"/>
+            ${greenBand}
+            ${limLine(L.redHi,'#dc3b32',true)}
+            ${limLine(L.orangeHi,'#e0a012',true)}
+            ${limLine(L.greenHi,'#1f9d57',false)}
+            ${limLine(L.greenLo,'#1f9d57',false)}
+            ${limLine(L.orangeLo,'#e0a012',true)}
+            ${limLine(L.redLo,'#dc3b32',true)}
+            <path d="${path}" fill="none" stroke="#15161a" stroke-width="2" stroke-linejoin="round"/>
+            ${pts}
+          </svg>
+          <div class="plot-labels">
+            ${limLabel(L.redHi,'crit','RED '+L.redHi)}
+            ${limLabel(L.orangeHi,'warn','CAUT '+L.orangeHi)}
+            ${limLabel(L.orangeLo,'warn','CAUT '+L.orangeLo)}
+            ${limLabel(L.redLo,'crit','RED '+L.redLo)}
+          </div>
+        </div>
+      </div>`;
+    }
+    case 'table': {
+      return `<div class="w-table"><table>
+        <thead><tr><th>Axis</th><th>Position</th><th>Velocity</th></tr></thead>
+        <tbody>
+          <tr><td>X</td><td>+8.41e7 km</td><td class="tv-ok">31.20</td></tr>
+          <tr><td>Y</td><td>−2.18e7 km</td><td class="tv-ok">−18.44</td></tr>
+          <tr><td>Z</td><td>+1.02e6 km</td><td class="tv-ok">0.612</td></tr>
+          <tr><td>|R|</td><td>8.74e7 km</td><td class="tv-warn">38.41</td></tr>
+        </tbody></table></div>`;
+    }
+    case 'status': {
+      const rows = {
+        rad_panel_status:[['Panel A','DEPLOYED','ok'],['Panel B','OVERTEMP','crit'],['Louver','82% OPEN','warn']],
+        dsn_link_status:[['Station','MADRID DSS-63','ok'],['Lock','CARRIER + DATA','ok'],['Elevation','41.2°','ok']],
+        instrument_state:[['Mode','STANDBY','ok'],['Calibration','VALID','ok'],['Last Frame','T+04:12','warn']],
+      }[ch] || [['State','NOMINAL','ok']];
+      return `<div class="w-status">${rows.map(r=>`
+        <div class="strow ${r[2]}"><span class="sk">${r[0]}</span><span class="sv ${r[2]}">${r[1]}</span></div>`).join('')}</div>`;
+    }
+    case 'stream': {
+      return `<div class="w-stream">
+        <div class="stream-grad"></div>
+        <div class="stream-noise"></div>
+        <div class="stream-rec"><span class="rdot"></span>LIVE</div>
+        <div class="stream-center">
+          <div class="stream-ring"><div class="play-tri"></div></div>
+          <div class="stream-label">${c.name}</div>
+          <div class="stream-sub">Streaming · ${c.tag} · 24 fps</div>
+        </div>
+        <div class="stream-res">DSN DOWNLINK</div>
+        <div class="stream-time" data-streamtime>00:00:00</div>
+      </div>`;
+    }
+    case 'image': {
+      const hue={img_venus_approach:34,img_star_tracker:218,img_thermal_scan:8,
+                 img_radiator_inspect:268,img_solar_panel_diag:158,
+                 img_horizon_scan:200,img_calibration:48,img_anomaly_log:0}[ch]||40;
+      const mk=(h,s)=>`background:radial-gradient(ellipse at ${s}% 38%, hsl(${h},32%,62%), hsl(${h},26%,38%))`;
+      return `<div class="w-image">
+        <div class="img-main">
+          <div class="img-render" style="${mk(hue,45)}"></div>
+          <svg class="img-render" viewBox="0 0 200 120" preserveAspectRatio="none" style="opacity:.4">
+            <circle cx="110" cy="55" r="38" fill="none" stroke="#ffffff" stroke-width="0.8"/>
+            <path d="${seriesPath(seriesFor(ch,20,'img'),{lo:0,hi:100},200,120)}" fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.7"/>
+            <line x1="100" y1="0" x2="100" y2="120" stroke="#ffffff" stroke-width="0.5" opacity="0.5"/>
+            <line x1="0" y1="60" x2="200" y2="60" stroke="#ffffff" stroke-width="0.5" opacity="0.5"/>
+          </svg>
+          <div class="img-frame-label">FRAME 01 / 06</div>
+          <div class="img-meta"><span>${c.name}</span><span data-imgts>T+142D 09:14:02</span></div>
+        </div>
+        <div class="img-thumbs">
+          ${[0,1,2,3].map((i)=>`<div class="thumb${i===0?' active':''}" style="${mk(hue+i*12,30+i*18)}"></div>`).join('')}
+        </div>
+      </div>`;
+    }
+    default: return `<div style="color:var(--ink-3);font-size:11px">No renderer for ${c.type}</div>`;
+  }
+}
+
+/* ============================================================
+   WORKSPACE — widget add / drag / resize / remove
+   ============================================================ */
+const workspace = document.getElementById('workspace');
+
+/* ============================================================
+   GRID SYSTEM — 3 columns, rows grow as needed
+   Base is 3x3 (9 slots). When all slots are filled, a new row
+   of 3 slots is appended. Dropped channels snap to a slot, then
+   can be freely dragged/resized afterward.
+   ============================================================ */
+const GRID_COLS = 3, GRID_BASE_ROWS = 3;
+const GRID_PAD = 16, GRID_GAP = 14;
+
+/* how many rows the grid currently needs (>= 3, grows with widgets) */
+function gridRowCount(){
+  const dash = activeDashboard();
+  let maxSlot = -1;
+  if(dash) dash.widgets.forEach(w=>{ if(w.slot!=null && w.slot>maxSlot) maxSlot=w.slot; });
+  /* rows needed to contain the highest slot, plus one spare empty row,
+     never fewer than the base 3 */
+  const rowsForWidgets = Math.floor(maxSlot/GRID_COLS) + 1;
+  return Math.max(GRID_BASE_ROWS, rowsForWidgets + (maxSlot>=0 ? 1 : 0));
+}
+
+/* compute pixel rects for every slot in the current grid */
+function slotRects(){
+  const ws = workspace;
+  const rows = gridRowCount();
+  const W = Math.max(ws.clientWidth, 600);
+  /* first 3 rows fill the viewport height; extra rows reuse that row height */
+  const H = Math.max(ws.clientHeight, 480);
+  const cellW = (W - GRID_PAD*2 - GRID_GAP*(GRID_COLS-1)) / GRID_COLS;
+  const cellH = (H - GRID_PAD*2 - GRID_GAP*(GRID_BASE_ROWS-1)) / GRID_BASE_ROWS;
+  const rects = [];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<GRID_COLS;c++){
+      rects.push({
+        idx: r*GRID_COLS+c,
+        x: GRID_PAD + c*(cellW+GRID_GAP),
+        y: GRID_PAD + r*(cellH+GRID_GAP),
+        w: cellW, h: cellH,
+      });
+    }
+  }
+  return rects;
+}
+
+/* draw / refresh the slot guides */
+function renderGrid(){
+  const overlay = document.getElementById('grid-overlay');
+  if(!overlay) return;
+  const rects = slotRects();
+  const last = rects[rects.length-1];
+  overlay.style.left = '0px'; overlay.style.top = '0px';
+  overlay.style.width  = (last.x+last.w+GRID_PAD)+'px';
+  overlay.style.height = (last.y+last.h+GRID_PAD)+'px';
+  overlay.innerHTML = rects.map(s=>`
+    <div class="grid-slot" data-slot="${s.idx}"
+      style="left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px">
+      <span class="slot-num">${String(s.idx+1).padStart(2,'0')}</span>
+    </div>`).join('');
+  updateGridDim();
+}
+
+/* dim the grid guides once widgets exist (less visual noise) */
+function updateGridDim(){
+  const overlay = document.getElementById('grid-overlay');
+  const dash = activeDashboard();
+  if(!overlay) return;
+  overlay.classList.toggle('dim', !!(dash && dash.widgets.length));
+}
+
+/* find the slot whose center is nearest a given workspace point */
+function nearestSlot(px, py){
+  const rects = slotRects();
+  let best=rects[0], bd=Infinity;
+  rects.forEach(s=>{
+    const cx=s.x+s.w/2, cy=s.y+s.h/2;
+    const d=(cx-px)**2 + (cy-py)**2;
+    if(d<bd){ bd=d; best=s; }
+  });
+  return best;
+}
+
+/* highlight a slot as the active drop target */
+function highlightSlot(idx){
+  document.querySelectorAll('.grid-slot').forEach(el=>{
+    el.classList.toggle('target', +el.dataset.slot===idx);
+  });
+}
+function clearSlotHighlight(){
+  document.querySelectorAll('.grid-slot.target').forEach(el=>el.classList.remove('target'));
+}
+
+/* first unoccupied slot — extends past 9 by adding a new row */
+function firstFreeSlot(dash){
+  const taken = new Set();
+  (dash?dash.widgets:[]).forEach(w=>{ if(w.slot!=null) taken.add(w.slot); });
+  /* search slot indices in order; the grid grows so this always terminates */
+  let idx = 0;
+  while(taken.has(idx)) idx++;
+  return { idx };
+}
+
+function addWidget(ch, opts){
+  const dash = activeDashboard();
+  if(!dash){ toast('Create a dashboard first', 'warn'); return; }
+  const c = CHANNEL_INDEX[ch];
+  if(!c){ return; }
+  opts = opts || {};
+
+  /* determine the target slot index */
+  let slotIdx = (opts.slot!=null) ? opts.slot : firstFreeSlot(dash).idx;
+
+  /* create the widget first (with the slot index) so the grid knows
+     how many rows it needs, then resolve the slot's pixel rect */
+  const widget = {
+    id: uid('w'),
+    ch: ch,
+    slot: slotIdx,
+    seq: STATE.widgetSeq++,
+    calculations: [],
+  };
+  /* if this channel has saved preset calculations, attach copies of them
+     so a reusable preset channel arrives with its calculation ready */
+  const presets = STATE.presetCalcs[ch];
+  if(presets && presets.length){
+    widget.calculations = presets.map(p=>Object.assign({}, p, {id:uid('calc')}));
+  }
+  dash.widgets.push(widget);
+
+  /* now slotRects() accounts for any newly-needed row */
+  const rects = slotRects();
+  const slot = rects.find(s=>s.idx===slotIdx) || rects[rects.length-1];
+  widget.x = opts.x!=null ? opts.x : slot.x;
+  widget.y = opts.y!=null ? opts.y : slot.y;
+  widget.w = opts.w!=null ? opts.w : slot.w;
+  widget.h = opts.h!=null ? opts.h : slot.h;
+
+  renderWidget(widget);
+  renderGrid();                 /* redraw guides — may have grown a row */
+  refreshEmptyState();
+  updateStatusBar();
+  if(isMobile()) applyMobileStack();
+  if(!opts.silent) toast('Added · '+c.name+' → slot '+String(slotIdx+1).padStart(2,'0'), 'success');
+}
+
+function renderWidget(w){
+  const c = CHANNEL_INDEX[w.ch];
+  const el = document.createElement('section');
+  el.className = 'panel';
+  el.dataset.wid = w.id;
+  el.style.left=w.x+'px'; el.style.top=w.y+'px';
+  el.style.width=w.w+'px'; el.style.height=w.h+'px';
+  el.style.zIndex = 100 + w.seq;
+  const typeClass = (c.type==='stream'?'stream':c.type==='image'?'image':'');
+  el.innerHTML = `
+    <header class="panel-header">
+      <div class="panel-title">
+        <span class="ptype ${typeClass}">${(c.type).slice(0,4).toUpperCase()}</span>
+        <span class="pname" title="${c.name}">${c.name}</span>
+      </div>
+      <div class="panel-actions">
+        <button class="panel-btn note-btn" title="Add note to this widget">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M6 7h5M6 10h5"/></svg>
+        </button>
+        <button class="panel-btn menu-btn" title="More options">
+          <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>
+        </button>
+        <button class="panel-btn close-btn" title="Remove widget">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="panel-body">
+      <div class="panel-note-badge">NOTES</div>
+      ${renderWidgetBody(w.ch)}
+    </div>
+    <div class="panel-calcs" data-calcs-for="${w.id}"></div>
+    <div class="resize-handle"></div>`;
+  workspace.appendChild(el);
+  wireWidget(el, w);
+  updateWidgetNoteBadge(w.id);
+  refreshWidgetCalcs(w.id);
+}
+
+/* render the calculation strip at the bottom of a widget */
+function refreshWidgetCalcs(wid){
+  const dash = activeDashboard();
+  if(!dash) return;
+  const w = dash.widgets.find(x=>x.id===wid);
+  if(!w) return;
+  const strip = workspace.querySelector(`[data-calcs-for="${wid}"]`);
+  if(!strip) return;
+  const calcs = w.calculations||[];
+  if(!calcs.length){ strip.innerHTML=''; strip.classList.remove('has-calcs'); return; }
+  strip.classList.add('has-calcs');
+  strip.innerHTML = `
+    <div class="pc-head">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 5h6M5 8h6"/><path d="M11 10v2.5M9.8 11.2h2.4"/></svg>
+      Calculations <span class="pc-count">${calcs.length}</span>
+    </div>
+    <div class="pc-list">
+      ${calcs.map(cl=>{
+        const res = evalCalc(cl, w.ch);
+        return `<div class="pc-row" title="${calcType(cl.type)?calcType(cl.type).name:cl.type}">
+          <span class="pc-name">${cl.preset?'<span class="pc-star">★</span>':''}${cl.name}</span>
+          <span class="pc-value">${res.value}${cl.unit?(' '+cl.unit):''}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function wireWidget(el, w){
+  const dash = activeDashboard();
+  const header = el.querySelector('.panel-header');
+  const handle = el.querySelector('.resize-handle');
+
+  /* bring to front + select on mousedown */
+  el.addEventListener('mousedown', ()=>{
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('selected'));
+    el.classList.add('selected');
+    el.style.zIndex = 100 + (STATE.widgetSeq++);
+    w.seq = STATE.widgetSeq;
+  });
+
+  /* ----- DRAG to move ----- */
+  header.addEventListener('mousedown', e=>{
+    if(e.target.closest('.panel-btn')) return;
+    if(isMobile()) return;                 /* no free-drag on mobile (stacked) */
+    e.preventDefault();
+    const startX=e.clientX, startY=e.clientY;
+    const ox=w.x, oy=w.y;
+    el.classList.add('dragging');
+    function mv(ev){
+      const nx = Math.max(0, ox + ev.clientX-startX);
+      const ny = Math.max(0, oy + ev.clientY-startY);
+      w.x=nx; w.y=ny;
+      el.style.left=nx+'px'; el.style.top=ny+'px';
+    }
+    function up(){
+      el.classList.remove('dragging');
+      /* re-associate widget with whichever slot it now sits over */
+      const slot = nearestSlot(w.x + w.w/2, w.y + w.h/2);
+      w.slot = slot.idx;
+      document.removeEventListener('mousemove',mv);
+      document.removeEventListener('mouseup',up);
+    }
+    document.addEventListener('mousemove',mv);
+    document.addEventListener('mouseup',up);
+  });
+
+  /* ----- RESIZE ----- */
+  handle.addEventListener('mousedown', e=>{
+    if(isMobile()) return;                 /* no resize on mobile (full-width) */
+    e.preventDefault(); e.stopPropagation();
+    const startX=e.clientX, startY=e.clientY;
+    const ow=w.w, oh=w.h;
+    function mv(ev){
+      const nw=Math.max(220, ow+ev.clientX-startX);
+      const nh=Math.max(140, oh+ev.clientY-startY);
+      w.w=nw; w.h=nh;
+      el.style.width=nw+'px'; el.style.height=nh+'px';
+    }
+    function up(){
+      document.removeEventListener('mousemove',mv);
+      document.removeEventListener('mouseup',up);
+    }
+    document.addEventListener('mousemove',mv);
+    document.addEventListener('mouseup',up);
+  });
+
+  /* ----- REMOVE ----- */
+  el.querySelector('.close-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    removeWidget(w.id);
+  });
+
+  /* ----- NOTE shortcut ----- */
+  el.querySelector('.note-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    openNotesForWidget(w.id);
+  });
+
+  /* ----- THREE-DOT MENU ----- */
+  el.querySelector('.menu-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    openPanelMenu(e.currentTarget, w);
+  });
+}
+
+function removeWidget(wid){
+  const dash = activeDashboard();
+  if(!dash) return;
+  dash.widgets = dash.widgets.filter(x=>x.id!==wid);
+  const el = workspace.querySelector(`[data-wid="${wid}"]`);
+  if(el) el.remove();
+  refreshEmptyState();
+  updateStatusBar();
+  renderGrid();                 /* grid may shrink back a row */
+}
+
+/* ============================================================
+   THREE-DOT PANEL MENU — pop-out, CSV export, notes, duplicate
+   ============================================================ */
+let openMenu = null;
+function closePanelMenu(){ if(openMenu){ openMenu.remove(); openMenu=null; } }
+document.addEventListener('click', e=>{
+  if(openMenu && !e.target.closest('.panel-menu') && !e.target.closest('.menu-btn')) closePanelMenu();
+});
+
+function openPanelMenu(btn, w){
+  closePanelMenu();
+  const c = CHANNEL_INDEX[w.ch];
+  const menu = document.createElement('div');
+  menu.className='panel-menu';
+  menu.innerHTML = `
+    <div class="menu-item" data-act="popout">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2H2v12h12v-4"/><path d="M9 2h5v5M14 2L7 9"/></svg>
+      Pop out to new window
+    </div>
+    <div class="menu-item" data-act="csv">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12v2h10v-2"/></svg>
+      Export this channel · CSV
+    </div>
+    <div class="menu-item" data-act="note">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M6 7h5M6 10h5"/></svg>
+      Add timestamped note
+    </div>
+    <div class="menu-item" data-act="calc">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 5h6M5 8h6M5 11h3"/><path d="M11 10v2.5M9.8 11.2h2.4"/></svg>
+      Add calculation
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-item" data-act="duplicate">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9"/><path d="M11 5V2H2v9h3"/></svg>
+      Duplicate widget
+    </div>
+    <div class="menu-item" data-act="front">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="8" height="8"/><path d="M7 11v2h6V7h-2"/></svg>
+      Bring to front
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-item danger" data-act="remove">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V2h4v2M5 4l1 10h4l1-10"/></svg>
+      Remove widget
+    </div>`;
+  document.body.appendChild(menu);
+  const r = btn.getBoundingClientRect();
+  let left = r.left - 160, top = r.bottom + 4;
+  if(top + menu.offsetHeight > window.innerHeight) top = r.top - menu.offsetHeight - 4;
+  if(left < 4) left = r.left;
+  menu.style.left=left+'px'; menu.style.top=top+'px';
+  openMenu = menu;
+
+  menu.querySelectorAll('.menu-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const act=item.dataset.act;
+      closePanelMenu();
+      if(act==='popout') popoutWidget(w);
+      else if(act==='csv') exportChannelCSV(w.ch);
+      else if(act==='note') openNotesForWidget(w.id);
+      else if(act==='calc') openCalcModal(w);
+      else if(act==='duplicate') addWidget(w.ch, {x:w.x+24,y:w.y+24,w:w.w,h:w.h});
+      else if(act==='front'){
+        const el=workspace.querySelector(`[data-wid="${w.id}"]`);
+        el.style.zIndex = 100 + (STATE.widgetSeq++);
+      }
+      else if(act==='remove') removeWidget(w.id);
+    });
+  });
+}
+
+/* ---------- POP-OUT ---------- */
+function popoutWidget(w){
+  const c = CHANNEL_INDEX[w.ch];
+  const win = window.open('', '_blank', `width=${Math.max(420,w.w+60)},height=${Math.max(360,w.h+120)}`);
+  if(!win){ toast('Pop-up blocked — allow pop-ups for this site', 'warn'); return; }
+  const css = document.querySelector('style').textContent;
+  win.document.write(`<!doctype html><html><head><title>${c.name} — APOGEE DYNAMICS Popout</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>${css}</style></head>
+    <body style="background:var(--paper);color:var(--ink);font-family:'IBM Plex Mono',monospace;margin:0;padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:12px">
+        <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+          <ellipse cx="10" cy="10" rx="8.4" ry="4.5" transform="rotate(-32 10 10)" stroke="var(--ink)" stroke-width="1.5"/>
+          <circle cx="10" cy="10" r="2.5" fill="var(--ink)"/>
+          <circle cx="16.9" cy="5.4" r="1.6" fill="var(--ink)"/>
+        </svg>
+        <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;letter-spacing:.1em;color:var(--ink);font-size:12px">APOGEE&nbsp;DYNAMICS</span>
+        <span style="font-family:'IBM Plex Mono',monospace;color:var(--ink-3);font-size:11px;font-weight:500">Detached Monitor</span>
+        <span style="margin-left:auto;color:var(--ink-3);font-size:10px;font-family:'IBM Plex Mono',monospace" id="poclock"></span>
+      </div>
+      <section class="panel" style="position:relative;width:100%;height:calc(100vh - 96px)">
+        <header class="panel-header" style="cursor:default">
+          <div class="panel-title"><span class="ptype ${c.type==='stream'?'stream':c.type==='image'?'image':''}">${c.type.slice(0,4).toUpperCase()}</span><span class="pname">${c.name}</span></div>
+        </header>
+        <div class="panel-body">${renderWidgetBody(w.ch)}</div>
+      </section>
+      <div style="margin-top:10px;color:var(--ink-4);font-size:10px;letter-spacing:.02em">Live mirror · ${c.dictName} · HELIOS-9 Venus Transfer</div>
+      <script>setInterval(function(){var d=new Date();document.getElementById('poclock').textContent=d.toUTCString().slice(17,25)+' UTC';},1000);<\/script>
+    </body></html>`);
+  win.document.close();
+  toast('Popped out · '+c.name, 'success');
+}
+
+/* ============================================================
+   CSV EXPORT
+   ============================================================ */
+function downloadCSV(filename, rows){
+  const csv = rows.map(r=>r.map(cell=>{
+    const s=String(cell);
+    return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+/* synthesize a timestamped sample series for a channel */
+function syntheticSeries(ch, n){
+  const c=CHANNEL_INDEX[ch], s=SAMPLE[ch]||{};
+  const rows=[['timestamp_utc','met','channel','value','unit','status']];
+  let rng = ch.split('').reduce((a,x)=>a+x.charCodeAt(0),0);
+  const base = parseFloat(String(s.v||'0').replace(/[^0-9.\-]/g,''))||0;
+  const now = Date.now();
+  for(let i=n-1;i>=0;i--){
+    rng=(rng*9301+49297)%233280;
+    const jitter = (rng/233280 - 0.5) * (base?base*0.04:1);
+    const d = new Date(now - i*30000);
+    const p=v=>String(v).padStart(2,'0');
+    const ts=`${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}Z`;
+    const met=`T+142D ${p(9)}:${p(14 - Math.floor(i/2))}:${p((i*30)%60)}`;
+    const val = base ? (base+jitter).toFixed(3) : (c.type==='stream'?'STREAMING':c.type==='image'?'FRAME':'NOMINAL');
+    rows.push([ts, met, c.name, val, c.tag||'', s.warn?'CAUTION':'NOMINAL']);
+  }
+  return rows;
+}
+
+function exportChannelCSV(ch){
+  const c=CHANNEL_INDEX[ch];
+  downloadCSV(`HELIOS9_${c.name}_${Date.now()}.csv`, syntheticSeries(ch, 60));
+  toast('CSV exported · '+c.name, 'success');
+}
+
+function exportDashboardCSV(){
+  const dash = activeDashboard();
+  if(!dash || !dash.widgets.length){ toast('No widgets to export', 'warn'); return; }
+  let all=[['# HELIOS-9 Mission Control Export'],
+           ['# Dashboard', dash.name],
+           ['# Generated', nowFull()],
+           ['# Widgets', dash.widgets.length],
+           []];
+  dash.widgets.forEach((w,i)=>{
+    const c=CHANNEL_INDEX[w.ch];
+    all.push(['## Channel '+(i+1), c.name, c.dictName]);
+    const series = syntheticSeries(w.ch, 30);
+    all = all.concat(series);
+    all.push([]);
+  });
+  /* attach notes relevant to this dashboard */
+  const dn = STATE.notes.filter(n=>n.scope==='mission' || (n.scope==='dashboard'&&n.target===dash.id) ||
+             (n.scope==='channel' && dash.widgets.some(w=>w.id===n.target)));
+  if(dn.length){
+    all.push(['## Mission Log Notes']);
+    all.push(['timestamp_met','scope','target','note']);
+    dn.forEach(n=> all.push([n.metId, n.scope, n.targetLabel||'—', n.text]));
+  }
+  downloadCSV(`HELIOS9_dashboard_${dash.name.replace(/\s+/g,'_')}_${Date.now()}.csv`, all);
+  toast('Dashboard CSV exported · '+dash.widgets.length+' channels', 'success');
+}
+
+/* ============================================================
+   DROP ZONE — workspace accepts dragged channels
+   ============================================================ */
+workspace.addEventListener('dragover', e=>{
+  e.preventDefault();
+  e.dataTransfer.dropEffect='copy';
+  workspace.classList.add('drop-active');
+  if(isMobile()) return;                     /* no slot snapping on mobile */
+  const rect = workspace.getBoundingClientRect();
+  const px = e.clientX-rect.left + workspace.scrollLeft;
+  const py = e.clientY-rect.top  + workspace.scrollTop;
+  highlightSlot(nearestSlot(px,py).idx);
+});
+workspace.addEventListener('dragleave', e=>{
+  if(e.target===workspace){
+    workspace.classList.remove('drop-active');
+    clearSlotHighlight();
+  }
+});
+workspace.addEventListener('drop', e=>{
+  e.preventDefault();
+  workspace.classList.remove('drop-active');
+  clearSlotHighlight();
+  const ch = e.dataTransfer.getData('text/plain');
+  if(!ch || !CHANNEL_INDEX[ch]) return;
+  if(isMobile()){
+    addWidget(ch);                           /* mobile: just append to stack */
+    return;
+  }
+  const rect = workspace.getBoundingClientRect();
+  const px = e.clientX-rect.left + workspace.scrollLeft;
+  const py = e.clientY-rect.top  + workspace.scrollTop;
+  const slot = nearestSlot(px,py);
+  addWidget(ch, {slot: slot.idx});            /* snap into the chosen slot */
+});
+
+function refreshEmptyState(){
+  const dash = activeDashboard();
+  const empty = !dash || dash.widgets.length===0;
+  document.getElementById('empty-state').classList.toggle('hidden', !empty);
+}
+
+/* ============================================================
+   RESPONSIVE — mobile detection, stacking, nav drawer
+   ============================================================ */
+const MOBILE_BREAKPOINT = 860;
+function isMobile(){ return window.innerWidth <= MOBILE_BREAKPOINT; }
+
+/* On mobile, widgets ignore absolute positioning and stack in
+   one column (CSS handles the layout via .mobile-stack).
+   Stack order follows slot index, then add-order. */
+function applyMobileStack(){
+  const dash = activeDashboard();
+  if(!dash) return;
+  /* sort panels in the DOM by slot so the column order is predictable */
+  const ordered = [...dash.widgets].sort((a,b)=>{
+    const sa=a.slot!=null?a.slot:99, sb=b.slot!=null?b.slot:99;
+    return sa-sb || a.seq-b.seq;
+  });
+  ordered.forEach(w=>{
+    const el=workspace.querySelector(`[data-wid="${w.id}"]`);
+    if(el) workspace.appendChild(el);   /* re-append in order */
+  });
+}
+
+/* snap every widget back to its grid slot's pixel rect.
+   Called when entering desktop mode so widgets sit in the grid
+   regardless of what size they were created at. */
+function relayoutToGrid(){
+  const dash = activeDashboard();
+  if(!dash) return;
+  const rects = slotRects();
+  dash.widgets.forEach(w=>{
+    const slot = rects.find(s=>s.idx===w.slot);
+    if(!slot) return;
+    w.x=slot.x; w.y=slot.y; w.w=slot.w; w.h=slot.h;
+    const el=workspace.querySelector(`[data-wid="${w.id}"]`);
+    if(el){
+      el.style.left=w.x+'px'; el.style.top=w.y+'px';
+      el.style.width=w.w+'px'; el.style.height=w.h+'px';
+    }
+  });
+}
+
+/* switch workspace between grid mode (desktop) and stack mode (mobile) */
+function applyResponsiveMode(){
+  const mobile = isMobile();
+  const wasStacked = workspace.classList.contains('mobile-stack');
+  workspace.classList.toggle('mobile-stack', mobile);
+  if(mobile){
+    applyMobileStack();
+    closeNavDrawer();                   /* drawer starts closed */
+  } else {
+    renderGrid();                       /* recompute slot guides */
+    relayoutToGrid();                   /* snap widgets back into slots */
+  }
+}
+
+/* ----- mobile nav drawer (sidebar) ----- */
+function openNavDrawer(){
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('nav-scrim').classList.add('show');
+}
+function closeNavDrawer(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('nav-scrim').classList.remove('show');
+}
+document.getElementById('nav-toggle').addEventListener('click', ()=>{
+  const sb=document.querySelector('.sidebar');
+  sb.classList.contains('open') ? closeNavDrawer() : openNavDrawer();
+});
+document.getElementById('nav-scrim').addEventListener('click', closeNavDrawer);
+/* tapping a channel on mobile: close the drawer so the user sees the canvas */
+document.getElementById('dict-list').addEventListener('dblclick', ()=>{
+  if(isMobile()) closeNavDrawer();
+});
+
+/* re-flow on viewport resize (debounced) */
+let _resizeTimer=null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_resizeTimer);
+  _resizeTimer=setTimeout(applyResponsiveMode, 150);
+});
+
+/* ============================================================
+   DASHBOARD TABS — create / switch / rename / close
+   ============================================================ */
+function createDashboard(name, widgets, silent){
+  const dash = {
+    id: uid('dash'),
+    name: name || ('Dashboard '+(STATE.dashSeq++)),
+    widgets: [],
+  };
+  STATE.dashboards.push(dash);
+  STATE.activeDash = dash.id;
+  /* seed widgets if provided (presets) */
+  if(widgets && widgets.length){
+    renderTabs();
+    switchDashboard(dash.id);
+    widgets.forEach(spec=> addWidget(spec.ch, {slot:spec.slot, silent:true}));
+  } else {
+    renderTabs();
+    switchDashboard(dash.id);
+  }
+  if(!silent) toast('Created · '+dash.name, 'success');
+  return dash;
+}
+
+function renderTabs(){
+  const bar = document.getElementById('tabs-bar');
+  /* remove existing tabs (keep add-btn and tabs-right) */
+  bar.querySelectorAll('.dash-tab').forEach(t=>t.remove());
+  const addBtn = document.getElementById('tab-add');
+  STATE.dashboards.forEach(d=>{
+    const tab = document.createElement('div');
+    tab.className = 'dash-tab' + (d.id===STATE.activeDash?' active':'');
+    tab.dataset.dash = d.id;
+    tab.innerHTML = `
+      <span class="tab-led"></span>
+      <span class="tab-label">${d.name}</span>
+      <span class="tab-close" title="Close dashboard">×</span>`;
+    bar.insertBefore(tab, addBtn);
+
+    tab.querySelector('.tab-label').addEventListener('click', ()=> switchDashboard(d.id));
+    tab.querySelector('.tab-led').addEventListener('click', ()=> switchDashboard(d.id));
+    /* double-click label = rename */
+    tab.querySelector('.tab-label').addEventListener('dblclick', e=>{
+      e.stopPropagation();
+      startRenameTab(tab, d);
+    });
+    tab.querySelector('.tab-close').addEventListener('click', e=>{
+      e.stopPropagation();
+      closeDashboard(d.id);
+    });
+  });
+}
+
+function startRenameTab(tab, dash){
+  const label = tab.querySelector('.tab-label');
+  const input = document.createElement('input');
+  input.className='tab-name-input';
+  input.value=dash.name;
+  label.replaceWith(input);
+  input.focus(); input.select();
+  function commit(){
+    dash.name = input.value.trim() || dash.name;
+    renderTabs();
+    updateStatusBar();
+    toast('Renamed · '+dash.name);
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter') input.blur();
+    if(e.key==='Escape'){ input.value=dash.name; input.blur(); }
+  });
+}
+
+function switchDashboard(id){
+  STATE.activeDash = id;
+  /* clear workspace panels */
+  workspace.querySelectorAll('.panel').forEach(p=>p.remove());
+  const dash = activeDashboard();
+  if(dash){
+    dash.widgets.forEach(w=> renderWidget(w));
+  }
+  renderTabs();
+  refreshEmptyState();
+  updateStatusBar();
+  renderNotes();
+  renderGrid();
+  applyResponsiveMode();
+}
+
+function closeDashboard(id){
+  if(STATE.dashboards.length<=1){
+    /* keep at least one; just clear it */
+    const d=STATE.dashboards[0];
+    d.widgets=[];
+    switchDashboard(d.id);
+    toast('Dashboard cleared', 'warn');
+    return;
+  }
+  const idx = STATE.dashboards.findIndex(d=>d.id===id);
+  STATE.dashboards.splice(idx,1);
+  if(STATE.activeDash===id){
+    STATE.activeDash = STATE.dashboards[Math.max(0,idx-1)].id;
+  }
+  switchDashboard(STATE.activeDash);
+  toast('Dashboard closed', 'warn');
+}
+
+document.getElementById('tab-add').addEventListener('click', ()=> openNewDashboardModal());
+
+/* ============================================================
+   NOTES / MISSION LOG
+   ============================================================ */
+const notesDrawer = document.getElementById('notes-drawer');
+let noteScope = 'mission';
+
+function openNotes(){ notesDrawer.classList.add('open'); refreshNoteCompose(); }
+function closeNotes(){ notesDrawer.classList.remove('open'); }
+
+document.getElementById('btn-notes').addEventListener('click', ()=>{
+  notesDrawer.classList.toggle('open'); refreshNoteCompose();
+});
+document.getElementById('notes-close').addEventListener('click', closeNotes);
+
+/* scope buttons */
+document.getElementById('nc-scope').addEventListener('click', e=>{
+  const b=e.target.closest('.nc-scope-btn'); if(!b) return;
+  noteScope=b.dataset.scope;
+  document.querySelectorAll('.nc-scope-btn').forEach(x=>x.classList.toggle('active',x===b));
+  refreshNoteCompose();
+});
+
+function refreshNoteCompose(){
+  const sel=document.getElementById('nc-channel-select');
+  if(noteScope==='channel'){
+    const dash=activeDashboard();
+    sel.style.display='block';
+    sel.innerHTML='<option value="">— select widget —</option>' +
+      (dash? dash.widgets.map(w=>`<option value="${w.id}">${CHANNEL_INDEX[w.ch].name}</option>`).join('') : '');
+  } else {
+    sel.style.display='none';
+  }
+  document.getElementById('nc-ts').textContent = nowUTC();
+}
+
+/* open notes drawer pre-targeted at a widget */
+function openNotesForWidget(wid){
+  openNotes();
+  noteScope='channel';
+  document.querySelectorAll('.nc-scope-btn').forEach(x=>x.classList.toggle('active',x.dataset.scope==='channel'));
+  refreshNoteCompose();
+  document.getElementById('nc-channel-select').value=wid;
+  document.getElementById('nc-text').focus();
+}
+
+document.getElementById('nc-submit').addEventListener('click', addNote);
+document.getElementById('nc-text').addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey) && e.key==='Enter') addNote();
+});
+
+function addNote(){
+  const txt=document.getElementById('nc-text').value.trim();
+  if(!txt){ toast('Note is empty', 'warn'); return; }
+  const dash=activeDashboard();
+  let target=null, targetLabel='';
+  if(noteScope==='dashboard'){ target=dash?dash.id:null; targetLabel=dash?dash.name:'—'; }
+  if(noteScope==='channel'){
+    target=document.getElementById('nc-channel-select').value;
+    if(!target){ toast('Select a widget for this note', 'warn'); return; }
+    const w=dash.widgets.find(x=>x.id===target);
+    targetLabel=w?CHANNEL_INDEX[w.ch].name:'—';
+  }
+  if(noteScope==='mission') targetLabel='HELIOS-9';
+  const note={
+    id:uid('note'),
+    ts:nowUTC(),
+    metId:metStamp(),
+    scope:noteScope,
+    target, targetLabel,
+    dashAtTime: dash?dash.name:'—',
+  };
+  note.text=txt;
+  STATE.notes.unshift(note);
+  document.getElementById('nc-text').value='';
+  renderNotes();
+  updateStatusBar();
+  toast('Note logged · '+note.metId, 'success');
+}
+
+function renderNotes(){
+  const list=document.getElementById('notes-list');
+  const dash=activeDashboard();
+  if(!STATE.notes.length){
+    list.innerHTML='<div class="nl-empty">No notes logged yet.<br>Add a timestamped observation above to correlate it with telemetry.</div>';
+  } else {
+    list.innerHTML=STATE.notes.map(n=>`
+      <div class="note-item" data-note="${n.id}">
+        <span class="ni-del" title="Delete note">×</span>
+        <div class="ni-head">
+          <span class="ni-ts">▣ ${n.metId}</span>
+          <span class="ni-scope ${n.scope}">${n.scope}</span>
+        </div>
+        <div class="ni-body">${escapeHtml(n.text)}</div>
+        <div class="ni-met">${n.ts} · ${n.scope==='mission'?'MISSION-WIDE':n.targetLabel} · dash: ${n.dashAtTime}</div>
+      </div>`).join('');
+    list.querySelectorAll('.ni-del').forEach(x=>{
+      x.addEventListener('click', ()=>{
+        const id=x.closest('.note-item').dataset.note;
+        STATE.notes=STATE.notes.filter(n=>n.id!==id);
+        renderNotes(); updateStatusBar();
+      });
+    });
+  }
+  /* update per-widget note badges */
+  if(dash) dash.widgets.forEach(w=> updateWidgetNoteBadge(w.id));
+  document.getElementById('notes-badge').textContent =
+    STATE.notes.length? ' ['+STATE.notes.length+']' : '';
+}
+
+function updateWidgetNoteBadge(wid){
+  const el=workspace.querySelector(`[data-wid="${wid}"]`);
+  if(!el) return;
+  const count=STATE.notes.filter(n=>n.scope==='channel'&&n.target===wid).length;
+  const badge=el.querySelector('.panel-note-badge');
+  if(badge){
+    badge.classList.toggle('show', count>0);
+    badge.textContent = count>0? count+' NOTE'+(count>1?'S':'') : 'NOTES';
+  }
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+const overlay=document.getElementById('modal-overlay');
+const modalEl=document.getElementById('modal');
+function openModal(html){ modalEl.innerHTML=html; overlay.classList.add('show'); }
+function closeModal(){ overlay.classList.remove('show'); modalEl.innerHTML=''; }
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ---- New dashboard modal ---- */
+function openNewDashboardModal(){
+  openModal(`
+    <div class="modal-head">
+      <span class="mh-title">New Mission Dashboard</span>
+      <button class="btn" data-x>×</button>
+    </div>
+    <div class="modal-body">
+      <label>Dashboard Name</label>
+      <input type="text" id="nd-name" placeholder="e.g. Venus Orbit Insertion" autofocus>
+      <label>Start From</label>
+      <select id="nd-start">
+        <option value="blank">Blank workspace</option>
+        ${PRESETS.map((p,i)=>`<option value="${i}">Preset · ${p.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-x>Cancel</button>
+      <button class="btn primary" id="nd-create">Create Dashboard</button>
+    </div>`);
+  modalEl.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',closeModal));
+  const nameInp=modalEl.querySelector('#nd-name');
+  nameInp.focus();
+  modalEl.querySelector('#nd-create').addEventListener('click', ()=>{
+    const name=nameInp.value.trim();
+    const start=modalEl.querySelector('#nd-start').value;
+    if(start==='blank'){
+      createDashboard(name||null, null);
+    } else {
+      const p=PRESETS[+start];
+      createDashboard(name||p.name, p.channels);
+    }
+    closeModal();
+  });
+  nameInp.addEventListener('keydown',e=>{ if(e.key==='Enter') modalEl.querySelector('#nd-create').click(); });
+}
+
+/* ---- Presets modal ---- */
+function openPresetsModal(){
+  openModal(`
+    <div class="modal-head">
+      <span class="mh-title">Preset Mission Dashboards</span>
+      <button class="btn" data-x>×</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--ink-3);font-size:11px;margin-bottom:14px;letter-spacing:.04em">
+        Load a pre-built dashboard layout. It opens in a new tab — you can rename and customize it freely.
+      </p>
+      <div class="preset-grid">
+        ${PRESETS.map((p,i)=>`
+          <div class="preset-card" data-preset="${i}">
+            <div class="pc-icon">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="2" width="6" height="6" rx="1"/><rect x="10" y="2" width="6" height="6" rx="1"/>
+                <rect x="2" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/>
+              </svg>
+            </div>
+            <div class="pc-info">
+              <div class="pc-name">${p.name}</div>
+              <div class="pc-desc">${p.desc}</div>
+            </div>
+            <div class="pc-count">${p.channels.length} CH</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-x>Close</button>
+    </div>`);
+  modalEl.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',closeModal));
+  modalEl.querySelectorAll('.preset-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const p=PRESETS[+card.dataset.preset];
+      createDashboard(p.name, p.channels);
+      closeModal();
+    });
+  });
+}
+document.getElementById('btn-presets').addEventListener('click', openPresetsModal);
+
+/* ---- Add channel modal ---- */
+function openAddChannelModal(dictId){
+  const dict=DICTIONARIES.find(d=>d.id===dictId);
+  /* a pool of "available" channels not yet in the dict */
+  const POOL={
+    prop:[['nozzle_temp_n','°C','numeric'],['gimbal_angle_pitch','°','plot'],['prop_tank_pressure','kPa','numeric']],
+    eclss:[['water_recovery_pct','%','numeric'],['scrubber_bed_state','—','status'],['trace_contaminant','ppm','numeric']],
+    pwr:[['battery_temp','°C','numeric'],['load_shed_state','—','status'],['array_gimbal_pos','°','plot']],
+    gnc:[['star_tracker_lock','—','status'],['gyro_bias_x','°/hr','numeric'],['nav_residual','m','plot']],
+    thm:[['heater_duty_cycle','%','numeric'],['loop_flow_rate','kg/s','numeric'],['mli_temp','°C','plot']],
+    com:[['antenna_gimbal_az','°','plot'],['downlink_bitrate','kbps','numeric'],['bit_error_rate','—','numeric']],
+    pld:[['detector_temp','K','numeric'],['frame_count','—','numeric'],['shutter_state','—','status']],
+    stream:[['cam_aft_wide','720p','stream'],['cam_thermal_ir','1080p','stream'],['cam_crew_cabin','1080p','stream']],
+    images:[['img_horizon_scan','IMG','image'],['img_calibration','IMG','image'],['img_anomaly_log','IMG','image']],
+  }[dictId]||[];
+
+  openModal(`
+    <div class="modal-head">
+      <span class="mh-title">Add Channel · ${dict.name}</span>
+      <button class="btn" data-x>×</button>
+    </div>
+    <div class="modal-body">
+      <label>Available ${dict.code} Channels</label>
+      <div class="picker-list" id="pick-list">
+        ${POOL.map(c=>`
+          <div class="picker-item" data-id="${c[0]}" data-tag="${c[1]}" data-type="${c[2]}">
+            <span class="pi-type ${c[2]}">${c[2].slice(0,4).toUpperCase()}</span>
+            <span>${c[0]}</span>
+            <span class="pi-tag">${c[1]}</span>
+          </div>`).join('') || '<div style="padding:20px;color:var(--ink-4);text-align:center">No additional channels</div>'}
+      </div>
+      <p style="color:var(--ink-4);font-size:10px;margin-top:12px;letter-spacing:.04em">
+        Click a channel to add it to the ${dict.code} dictionary in the left panel.
+      </p>
+    </div>
+    <div class="modal-foot"><button class="btn" data-x>Done</button></div>`);
+  modalEl.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',closeModal));
+  modalEl.querySelectorAll('.picker-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const id=item.dataset.id;
+      if(CHANNEL_INDEX[id]){ toast('Already in dictionary', 'warn'); return; }
+      const newCh={id, name:id, tag:item.dataset.tag, type:item.dataset.type};
+      dict.channels.push(newCh);
+      dict.total++;
+      CHANNEL_INDEX[id]=Object.assign({},newCh,{dictId:dict.id,dictName:dict.name});
+      SAMPLE[id]={v:(Math.random()*100).toFixed(1),unit:item.dataset.tag,warn:false,range:'NOMINAL',trend:'— STBL'};
+      renderSidebar();
+      wireSearch();
+      item.style.opacity='0.4'; item.style.pointerEvents='none';
+      item.querySelector('span:nth-child(2)').textContent += '  ✓ added';
+      toast('Channel added · '+id, 'success');
+    });
+  });
+}
+
+/* ============================================================
+   CALCULATION MODAL — add a calculation to a channel widget
+   ============================================================ */
+function openCalcModal(w){
+  const c = CHANNEL_INDEX[w.ch];
+  const existing = (w.calculations||[]);
+
+  openModal(`
+    <div class="modal-head">
+      <span class="mh-title">Add Calculation · ${c.name}</span>
+      <button class="btn" data-x>×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- existing calcs on this channel -->
+      <div id="calc-existing" style="${existing.length?'':'display:none'}">
+        <label>Calculations on this channel</label>
+        <div class="calc-chip-row" id="calc-chip-row"></div>
+        <div style="height:14px"></div>
+      </div>
+
+      <!-- ===== MODE 1 · pick an existing calculation ===== -->
+      <label>Choose a Calculation</label>
+      <select id="calc-type">
+        <option value="">— select a calculation type —</option>
+        ${CALC_TYPES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
+      </select>
+      <div class="calc-desc" id="calc-desc"></div>
+
+      <!-- dynamic parameter fields for the chosen type -->
+      <div id="calc-params"></div>
+
+      <!-- live preview of the computed result -->
+      <div class="calc-preview" id="calc-preview" style="display:none">
+        <span class="cp-label">Live result</span>
+        <span class="cp-value" id="cp-value">—</span>
+      </div>
+
+      <!-- ===== MODE 2 · manual calculation CTA ===== -->
+      <div class="calc-divider"><span>or</span></div>
+      <button class="btn calc-manual-cta" id="calc-manual-cta">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+        Build a Manual Calculation
+      </button>
+
+      <!-- ===== MODE 3 · save as preset (bound to this channel) ===== -->
+      <div class="calc-preset-block" id="calc-preset-block">
+        <label style="display:flex;align-items:center;gap:7px">
+          <input type="checkbox" id="calc-as-preset" style="width:auto;margin:0">
+          Save as a Preset Calculation for this channel
+        </label>
+        <div id="calc-preset-name-wrap" style="display:none">
+          <input type="text" id="calc-preset-name" placeholder="Name this preset calculation…">
+          <div class="calc-desc">Preset calculations appear in the sidebar “Presets” tab and travel with the channel when reused.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-x>Cancel</button>
+      <button class="btn primary" id="calc-apply">Add Calculation</button>
+    </div>`);
+
+  modalEl.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',closeModal));
+
+  const typeSel   = modalEl.querySelector('#calc-type');
+  const descEl    = modalEl.querySelector('#calc-desc');
+  const paramsEl  = modalEl.querySelector('#calc-params');
+  const previewEl = modalEl.querySelector('#calc-preview');
+  const cpValue   = modalEl.querySelector('#cp-value');
+  let manualMode  = false;
+
+  /* render the existing-calc chips */
+  function renderChips(){
+    const row = modalEl.querySelector('#calc-chip-row');
+    const wrap = modalEl.querySelector('#calc-existing');
+    const list = w.calculations||[];
+    wrap.style.display = list.length ? '' : 'none';
+    row.innerHTML = list.map(cl=>`
+      <span class="calc-chip" data-cid="${cl.id}">
+        ${cl.preset?'<span class="calc-chip-star">★</span>':''}
+        ${cl.name}
+        <span class="calc-chip-x" data-cid="${cl.id}">×</span>
+      </span>`).join('');
+    row.querySelectorAll('.calc-chip-x').forEach(x=>{
+      x.addEventListener('click', ()=>{
+        w.calculations = (w.calculations||[]).filter(cl=>cl.id!==x.dataset.cid);
+        renderChips();
+        refreshWidgetCalcs(w.id);
+        if(typeof applyLimitState==='function') applyLimitState();
+      });
+    });
+  }
+  renderChips();
+
+  /* on reopen / after edits: enable or disable each path per current calcs */
+  function applyLimitState(){
+    const list = w.calculations || [];
+    const hasManual   = list.some(cl=>cl.origin==='manual');
+    const hasDropdown = list.some(cl=>cl.origin==='dropdown');
+    const cta   = modalEl.querySelector('#calc-manual-cta');
+    const apply = modalEl.querySelector('#calc-apply');
+
+    /* manual path: hide the CTA only if a manual calc exists AND we aren't
+       currently in manual mode building one */
+    cta.style.display = (hasManual || manualMode) ? 'none' : '';
+
+    /* dropdown path: locked if a dropdown calc exists, or while in manual mode
+       (manual mode is fixed to the Custom Expression builder) */
+    typeSel.disabled = manualMode || hasDropdown;
+    typeSel.title = (hasDropdown && !manualMode)
+      ? 'A dropdown calculation has already been added' : '';
+
+    /* apply button */
+    if(hasManual && hasDropdown){
+      apply.disabled = true;
+      apply.textContent = 'Limit reached';
+      descEl.textContent = 'This channel already has one manual and one dropdown calculation.';
+    } else {
+      apply.disabled = false;
+      apply.textContent = 'Add Calculation';
+    }
+  }
+  applyLimitState();
+
+  /* build the dynamic parameter fields for a calc type */
+  function renderParams(typeId){
+    const t = calcType(typeId);
+    if(!t){ paramsEl.innerHTML=''; descEl.textContent=''; previewEl.style.display='none'; return; }
+    descEl.textContent = t.desc;
+    paramsEl.innerHTML = `
+      ${manualMode?'<label>Calculation Parameters</label>':''}
+      <div class="calc-param-grid">
+        ${t.params.map(p=>{
+          if(p.type==='select'){
+            return `<div class="calc-field">
+              <span class="cf-label">${p.label}</span>
+              <select class="cf-input" data-pkey="${p.key}">
+                ${p.options.map(o=>`<option value="${o}"${o===p.def?' selected':''}>${o}</option>`).join('')}
+              </select></div>`;
+          }
+          return `<div class="calc-field">
+            <span class="cf-label">${p.label}</span>
+            <input class="cf-input" data-pkey="${p.key}" type="${p.type==='number'?'number':'text'}"
+                   value="${p.def}"></div>`;
+        }).join('')}
+      </div>`;
+    previewEl.style.display='';
+    paramsEl.querySelectorAll('.cf-input').forEach(i=>i.addEventListener('input', updatePreview));
+    updatePreview();
+  }
+
+  /* gather params into a def object */
+  function gatherDef(){
+    const def={};
+    paramsEl.querySelectorAll('.cf-input').forEach(i=>{ def[i.dataset.pkey]=i.value; });
+    return def;
+  }
+
+  /* live-evaluate the calc and show the result */
+  function updatePreview(){
+    const t = calcType(typeSel.value);
+    if(!t){ previewEl.style.display='none'; return; }
+    const res = evalCalc({type:t.id, def:gatherDef()}, w.ch);
+    cpValue.textContent = res.value + (t.unit?(' '+t.unit):'') + (res.label?('  ('+res.label+')'):'');
+  }
+
+  typeSel.addEventListener('change', ()=> renderParams(typeSel.value));
+
+  /* MANUAL mode — jump to the Custom Expression builder, then hide the CTA */
+  modalEl.querySelector('#calc-manual-cta').addEventListener('click', ()=>{
+    manualMode = true;
+    typeSel.value = 'expression';
+    descEl.textContent = 'Manual mode — define each parameter of your calculation below.';
+    renderParams('expression');
+    applyLimitState();   /* hides the CTA, re-enables dropdown context for manual */
+    modalEl.querySelector('#calc-type').scrollIntoView({block:'nearest'});
+  });
+
+  /* PRESET — reveal the name field */
+  const asPreset = modalEl.querySelector('#calc-as-preset');
+  asPreset.addEventListener('change', ()=>{
+    modalEl.querySelector('#calc-preset-name-wrap').style.display =
+      asPreset.checked ? '' : 'none';
+  });
+
+  /* APPLY — adds the calculation, then closes the modal */
+  modalEl.querySelector('#calc-apply').addEventListener('click', ()=>{
+    const t = calcType(typeSel.value);
+    if(!t){ toast('Select a calculation type first', 'warn'); return; }
+    const def = gatherDef();
+    const isPreset = asPreset.checked;
+    let name = t.name;
+    if(isPreset){
+      name = (modalEl.querySelector('#calc-preset-name').value||'').trim();
+      if(!name){ toast('Name the preset calculation', 'warn'); return; }
+    }
+
+    /* enforce the per-modal limit: at most one manual + one preset */
+    const existing = w.calculations || [];
+    if(manualMode && existing.some(cl=>cl.origin==='manual')){
+      toast('Only one manual calculation can be added', 'warn'); return;
+    }
+    if(!manualMode && existing.some(cl=>cl.origin==='dropdown')){
+      toast('Only one calculation from the dropdown can be added', 'warn'); return;
+    }
+
+    const calc = {
+      id: uid('calc'),
+      name: name,
+      type: t.id,
+      def: def,
+      unit: t.unit,
+      preset: isPreset,
+      origin: manualMode ? 'manual' : 'dropdown',
+    };
+    /* attach to the widget */
+    w.calculations = w.calculations || [];
+    w.calculations.push(calc);
+    refreshWidgetCalcs(w.id);
+
+    /* if preset — register it under the channel so it shows in the Presets tab */
+    if(isPreset){
+      const list = STATE.presetCalcs[w.ch] || (STATE.presetCalcs[w.ch]=[]);
+      list.push(Object.assign({}, calc));
+      renderSidebar();
+      toast('Preset calculation saved · '+name, 'success');
+    } else {
+      toast('Calculation added · '+name, 'success');
+    }
+    /* primary action complete — close the modal */
+    closeModal();
+  });
+}
+
+/* ============================================================
+   STATUS BAR + CLOCKS
+   ============================================================ */
+function updateStatusBar(){
+  const dash=activeDashboard();
+  const streamCount = dash? dash.widgets.filter(w=>CHANNEL_INDEX[w.ch].type==='stream').length : 0;
+  document.getElementById('sb-stream').textContent = streamCount;
+  document.getElementById('sb-dash').textContent = dash? dash.name : '—';
+  document.getElementById('sb-notes').textContent = STATE.notes.length;
+}
+
+/* ============================================================
+   LIVE TELEMETRY — nudge values & re-render so it feels active
+   ============================================================ */
+function liveTick(){
+  /* nudge each numeric channel's value within a believable range */
+  Object.keys(SAMPLE).forEach(ch=>{
+    const s=SAMPLE[ch];
+    if(s.num==null || !s.axis) return;
+    const span=(s.axis.hi-s.axis.lo)||1;
+    /* small random walk, gently held near original */
+    if(s._anchor==null) s._anchor=s.num;
+    s.num += (Math.random()-0.5)*span*0.012;
+    s.num += (s._anchor - s.num)*0.05;
+    /* format display value to match original precision */
+    const orig=s.v.replace(/,/g,'');
+    const decimals=(orig.split('.')[1]||'').length;
+    let disp=s.num.toFixed(decimals);
+    if(Math.abs(s.num)>=1000) disp=Number(disp).toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+    s.v=disp;
+    /* trend arrow */
+    const delta=s.num-(s._prev!=null?s._prev:s.num);
+    s._prev=s.num;
+    s.trend = delta>span*0.002?'▲ '+Math.abs(delta).toFixed(decimals||1)
+            : delta<-span*0.002?'▼ '+Math.abs(delta).toFixed(decimals||1)
+            : '— STBL';
+  });
+  /* re-render numeric & plot widget bodies on the active dashboard */
+  const dash=activeDashboard();
+  if(!dash) return;
+  dash.widgets.forEach(w=>{
+    const c=CHANNEL_INDEX[w.ch];
+    if(c.type==='numeric' || c.type==='plot'){
+      const el=workspace.querySelector(`[data-wid="${w.id}"] .panel-body`);
+      if(el){
+        el.innerHTML='<div class="panel-note-badge"></div>'+renderWidgetBody(w.ch);
+        updateWidgetNoteBadge(w.id);
+      }
+    }
+    /* live-update any calculations on this widget */
+    if(w.calculations && w.calculations.length) refreshWidgetCalcs(w.id);
+  });
+}
+
+function tickClocks(){
+  document.getElementById('utc-clock').textContent = nowFull();
+  document.getElementById('sb-clock').textContent = nowUTC();
+  if(notesDrawer.classList.contains('open'))
+    document.getElementById('nc-ts').textContent = nowUTC();
+  /* stream timers */
+  document.querySelectorAll('[data-streamtime]').forEach(el=>{
+    const d=new Date();
+    el.textContent = d.toUTCString().slice(17,25);
+  });
+}
+
+/* export all button */
+document.getElementById('btn-export-all').addEventListener('click', exportDashboardCSV);
+
+/* deselect panels on canvas click */
+workspace.addEventListener('mousedown', e=>{
+  if(e.target===workspace || e.target.closest('.empty-state')){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('selected'));
+  }
+});
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+function init(){
+  renderSidebar();
+  wireSearch();
+  wireSidebarTabs();
+
+  /* start with one preset loaded so the prototype isn't bare,
+     plus one blank dashboard to demonstrate the empty state */
+  const p = PRESETS[0];
+  createDashboard(p.name, p.channels, true);
+  createDashboard('New Dashboard', null, true);
+  /* switch back to the preset as the landing view */
+  switchDashboard(STATE.dashboards[0].id);
+
+  /* seed a couple of demo notes for context */
+  STATE.notes = [
+    {id:uid('note'), ts:nowUTC(), metId:'T+142D 09:11:40', scope:'mission',
+     target:null, targetLabel:'HELIOS-9', dashAtTime:p.name,
+     text:'RAD-B radiator running 1.8°C above nominal since GS-ACQ. Watching for correlation with solar array current ramp.'},
+    {id:uid('note'), ts:nowUTC(), metId:'T+142D 09:06:12', scope:'mission',
+     target:null, targetLabel:'HELIOS-9', dashAtTime:p.name,
+     text:'Attitude maneuver complete. All buses nominal. Begin cruise-phase monitoring.'},
+  ];
+  renderNotes();
+  updateStatusBar();
+  renderGrid();
+  applyResponsiveMode();
+
+  tickClocks();
+  setInterval(tickClocks, 1000);
+  setInterval(liveTick, 2000);   /* live telemetry updates every 2s */
+
+  toast('Mission console ready · drag channels to build', 'success');
+}
+
+init();
+</script>
+</body>
+</html>
