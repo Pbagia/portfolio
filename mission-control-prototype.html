@@ -6,7 +6,7 @@
 <title>APOGEE DYNAMICS · HELIOS-9 Mission Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     /* ---- Apogee Dynamics light-mode palette: near-monochrome, calm, modern ---- */
@@ -72,7 +72,7 @@
   /* ============================ APP SHELL ============================ */
   .app {
     display: grid;
-    grid-template-rows: 38px 56px 42px 1fr 32px;
+    grid-template-rows: 64px 56px 42px 1fr 32px;
     grid-template-columns: 300px 1fr;
     grid-template-areas:
       "globalnav globalnav"
@@ -84,44 +84,57 @@
   }
 
   /* ============================ GLOBAL NAV ============================ */
-  /* slim bar linking back to the portfolio — sits above the app header */
+  /* portfolio-style nav — matches index.html for cross-page consistency */
   .globalnav {
     grid-area: globalnav;
-    background: var(--ink);
+    background: #FBF9F4;
+    border-bottom: 1px solid #D9D4C7;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 18px;
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    padding: 0 24px;
+    font-family: 'Jost', 'Helvetica Neue', sans-serif;
     z-index: 20;
   }
+  @media (min-width: 900px) {
+    .globalnav { padding: 0 64px; }
+  }
   .globalnav a { text-decoration: none; }
-  .globalnav .gn-back {
-    display: flex; align-items: center; gap: 8px;
-    color: var(--surface); font-size: 11px; font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 5px 10px; border-radius: 5px;
-    border: 1px solid rgba(255,255,255,0.22);
-    transition: background 0.14s, border-color 0.14s;
+  .globalnav .nav-logo {
+    display: flex; align-items: center; gap: 11px;
   }
-  .globalnav .gn-back:hover {
-    background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.4);
+  .globalnav .nav-logo .mark { display: inline-block; }
+  .globalnav .nav-logo .nm {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500; font-size: 21px;
+    color: #2E2C28; letter-spacing: 0.04em;
   }
-  .globalnav .gn-back svg { width: 12px; height: 12px; }
-  .globalnav .gn-context {
-    color: rgba(255,255,255,0.5); font-size: 10px;
-    letter-spacing: 0.14em; text-transform: uppercase;
+  .globalnav .nav-links { display: none; gap: 34px; }
+  @media (min-width: 760px) {
+    .globalnav .nav-links { display: flex; }
   }
-  .globalnav .gn-links {
-    display: flex; align-items: center; gap: 4px;
+  .globalnav .nav-links a {
+    font-family: 'Jost', 'Helvetica Neue', sans-serif;
+    font-weight: 400; font-size: 12px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: #2E2C28;
+    transition: color 0.25s;
+    position: relative; padding: 4px 0;
   }
-  .globalnav .gn-links a {
-    color: rgba(255,255,255,0.62); font-size: 11px; font-weight: 500;
-    padding: 5px 9px; border-radius: 5px;
-    transition: color 0.12s, background 0.12s;
+  .globalnav .nav-links a::after {
+    content: ""; position: absolute; left: 0; bottom: 0;
+    width: 0; height: 1px; background: #B98E80;
+    transition: width 0.3s ease;
   }
-  .globalnav .gn-links a:hover {
-    color: var(--surface); background: rgba(255,255,255,0.1);
+  .globalnav .nav-links a:hover { color: #8A6253; }
+  .globalnav .nav-links a:hover::after { width: 100%; }
+  .globalnav .nav-cta {
+    font-family: 'Jost', 'Helvetica Neue', sans-serif;
+    font-weight: 400; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: #FBF9F4; background: #2E2C28;
+    padding: 11px 20px; border-radius: 3px;
+    transition: background 0.3s;
   }
+  .globalnav .nav-cta:hover { background: #8A6253; }
 
   /* ============================ TOP BAR ============================ */
   /* entire header uses monospace; layout tuned so nothing overlaps */
@@ -1229,7 +1242,7 @@
   /* ----- MOBILE: ≤ 860px — collapse sidebar, stack widgets ----- */
   @media (max-width: 860px) {
     .app {
-      grid-template-rows: 38px 56px 42px 1fr 32px;
+      grid-template-rows: 60px 56px 42px 1fr 32px;
       grid-template-columns: 1fr;
       grid-template-areas:
         "globalnav"
@@ -1238,10 +1251,10 @@
         "canvas"
         "statusbar";
     }
-    /* global nav: drop the middle context label on small screens */
-    .globalnav { padding: 0 12px; }
-    .globalnav .gn-context { display: none; }
-    .globalnav .gn-links a { padding: 5px 7px; }
+    /* global nav: tighter padding, smaller CTA on mobile */
+    .globalnav { padding: 0 16px; }
+    .globalnav .nav-logo .nm { font-size: 18px; }
+    .globalnav .nav-cta { padding: 9px 14px; font-size: 10px; }
     /* sidebar becomes an off-canvas drawer */
     .sidebar {
       position: fixed; top: 0; left: 0; bottom: 0;
@@ -1311,22 +1324,37 @@
 </head>
 <body>
 
+<!-- ===== petal mark, reused via <use> (matches index.html nav) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="petalmark">
+      <path d="M40 6 A34 34 0 1 1 39.9 6" fill="none" stroke="#9CA98C"
+        stroke-width="1.8" stroke-dasharray="150 64" stroke-dashoffset="-43"/>
+      <g fill="none" stroke="#B98E80" stroke-width="2.4"
+        transform="translate(0,1) scale(0.86) translate(6.5,6.5)">
+        <path d="M40 40 C26 30 26 14 40 8 C54 14 54 30 40 40 Z"/>
+        <path d="M40 40 C54 30 70 38 72 52 C62 60 46 54 40 40 Z"/>
+        <path d="M40 40 C46 54 38 70 24 72 C16 62 22 46 40 40 Z"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
 <div class="app">
 
   <!-- ============================ GLOBAL NAV ============================ -->
   <nav class="globalnav">
-    <a href="index.html" class="gn-back">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M13 8H3M7 4L3 8l4 4"/>
-      </svg>
-      Back to Portfolio
+    <a href="index.html#top" class="nav-logo" aria-label="Prina Bagia home">
+      <svg class="mark" width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
+      <span class="nm">Prina Bagia</span>
     </a>
-    <span class="gn-context">Prina Bagia · Case Study Prototype</span>
-    <div class="gn-links">
-      <a href="index.html">Home</a>
-      <a href="work.html">Work</a>
-      <a href="case-mission-control.html">Case Study</a>
+    <div class="nav-links">
+      <a href="index.html#about">About</a>
+      <a href="index.html#work">Work</a>
+      <a href="index.html#process">Process</a>
+      <a href="index.html#skills">Skills</a>
     </div>
+    <a href="index.html#contact" class="nav-cta">Get in touch</a>
   </nav>
 
   <!-- ============================ TOP BAR ============================ -->
