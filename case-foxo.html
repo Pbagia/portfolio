@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOXO Technologies — Case Study | Prina Bagia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
+
+  :root{
+    --bone:#FBF9F4; --ivory:#F3EFE6; --sage:#9CA98C; --deep-sage:#6F7A5E;
+    --clay:#8A6253; --deep-clay:#6F4E42; --clay-tint:#E4D8D0;
+    --soft-black:#2E2C28; --warm-grey:#8A867D; --hairline:#D9D4C7;
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Jost','Helvetica Neue',sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{ font-family:var(--sans); font-weight:300; color:var(--soft-black);
+    background:var(--bone); line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; }
+  ::selection{ background:var(--sage); color:var(--bone); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 7vw; }
+  @media(min-width:900px){ .wrap{ padding:0 64px; } }
+  .narrow{ max-width:760px; }
+
+  .eyebrow{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.34em; text-transform:uppercase; color:var(--deep-sage); }
+  h1,h2,h3{ font-family:var(--serif); font-weight:500; letter-spacing:.01em; }
+  .reveal{ opacity:0; transform:translateY(26px);
+    transition:opacity 1s cubic-bezier(.2,.6,.2,1), transform 1s cubic-bezier(.2,.6,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- NAV ---------- */
+  nav{ position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 7vw; background:rgba(251,249,244,.93);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline); }
+  @media(min-width:900px){ nav{ padding:15px 64px; } }
+  .nav-logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav-logo .nm{ font-family:var(--serif); font-weight:500; font-size:21px;
+    color:var(--soft-black); letter-spacing:.04em; }
+  .nav-back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    text-decoration:none; display:inline-flex; align-items:center; gap:9px;
+    transition:color .25s; }
+  .nav-back:hover{ color:var(--deep-clay); }
+  .nav-back .ar{ transition:transform .3s; }
+  .nav-back:hover .ar{ transform:translateX(-4px); }
+
+  /* ---------- HERO ---------- */
+  header{ padding:150px 0 70px; }
+  .hero-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    margin-bottom:20px; }
+  h1.title{ font-size:clamp(38px,5.6vw,68px); line-height:1.06; font-weight:500;
+    max-width:18ch; }
+  h1.title em{ font-style:italic; color:var(--deep-sage); }
+  .hero-sub{ font-family:var(--sans); font-weight:300;
+    font-size:clamp(15px,1.7vw,18px); color:#43403A; max-width:54ch;
+    margin-top:24px; line-height:1.75; }
+
+  /* ---------- META STRIP ---------- */
+  .meta{ border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline); margin-top:54px; }
+  .meta-grid{ display:grid; gap:0; }
+  @media(min-width:680px){ .meta-grid{ grid-template-columns:repeat(4,1fr); } }
+  .meta-cell{ padding:26px 0; }
+  @media(min-width:680px){ .meta-cell{ padding:30px 28px 30px 0; } }
+  .meta-cell + .meta-cell{ border-top:1px solid var(--hairline); }
+  @media(min-width:680px){ .meta-cell + .meta-cell{ border-top:0;
+    border-left:1px solid var(--hairline); padding-left:28px; } }
+  .meta-k{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-clay); }
+  .meta-v{ font-family:var(--serif); font-size:18px; color:var(--soft-black);
+    margin-top:7px; line-height:1.3; }
+
+  /* ---------- SECTION ---------- */
+  section{ padding:clamp(56px,8vh,90px) 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:18px; }
+  .sec-head .idx{ font-family:var(--serif); font-style:italic; font-size:17px;
+    color:var(--clay); }
+  h2.sec-title{ font-size:clamp(27px,3.4vw,40px); line-height:1.12;
+    max-width:20ch; }
+  h2.sec-title em{ font-style:italic; color:var(--deep-sage); }
+  p.body{ font-size:clamp(15px,1.6vw,16.5px); color:#43403A; line-height:1.8;
+    margin-top:16px; }
+  p.body strong{ font-weight:500; color:var(--soft-black); }
+
+  /* two-column intro block */
+  .cols{ display:grid; gap:30px; margin-top:10px; }
+  @media(min-width:760px){ .cols{ grid-template-columns:repeat(3,1fr);
+    gap:36px; } }
+  .col h3{ font-size:21px; color:var(--soft-black); }
+  .col .kicker{ font-family:var(--serif); font-style:italic; font-size:15px;
+    color:var(--clay); }
+  .col p{ font-family:var(--sans); font-weight:300; font-size:14.5px;
+    color:#43403A; line-height:1.74; margin-top:9px; }
+
+  /* alt background block */
+  .band{ background:var(--ivory); }
+  .band-dark{ background:var(--soft-black); color:var(--bone); }
+  .band-dark .eyebrow{ color:var(--sage); }
+  .band-dark h2.sec-title{ color:var(--bone); }
+  .band-dark h2.sec-title em{ color:var(--sage); }
+  .band-dark p.body{ color:#D8D3C8; }
+  .band-dark p.body strong{ color:var(--bone); }
+  .band-dark .sec-head .idx{ color:var(--clay); }
+
+  /* goal callout */
+  .goal{ display:flex; gap:16px; margin-top:24px; padding:22px 26px;
+    background:var(--bone); border:1px solid var(--hairline);
+    border-left:3px solid var(--sage); border-radius:0 4px 4px 0; }
+  .band .goal{ background:#fff; }
+  .goal .lbl{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    flex:none; padding-top:3px; }
+  .goal p{ font-family:var(--serif); font-style:italic; font-size:18px;
+    color:var(--soft-black); line-height:1.45; }
+
+  /* proprietary note */
+  .note{ font-family:var(--sans); font-weight:300; font-size:13px;
+    color:var(--warm-grey); margin-top:26px; font-style:italic;
+    line-height:1.6; }
+
+  /* tag row */
+  .tags{ display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+  .tag{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--deep-sage);
+    border:1px solid var(--hairline); border-radius:20px; padding:7px 15px; }
+
+  /* ---------- IMAGE FIGURE ---------- */
+  figure{ margin-top:36px; }
+  .figframe{ border-radius:5px; overflow:hidden; border:1px solid var(--hairline);
+    background:#fff; }
+  .figframe img{ width:100%; height:auto; display:block; }
+  figcaption{ font-family:var(--sans); font-weight:300; font-size:13px;
+    color:var(--warm-grey); margin-top:14px; text-align:center;
+    letter-spacing:.02em; }
+  figcaption strong{ font-weight:500; color:var(--deep-sage); }
+
+  /* ---------- 5-STEP PROCESS ---------- */
+  .steps{ display:grid; gap:1px; margin-top:36px;
+    background:var(--hairline); border:1px solid var(--hairline); }
+  @media(min-width:560px){ .steps{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:820px){ .steps{ grid-template-columns:repeat(5,1fr); } }
+  .step{ background:#fff; padding:26px 22px; }
+  .step .sn{ font-family:var(--serif); font-style:italic; font-size:22px;
+    color:var(--clay); }
+  .step .stitle{ font-family:var(--sans); font-weight:500; font-size:14px;
+    color:var(--soft-black); margin-top:10px; line-height:1.45;
+    letter-spacing:.01em; }
+
+  /* ---------- BEFORE/AFTER (Application sidebar) ---------- */
+  .ba{ display:grid; gap:24px; margin-top:34px; }
+  @media(min-width:780px){ .ba{ grid-template-columns:repeat(2,1fr); gap:30px; } }
+  .ba-block{ padding:24px 24px 26px;
+    background:#fff; border:1px solid var(--hairline); border-radius:4px; }
+  .band .ba-block{ background:var(--bone); }
+  .ba-block.before{ border-left:3px solid var(--clay); }
+  .ba-block.after{ border-left:3px solid var(--sage); }
+  .ba-block .lbl{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--deep-clay); }
+  .ba-block.after .lbl{ color:var(--deep-sage); }
+  .ba-block h4{ font-family:var(--serif); font-weight:500; font-size:19px;
+    color:var(--soft-black); margin-top:8px; line-height:1.3; }
+  .ba-block ul{ list-style:none; padding:0; margin-top:14px; }
+  .ba-block ul li{ font-family:var(--sans); font-weight:300; font-size:14px;
+    color:#43403A; line-height:1.65; padding-left:18px; position:relative;
+    margin-top:6px; }
+  .ba-block ul li::before{ content:""; position:absolute; left:0; top:10px;
+    width:7px; height:1px; background:var(--warm-grey); }
+
+  /* ---------- CAROUSEL ---------- */
+  .carousel{ margin-top:32px; }
+  .carousel-stage{ position:relative; border-radius:5px; overflow:hidden;
+    border:1px solid var(--hairline); background:var(--bone);
+    height:70vh; max-height:680px; min-height:380px; }
+  .carousel-track{ position:relative; height:100%; }
+  .carousel-slide{ display:none; height:100%; }
+  .carousel-slide.current{ display:flex; align-items:flex-start;
+    justify-content:center; }
+  .carousel-slide img{ max-width:100%; max-height:100%;
+    width:auto; height:auto; object-fit:contain; display:block; }
+  .carousel-arrow{ position:absolute; top:50%; transform:translateY(-50%);
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--hairline);
+    background:rgba(251,249,244,.94); color:var(--soft-black); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    transition:background .25s, color .25s; z-index:2; }
+  .carousel-arrow:hover{ background:var(--soft-black); color:var(--bone); }
+  .carousel-arrow.prev{ left:16px; }
+  .carousel-arrow.next{ right:16px; }
+  .carousel-meta{ display:flex; justify-content:space-between;
+    align-items:baseline; gap:18px; margin-top:14px; flex-wrap:wrap; }
+  .carousel-caption{ font-family:var(--sans); font-weight:300; font-size:13px;
+    color:var(--warm-grey); letter-spacing:.02em; }
+  .carousel-caption strong{ font-weight:500; color:var(--deep-sage); }
+  .carousel-counter{ font-family:var(--serif); font-style:italic; font-size:15px;
+    color:var(--clay); flex:none; }
+  .carousel-thumbs{ display:flex; gap:12px; margin-top:16px; overflow-x:auto;
+    padding-bottom:8px; scrollbar-width:thin;
+    scrollbar-color:var(--hairline) transparent; }
+  .carousel-thumbs::-webkit-scrollbar{ height:6px; }
+  .carousel-thumbs::-webkit-scrollbar-thumb{ background:var(--hairline);
+    border-radius:3px; }
+  .carousel-thumb{ flex:none; width:128px; height:84px; border-radius:3px;
+    overflow:hidden; border:1px solid var(--hairline); cursor:pointer;
+    background:#fff; padding:0; transition:border-color .25s, opacity .25s;
+    opacity:.6; }
+  .carousel-thumb img{ width:100%; height:100%; object-fit:cover;
+    object-position:center top; display:block; }
+  .carousel-thumb:hover{ opacity:.85; }
+  .carousel-thumb.active{ opacity:1; border-color:var(--deep-sage);
+    border-width:2px; }
+
+  /* Centre slides vertically for the FOXO carousels */
+  #qaCarousel .carousel-slide.current,
+  #appCarousel .carousel-slide.current,
+  #cdashCarousel .carousel-slide.current,
+  #adashCarousel .carousel-slide.current{ align-items:center; }
+
+  /* ---------- TWO-DASHBOARD GRID (Section 05) ---------- */
+  .dash-grid{ display:grid; gap:24px; margin-top:34px; }
+  @media(min-width:780px){ .dash-grid{ grid-template-columns:repeat(2,1fr);
+    gap:30px; } }
+  .dash-block{ padding:28px 28px 30px; background:#fff;
+    border:1px solid var(--hairline); border-radius:4px;
+    border-left:3px solid var(--sage); }
+  .dash-block.admin{ border-left-color:var(--clay); }
+  .dash-block .lbl{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--deep-sage); }
+  .dash-block.admin .lbl{ color:var(--deep-clay); }
+  .dash-block h4{ font-family:var(--serif); font-weight:500; font-size:22px;
+    color:var(--soft-black); margin-top:8px; line-height:1.3; }
+  .dash-block .desc{ font-family:var(--sans); font-weight:300; font-size:14px;
+    color:#43403A; line-height:1.65; margin-top:10px; }
+  .dash-block ul{ list-style:none; padding:0; margin-top:18px; }
+  .dash-block ul li{ font-family:var(--sans); font-weight:300; font-size:14px;
+    color:#43403A; line-height:1.65; padding-left:18px; position:relative;
+    margin-top:10px; }
+  .dash-block ul li::before{ content:""; position:absolute; left:0; top:11px;
+    width:7px; height:1px; background:var(--warm-grey); }
+  .dash-block ul li strong{ font-weight:500; color:var(--soft-black); }
+
+  /* Sub-section header inside Section 05 */
+  .subsec{ margin-top:54px; }
+  .subsec-eyebrow{ font-family:var(--sans); font-weight:500; font-size:10.5px;
+    letter-spacing:.24em; text-transform:uppercase; color:var(--deep-sage);
+    margin-bottom:10px; }
+  .subsec-eyebrow.admin{ color:var(--deep-clay); }
+  .subsec h3{ font-family:var(--serif); font-weight:500; font-size:26px;
+    color:var(--soft-black); line-height:1.2; }
+  .subsec h3 em{ font-style:italic; color:var(--deep-sage); }
+  .subsec h3.admin em{ color:var(--clay); }
+
+  /* Side-by-side carousel pair (Section 05) — grid matches .dash-grid so
+     the carousels line up with the cards above them */
+  .carousel-pair{ display:grid; gap:24px; margin-top:48px; }
+  @media(min-width:780px){ .carousel-pair{ grid-template-columns:repeat(2,1fr);
+    gap:30px; } }
+  .carousel-pair > div{ display:flex; flex-direction:column; }
+  .carousel-pair .subsec{ margin-top:0; margin-bottom:18px; }
+  .carousel-pair .carousel{ margin-top:0; }
+  @media(min-width:780px){
+    .carousel-pair .carousel-stage{ height:56vh; max-height:560px;
+      min-height:320px; }
+    .carousel-pair .carousel-thumb{ width:96px; height:62px; }
+  }
+
+  /* ---------- STATS GRID (Impact section) ---------- */
+  .stats{ display:grid; gap:1px; margin-top:34px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08); }
+  @media(min-width:620px){ .stats{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:920px){ .stats{ grid-template-columns:repeat(4,1fr); } }
+  .stat{ background:var(--soft-black); padding:28px 24px; }
+  .stat .sn{ font-family:var(--serif); font-weight:500; font-size:34px;
+    color:var(--sage); line-height:1.1; }
+  .stat .sl{ font-family:var(--sans); font-weight:400; font-size:13px;
+    color:#D8D3C8; margin-top:10px; line-height:1.5; }
+
+  /* Contributions list (Impact section) */
+  .contribs{ margin-top:36px; display:grid; gap:16px; }
+  @media(min-width:680px){ .contribs{ grid-template-columns:repeat(2,1fr);
+    gap:14px 30px; } }
+  .contribs li{ list-style:none; padding-left:22px; position:relative;
+    font-family:var(--sans); font-weight:300; font-size:14px;
+    color:#D8D3C8; line-height:1.6; }
+  .contribs li::before{ content:"\2022"; position:absolute; left:4px; top:0;
+    color:var(--sage); font-size:18px; line-height:1.4; }
+
+  /* ---------- NEXT / FOOTER ---------- */
+  .nextnav{ border-top:1px solid var(--hairline); padding:46px 0; }
+  .nextnav .wrap{ display:flex; justify-content:space-between;
+    align-items:center; gap:20px; flex-wrap:wrap; }
+  .nextnav a{ text-decoration:none; }
+  .nextnav .back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    display:inline-flex; align-items:center; gap:9px; transition:color .25s; }
+  .nextnav .back:hover{ color:var(--deep-clay); }
+  .nextnav .cta{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
+    background:var(--soft-black); padding:15px 28px; border-radius:3px;
+    transition:background .3s; }
+  .nextnav .cta:hover{ background:var(--deep-clay); }
+
+  footer{ background:var(--soft-black); border-top:1px solid rgba(255,255,255,.1);
+    padding:34px 0; }
+  .foot-row{ display:flex; flex-direction:column; gap:14px; align-items:center;
+    text-align:center; }
+  @media(min-width:680px){ .foot-row{ flex-direction:row;
+    justify-content:space-between; } }
+  .foot-row span, .foot-row a{ font-family:var(--sans); font-weight:300;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--warm-grey); text-decoration:none; }
+  .foot-row a:hover{ color:var(--sage); }
+</style>
+</head>
+<body>
+
+<!-- petal mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="petalmark">
+      <path d="M40 6 A34 34 0 1 1 39.9 6" fill="none" stroke="#9CA98C"
+        stroke-width="1.8" stroke-dasharray="150 64" stroke-dashoffset="-43"/>
+      <g fill="none" stroke="#B98E80" stroke-width="2.4"
+        transform="translate(0,1) scale(0.86) translate(6.5,6.5)">
+        <path d="M40 40 C26 30 26 14 40 8 C54 14 54 30 40 40 Z"/>
+        <path d="M40 40 C54 30 70 38 72 52 C62 60 46 54 40 40 Z"/>
+        <path d="M40 40 C46 54 38 70 24 72 C16 62 22 46 40 40 Z"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <a href="portfolio.html" class="nav-logo" aria-label="Prina Bagia home">
+    <svg width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
+    <span class="nm">Prina Bagia</span>
+  </a>
+  <a href="work.html" class="nav-back"><span class="ar">←</span> All work</a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header>
+  <div class="wrap">
+    <div class="hero-tag reveal">UX / UI · Life Insurance · Health Tech</div>
+    <h1 class="title reveal" style="transition-delay:.08s">
+      FOXO Technologies — life insurance, <em>designed around longevity.</em>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.16s">
+      Designing the FOXOLIFE suite — a responsive customer quote and
+      application, a customer dashboard, an admin support dashboard and the
+      personalized Longevity Report — for a life-insurance platform built on
+      epigenetic science.
+    </p>
+  </div>
+  <div class="wrap">
+    <div class="meta reveal" style="transition-delay:.24s">
+      <div class="meta-grid">
+        <div class="meta-cell">
+          <div class="meta-k">Company</div>
+          <div class="meta-v">FOXO Technologies<br>— FOXOLIFE</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Role</div>
+          <div class="meta-v">UX / UI Designer</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Tools</div>
+          <div class="meta-v">Figma, Jira, Asana,<br>Lucid, UserTesting</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Scope</div>
+          <div class="meta-v">Responsive desktop,<br>iPad &amp; mobile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= OVERVIEW ================= -->
+<section style="padding-bottom:48px;">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">01</span>
+        <div class="eyebrow">Overview</div></div>
+      <h2 class="sec-title">Live, better, <em>longer.</em></h2>
+    </div>
+    <div class="cols">
+      <div class="col reveal">
+        <div class="kicker">Who they are</div>
+        <h3>FOXO Technologies</h3>
+        <p>FOXO is changing how life-insurance companies underwrite and sell
+          their products — using a platform driven by molecular biotechnology
+          and the science of epigenetics to give customers a personalized
+          Longevity Report along with their policy.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.08s">
+        <div class="kicker">My role</div>
+        <h3>UX/UI Designer — FOXOLIFE</h3>
+        <p>I owned UX/UI across the FOXOLIFE suite: the customer Quote and
+          Application, the customer Dashboard, the Admin Dashboard and the
+          Longevity Report — partnering with product owners and engineering to
+          take patterns from heuristic review through to production.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.16s">
+        <div class="kicker">The challenge</div>
+        <h3>A long, high-stakes flow</h3>
+        <p>Life-insurance is dense — long medical surveys, eligibility checks,
+          documents and policy states. The work was to remove friction across
+          a multi-step journey while giving admins fast, confident access to
+          every piece of a customer's file.</p>
+      </div>
+    </div>
+    <div class="tags reveal" style="margin-bottom:0;">
+      <span class="tag">Life Insurance</span>
+      <span class="tag">Health Tech</span>
+      <span class="tag">Epigenetics</span>
+      <span class="tag">Responsive Design</span>
+    </div>
+    <p class="note reveal">A note on imagery: many FOXOLIFE assets remain
+      proprietary. The screens shown below are the public-shareable subset of
+      the work I did across the suite.</p>
+  </div>
+</section>
+
+<!-- ================= HERO IMAGE ================= -->
+<section style="padding-top:0; padding-bottom:clamp(40px,7vh,80px);">
+  <div class="wrap">
+    <figure class="reveal" style="margin-top:8px;">
+      <div class="figframe">
+        <img src="images/foxo-hero.jpg" alt="The FOXOLIFE product suite — Quote, Application, Customer Dashboard, Admin Dashboard and Longevity Report">
+      </div>
+      <figcaption>Life insurance designed around how we live —
+        and how long we live.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= WHAT IS FOXOLIFE ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">02</span>
+        <div class="eyebrow">What is FOXOLIFE</div></div>
+      <h2 class="sec-title">A life-insurance product <em>built on epigenetics.</em></h2>
+      <p class="body narrow">FOXOLIFE is the first life-insurance product to
+        pair a policy with a personalized Longevity Report — using epigenetic
+        science to show how lifestyle and environment shape lifespan. The
+        customer journey moves through five clear steps, from quote to
+        Longevity Report.</p>
+    </div>
+
+    <div class="steps reveal">
+      <div class="step">
+        <div class="sn">01</div>
+        <div class="stitle">Life-insurance quote</div>
+      </div>
+      <div class="step">
+        <div class="sn">02</div>
+        <div class="stitle">Complete full application</div>
+      </div>
+      <div class="step">
+        <div class="sn">03</div>
+        <div class="stitle">Receive life-insurance approval</div>
+      </div>
+      <div class="step">
+        <div class="sn">04</div>
+        <div class="stitle">Receive saliva kit</div>
+      </div>
+      <div class="step">
+        <div class="sn">05</div>
+        <div class="stitle">Receive personalized Longevity Report</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HEURISTIC UI QA PASS ================= -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">03</span>
+        <div class="eyebrow">My Heuristic UI QA Pass</div></div>
+      <h2 class="sec-title">Walking the platform <em>as a customer would.</em></h2>
+      <p class="body narrow">When a product is already built, my first move
+        is a heuristic / UI QA pass — going through the experience as the
+        end user, then noting what to fix and what to keep. I walked both
+        the customer-facing FOXOLIFE journey and the internal admin
+        platform, capturing alignment, spacing, state, copy and interaction
+        issues page by page. The screens below are excerpts from that
+        review, redlined in place.</p>
+    </div>
+
+    <div class="goal reveal">
+      <span class="lbl">Goal</span>
+      <p>Catch every small friction before it compounds — across both the
+        customer journey and the admin tools — and give engineering a
+        clear, redlined punch list to act on.</p>
+    </div>
+
+    <div class="carousel reveal" id="qaCarousel">
+      <div class="carousel-stage">
+        <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+        <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+        <div class="carousel-track">
+          <div class="carousel-slide current"><img src="images/foxo-qa-01-admin-dashboard.jpg" alt="Admin dashboard — padding between nav, header and welcome card"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-02-customer-list.jpg" alt="Customer list — VIEW-only clickability, filters, pagination, padding"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-03-customer-profile.jpg" alt="Customer profile — corner radius and card alignment notes"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-04-customer-documents.jpg" alt="Customer Documents — alignment, corner radius and empty-state banner"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-05-customer-billing.jpg" alt="Customer Billing — warning emphasis, header / account spacing"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-06-customer-policies.jpg" alt="Customer Policies — inactive state, missing banner and corner radius"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-07-policy-banner.jpg" alt="Inactive-policy banner — padding and vertical centering of the banner"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-08-case-modal.jpg" alt="Case modal — X/Cancel not exiting, padding and Refresh alignment"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-09-admin-orders.jpg" alt="Admin Orders — filter arrow alignment, label size and pagination"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-10-admin-applications.jpg" alt="Admin Applications — nav padding and filter alignment"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-11-customer-todos.jpg" alt="Customer Overview — To-dos / Quote / Longevity Report card states"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-12-customer-kit-status.jpg" alt="Customer Kit Status — add Longevity Report Available, real-time updates, remove duplicate card"></div>
+          <div class="carousel-slide"><img src="images/foxo-qa-13-customer-longevity.jpg" alt="Customer Overview — Longevity Report tab and Insurance / Kit Status nav"></div>
+        </div>
+      </div>
+      <div class="carousel-meta">
+        <div class="carousel-caption" id="qaCaption">
+          <strong>Admin dashboard</strong> — flagging padding between the nav, header and welcome card.</div>
+        <div class="carousel-counter" id="qaCounter">01 / 13</div>
+      </div>
+      <div class="carousel-thumbs" id="qaThumbs">
+        <button class="carousel-thumb active"><img src="images/foxo-qa-01-admin-dashboard.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-02-customer-list.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-03-customer-profile.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-04-customer-documents.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-05-customer-billing.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-06-customer-policies.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-07-policy-banner.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-08-case-modal.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-09-admin-orders.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-10-admin-applications.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-11-customer-todos.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-12-customer-kit-status.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-qa-13-customer-longevity.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CUSTOMER APPLICATION ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">04</span>
+        <div class="eyebrow">Customer Application</div></div>
+      <h2 class="sec-title">A long survey, <em>made linear.</em></h2>
+      <p class="body narrow">The application carries a long medical survey —
+        deliberately, to remove the in-person medical exam from the
+        underwriting process. The pain point was the sidebar: it let
+        customers jump around, leave sections half-finished, and lose track
+        of where they were. I restructured it as a linear flow with explicit
+        section states, so customers always know what's done, what's left,
+        and what they're in the middle of.</p>
+    </div>
+
+    <div class="ba reveal">
+      <div class="ba-block before">
+        <div class="lbl">Before</div>
+        <h4>A non-linear sidebar</h4>
+        <ul>
+          <li>Customers could skip ahead and leave earlier sections unfinished</li>
+          <li>Easy to miss medical-survey questions</li>
+          <li>Time-consuming to jump back and forth to confirm progress</li>
+          <li>Hard to tell which section was actually in progress</li>
+        </ul>
+      </div>
+      <div class="ba-block after">
+        <div class="lbl">After</div>
+        <h4>A linear, stateful sidebar</h4>
+        <ul>
+          <li>Each section is <em>complete</em>, <em>declined</em> or <em>in progress</em></li>
+          <li>Customers can't move forward until the current section is done</li>
+          <li>Less time auditing answers, fewer missed questions</li>
+          <li>Clear sense of how much of the survey is left</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="carousel reveal" id="appCarousel">
+      <div class="carousel-stage">
+        <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+        <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+        <div class="carousel-track">
+          <div class="carousel-slide current"><img src="images/foxo-app-01-health.jpg" alt="Health survey — linear sidebar with explicit section states (Complete, In progress, Declined)"></div>
+          <div class="carousel-slide"><img src="images/foxo-app-02-beneficiaries.jpg" alt="Beneficiaries — primary and contingent beneficiary allocation"></div>
+          <div class="carousel-slide"><img src="images/foxo-app-03-shipping.jpg" alt="Shipping Address — confirming where the FOXO saliva kit will be sent"></div>
+          <div class="carousel-slide"><img src="images/foxo-app-04-complete.jpg" alt="Completion — &quot;You Did It!&quot; with What&apos;s Next dashboard preview"></div>
+        </div>
+      </div>
+      <div class="carousel-meta">
+        <div class="carousel-caption" id="appCaption">
+          <strong>Health survey</strong> — the linear sidebar in action, with Complete / In progress / Declined states for every section.</div>
+        <div class="carousel-counter" id="appCounter">01 / 04</div>
+      </div>
+      <div class="carousel-thumbs" id="appThumbs">
+        <button class="carousel-thumb active"><img src="images/foxo-app-01-health.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-app-02-beneficiaries.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-app-03-shipping.jpg" alt=""></button>
+        <button class="carousel-thumb"><img src="images/foxo-app-04-complete.jpg" alt=""></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TWO DASHBOARDS ================= -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">05</span>
+        <div class="eyebrow">The Dashboards</div></div>
+      <h2 class="sec-title">Two dashboards, <em>two audiences.</em></h2>
+      <p class="body narrow">FOXOLIFE runs on two distinct dashboards — one
+        for customers managing their own policy and Longevity Report, and
+        one for the admin team working behind the scenes. Each one carries
+        the same data model, but the surface area, density and priorities
+        are completely different.</p>
+    </div>
+
+    <div class="goal reveal">
+      <span class="lbl">Goal</span>
+      <p>Design two dashboards that share a data model but serve very
+        different jobs — calm clarity for the customer, dense access for
+        the admin.</p>
+    </div>
+
+    <div class="dash-grid reveal">
+      <div class="dash-block">
+        <div class="lbl">Customer-facing</div>
+        <h4>Their policy, their report, their kit.</h4>
+        <p class="desc">A focused space for the policyholder — track the
+          status of their FOXO kit, view their policy, and unlock their
+          Longevity Report once their epigenetic results are in.</p>
+        <ul>
+          <li><strong>Overview</strong> — the landing view with To-dos and a quick read on Quote, Application, Policy and Longevity Report.</li>
+          <li><strong>Profile</strong> — basic contact information for the policyholder.</li>
+          <li><strong>Insurance</strong> — individual policy info, with coverage and cost shaped by the Longevity Report.</li>
+          <li><strong>Kit Status</strong> — real-time tracking from ordered through shipped, received and processed.</li>
+          <li><strong>Longevity Report</strong> — gated until the epigenetic testing kit is returned and results are in.</li>
+          <li><strong>My Data</strong> — additional information on the epigenetic data and how it's used.</li>
+        </ul>
+      </div>
+      <div class="dash-block admin">
+        <div class="lbl">Admin-facing</div>
+        <h4>The operational view of every customer.</h4>
+        <p class="desc">A working dashboard for the admin team — metrics
+          and to-dos up top, then deep access into every customer's orders,
+          applications, policies and cases.</p>
+        <ul>
+          <li><strong>Overall dashboard</strong> — high-level metrics and a daily to-do list.</li>
+          <li><strong>Customers</strong> — every customer with kit and Longevity Report status; History sits inside each customer record as a full interaction catalogue.</li>
+          <li><strong>Orders</strong> — order information and statuses across the pipeline.</li>
+          <li><strong>Applications</strong> — application statuses at a glance.</li>
+          <li><strong>Policies</strong> — all policy information, indexed by customer.</li>
+          <li><strong>Cases</strong> — special circumstances and any issues to resolve through the process.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="carousel-pair reveal">
+      <div>
+        <div class="subsec">
+          <div class="subsec-eyebrow">Customer-facing</div>
+          <h3>What a policyholder <em>sees on log in.</em></h3>
+        </div>
+        <div class="carousel" id="cdashCarousel">
+          <div class="carousel-stage">
+            <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+            <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+            <div class="carousel-track">
+              <div class="carousel-slide current"><img src="images/foxo-cust-dash-01-overview.jpg" alt="Customer dashboard — Overview tab with To-dos and the Quote/Application progression"></div>
+              <div class="carousel-slide"><img src="images/foxo-cust-dash-02-profile.jpg" alt="Customer dashboard — Profile tab with contact information"></div>
+              <div class="carousel-slide"><img src="images/foxo-cust-dash-03-insurance.jpg" alt="Customer dashboard — Insurance tab with policy details and To-dos"></div>
+              <div class="carousel-slide"><img src="images/foxo-cust-dash-04-kit-status.jpg" alt="Customer dashboard — Kit Status tab with real-time tracking"></div>
+              <div class="carousel-slide"><img src="images/foxo-cust-dash-05-longevity.jpg" alt="Customer dashboard — Longevity Report tab with biological age and four scores"></div>
+            </div>
+          </div>
+          <div class="carousel-meta">
+            <div class="carousel-caption" id="cdashCaption">
+              <strong>Overview</strong> — the landing view, with To-dos walking through Quote, Application, Policy Issuance and Longevity Report.</div>
+            <div class="carousel-counter" id="cdashCounter">01 / 05</div>
+          </div>
+          <div class="carousel-thumbs" id="cdashThumbs">
+            <button class="carousel-thumb active"><img src="images/foxo-cust-dash-01-overview.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-cust-dash-02-profile.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-cust-dash-03-insurance.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-cust-dash-04-kit-status.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-cust-dash-05-longevity.jpg" alt=""></button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsec">
+          <div class="subsec-eyebrow admin">Admin-facing</div>
+          <h3 class="admin">Where the team <em>runs the platform.</em></h3>
+        </div>
+        <div class="carousel" id="adashCarousel">
+          <div class="carousel-stage">
+            <button class="carousel-arrow prev" aria-label="Previous screen">&#8249;</button>
+            <button class="carousel-arrow next" aria-label="Next screen">&#8250;</button>
+            <div class="carousel-track">
+              <div class="carousel-slide current"><img src="images/foxo-admin-dash-01-customers.jpg" alt="Admin dashboard — Customers, drilled into a record showing the History interaction catalogue"></div>
+              <div class="carousel-slide"><img src="images/foxo-admin-dash-02-orders.jpg" alt="Admin dashboard — Orders with customer, order ID, kit ID, date and status"></div>
+              <div class="carousel-slide"><img src="images/foxo-admin-dash-03-applications.jpg" alt="Admin dashboard — Applications overview with status pie chart and full list"></div>
+              <div class="carousel-slide"><img src="images/foxo-admin-dash-04-policies.jpg" alt="Admin dashboard — Policies list with status, face amount and premium"></div>
+              <div class="carousel-slide"><img src="images/foxo-admin-dash-05-cases.jpg" alt="Admin dashboard — Cases list for special circumstances"></div>
+            </div>
+          </div>
+          <div class="carousel-meta">
+            <div class="carousel-caption" id="adashCaption">
+              <strong>Customers</strong> — drilling into Bear Lindquist reveals the History tab — a full catalogue of every change made to the record.</div>
+            <div class="carousel-counter" id="adashCounter">01 / 05</div>
+          </div>
+          <div class="carousel-thumbs" id="adashThumbs">
+            <button class="carousel-thumb active"><img src="images/foxo-admin-dash-01-customers.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-admin-dash-02-orders.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-admin-dash-03-applications.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-admin-dash-04-policies.jpg" alt=""></button>
+            <button class="carousel-thumb"><img src="images/foxo-admin-dash-05-cases.jpg" alt=""></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LONGEVITY REPORT ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">06</span>
+        <div class="eyebrow">Longevity Report</div></div>
+      <h2 class="sec-title">A policy paired with <em>a personal report.</em></h2>
+      <p class="body narrow">The Longevity Report is what makes FOXOLIFE
+        different — every policyholder receives a personalized report based
+        on their epigenetic data. The design had to translate dense
+        scientific content into something readable and motivating for a
+        customer reading it for the first time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IMPACT ================= -->
+<section class="band-dark">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">07</span>
+        <div class="eyebrow">Impact &amp; contributions</div></div>
+      <h2 class="sec-title">Wearing every hat, <em>across the suite.</em></h2>
+      <p class="body narrow">UX/UI at FOXO meant design, but also process,
+        documentation and coordination. The work touched every FOXOLIFE
+        surface and the operational practices around them.</p>
+    </div>
+
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="sn">5</div>
+        <div class="sl">Surfaces designed: Quote, Application, Customer &amp; Admin Dashboards, Longevity Report.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">3×</div>
+        <div class="sl">Device sizes — responsive across desktop, iPad and mobile.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">3</div>
+        <div class="sl">History-tab states designed end-to-end: empty, active, inactive.</div>
+      </div>
+      <div class="stat">
+        <div class="sn">∞</div>
+        <div class="sl">Hats worn — design, research, documentation and stakeholder coordination.</div>
+      </div>
+    </div>
+
+    <ul class="contribs reveal">
+      <li>Updated wireframes across Customer Quote, Application, Customer Dashboard, Admin Dashboard and Longevity Report.</li>
+      <li>Designed new customer report modal, Policy "View" Active and Inactive states, Documents tab, Cases tab and History tab.</li>
+      <li>Created active and inactive banner patterns reused across the platform.</li>
+      <li>Owned UI / alignment / spacing consistency across desktop, iPad and mobile.</li>
+      <li>Partnered with Product and Engineering to ship design solutions.</li>
+      <li>Built documentation and process for SUS scoring and ongoing user testing.</li>
+      <li>Reviewed user-testing results and presented design solutions to the team.</li>
+      <li>Strategized future user journeys for the broader FOXOLIFE toolset.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= NEXT NAV ================= -->
+<div class="nextnav">
+  <div class="wrap">
+    <a href="work.html" class="back"><span>←</span> All work</a>
+    <a href="portfolio.html#contact" class="cta">Get in touch</a>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <span>Prina Bagia — Product Designer · UX / UI</span>
+      <a href="portfolio.html">← Back to home</a>
+      <span>© 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    const reveals = Array.prototype.slice.call(
+      document.querySelectorAll('.reveal'));
+    if(!reveals.length) return;
+    function check(){
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for(let i = reveals.length - 1; i >= 0; i--){
+        const el = reveals[i];
+        const r = el.getBoundingClientRect();
+        if(r.top < vh * 0.92 && r.bottom > 0){
+          el.classList.add('in');
+          reveals.splice(i, 1);
+        }
+      }
+      if(!reveals.length){
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+    }
+    let ticking = false;
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ check(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    check();
+  })();
+
+  /* ---------- CAROUSEL FACTORY ---------- */
+  function buildCarousel(rootId, captionId, counterId, captions){
+    const root = document.getElementById(rootId);
+    if(!root) return;
+    const slides  = root.querySelectorAll('.carousel-slide');
+    const thumbs  = root.querySelectorAll('.carousel-thumb');
+    const caption = document.getElementById(captionId);
+    const counter = document.getElementById(counterId);
+    const total   = slides.length;
+    let idx = 0;
+
+    function go(n){
+      idx = (n + total) % total;
+      slides.forEach((s,i) => s.classList.toggle('current', i===idx));
+      thumbs.forEach((t,i) => t.classList.toggle('active', i===idx));
+      if(caption) caption.innerHTML = captions[idx] || '';
+      if(counter) counter.textContent =
+        String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+      const at = thumbs[idx];
+      if(at && at.parentElement){
+        const strip = at.parentElement;
+        const target = at.offsetLeft - (strip.clientWidth - at.clientWidth) / 2;
+        strip.scrollTo({left: target, behavior: 'smooth'});
+      }
+    }
+    root.querySelector('.carousel-arrow.prev').addEventListener('click', () => go(idx-1));
+    root.querySelector('.carousel-arrow.next').addEventListener('click', () => go(idx+1));
+    thumbs.forEach((t,i) => t.addEventListener('click', () => go(i)));
+    document.addEventListener('keydown', (e) => {
+      const r = root.getBoundingClientRect();
+      if(r.top < window.innerHeight && r.bottom > 0){
+        if(e.key === 'ArrowLeft')  go(idx-1);
+        if(e.key === 'ArrowRight') go(idx+1);
+      }
+    });
+    go(0);
+  }
+
+  buildCarousel('qaCarousel', 'qaCaption', 'qaCounter', [
+    '<strong>Admin dashboard</strong> — flagging padding between the nav, header and welcome card.',
+    '<strong>Customer list</strong> — clickability (VIEW-only), missing filters, pagination compression and footer padding.',
+    '<strong>Customer profile</strong> — corner-radius and card alignment between nav and customer card.',
+    '<strong>Customer Documents</strong> — alignment, corner radius and an empty-state banner ask.',
+    '<strong>Customer Billing</strong> — warning emphasis (colour or symbol), section spacing, header / account hierarchy.',
+    '<strong>Customer Policies — inactive</strong> — greyed state with no banner and sharp corners.',
+    '<strong>Inactive-policy banner</strong> — banner padding and vertical centering inside its container.',
+    '<strong>Case modal</strong> — X / Cancel did not exit, plus padding and Refresh / Case # alignment.',
+    '<strong>Admin Orders</strong> — filter arrow alignment, ALL TIME label sizing and page-list compression.',
+    '<strong>Admin Applications</strong> — header padding and alignment to the applications overview card.',
+    '<strong>Customer Overview — To-dos</strong> — Quote / Application / Longevity Report card states and CTA logic.',
+    '<strong>Customer Kit Status</strong> — add a Longevity Report Available status, give real-time updates, remove duplicate card.',
+    '<strong>Customer Overview — Longevity Report</strong> — Overview tab and Insurance / Kit Status sidebar interactions.'
+  ]);
+
+  buildCarousel('appCarousel', 'appCaption', 'appCounter', [
+    '<strong>Health survey</strong> — the linear sidebar in action, with Complete / In progress / Declined states for every section.',
+    '<strong>Beneficiaries</strong> — allocating primary and contingent beneficiaries, with the same sidebar carrying progress.',
+    '<strong>Shipping Address</strong> — payment confirmed, address captured for the FOXO saliva-collection kit.',
+    '<strong>Completion</strong> — "You Did It!" with a preview of the personalized dashboard waiting on the other side.'
+  ]);
+
+  buildCarousel('cdashCarousel', 'cdashCaption', 'cdashCounter', [
+    '<strong>Overview</strong> — the landing view, with To-dos walking through Quote, Application, Policy Issuance and Longevity Report.',
+    '<strong>Profile</strong> — basic contact information for the policyholder, with a quick Update Profile action.',
+    '<strong>Insurance</strong> — policy details with coverage and pricing shaped by the Longevity Report; To-dos persist in context.',
+    '<strong>Kit Status</strong> — real-time tracking from Ordered through Processing, shown here with the kit already shipped.',
+    '<strong>Longevity Report</strong> — biological age and four scores, the gateway into the full personalized report.'
+  ]);
+
+  buildCarousel('adashCarousel', 'adashCaption', 'adashCounter', [
+    '<strong>Customers</strong> — drilling into Bear Lindquist reveals the History tab — a full catalogue of every change made to the record.',
+    '<strong>Orders</strong> — every saliva-kit order with customer, ID, kit ID, date and status.',
+    '<strong>Applications</strong> — high-level status pie chart at the top, full applications list below.',
+    '<strong>Policies</strong> — every policy with status, face amount and annual premium.',
+    '<strong>Cases</strong> — every open case for a special circumstance or issue mid-process.'
+  ]);
+</script>
+
+<script>
+  /* Ensure the case study opens at the top with the main title */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('load', function(){ window.scrollTo(0, 0); });
+</script>
+</body>
+</html>
