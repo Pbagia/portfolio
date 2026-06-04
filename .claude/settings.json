@@ -5,7 +5,8 @@
       "Bash(python3)",
       "Bash(awk 'length\\($0\\) > 500 { print NR\": \"length\\($0\\)\" chars\" }' /Users/prinabagia/Desktop/portfolio/work.html)",
       "Bash(awk 'NR>=373 && NR<=388' /Users/prinabagia/Desktop/portfolio/work.html)",
-      "Bash(python3 -c \"from PIL import Image; im=Image.open\\('/Users/prinabagia/Desktop/portfolio/images/foxo-laptop-ivory.png'\\); print\\(f'{im.size}, aspect {im.size[0]/im.size[1]:.3f}'\\)\")"
+      "Bash(python3 -c \"from PIL import Image; im=Image.open\\('/Users/prinabagia/Desktop/portfolio/images/foxo-laptop-ivory.png'\\); print\\(f'{im.size}, aspect {im.size[0]/im.size[1]:.3f}'\\)\")",
+      "Bash(sips -g pixelWidth -g pixelHeight case-bcbs.png case-first-chicago.png foxo-laptop-ivory.png)"
     ]
   }
 }
