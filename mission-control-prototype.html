@@ -89,7 +89,7 @@
     grid-area: globalnav;
     background: #FBF9F4;
     border-bottom: 1px solid #D9D4C7;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 28px;
     padding: 0 24px;
     font-family: 'Jost', 'Helvetica Neue', sans-serif;
     z-index: 20;
@@ -98,6 +98,17 @@
     .globalnav { padding: 0 64px; }
   }
   .globalnav a { text-decoration: none; }
+  .globalnav .nav-back {
+    font-family: 'Jost', 'Helvetica Neue', sans-serif;
+    font-weight: 400; font-size: 12px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: #2E2C28;
+    display: inline-flex; align-items: center; gap: 9px;
+    transition: color 0.25s;
+  }
+  .globalnav .nav-back:hover { color: #8A6253; }
+  .globalnav .nav-back .ar { display: inline-block; transition: transform 0.3s; }
+  .globalnav .nav-back:hover .ar { transform: translateX(-4px); }
   .globalnav .nav-logo {
     display: flex; align-items: center; gap: 11px;
   }
@@ -107,34 +118,6 @@
     font-weight: 500; font-size: 21px;
     color: #2E2C28; letter-spacing: 0.04em;
   }
-  .globalnav .nav-links { display: none; gap: 34px; }
-  @media (min-width: 760px) {
-    .globalnav .nav-links { display: flex; }
-  }
-  .globalnav .nav-links a {
-    font-family: 'Jost', 'Helvetica Neue', sans-serif;
-    font-weight: 400; font-size: 12px;
-    letter-spacing: 0.16em; text-transform: uppercase;
-    color: #2E2C28;
-    transition: color 0.25s;
-    position: relative; padding: 4px 0;
-  }
-  .globalnav .nav-links a::after {
-    content: ""; position: absolute; left: 0; bottom: 0;
-    width: 0; height: 1px; background: #B98E80;
-    transition: width 0.3s ease;
-  }
-  .globalnav .nav-links a:hover { color: #8A6253; }
-  .globalnav .nav-links a:hover::after { width: 100%; }
-  .globalnav .nav-cta {
-    font-family: 'Jost', 'Helvetica Neue', sans-serif;
-    font-weight: 400; font-size: 11px;
-    letter-spacing: 0.16em; text-transform: uppercase;
-    color: #FBF9F4; background: #2E2C28;
-    padding: 11px 20px; border-radius: 3px;
-    transition: background 0.3s;
-  }
-  .globalnav .nav-cta:hover { background: #8A6253; }
 
   /* ============================ TOP BAR ============================ */
   /* entire header uses monospace; layout tuned so nothing overlaps */
@@ -1344,17 +1327,15 @@
 
   <!-- ============================ GLOBAL NAV ============================ -->
   <nav class="globalnav">
-    <a href="index.html#top" class="nav-logo" aria-label="Prina Bagia home">
+    <a href="index.html" class="nav-back"
+       onclick="if (history.length > 1) { event.preventDefault(); history.back(); }"
+       aria-label="Back to previous page">
+      <span class="ar">←</span> Back
+    </a>
+    <a href="index.html" class="nav-logo" aria-label="Prina Bagia home">
       <svg class="mark" width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
       <span class="nm">Prina Bagia</span>
     </a>
-    <div class="nav-links">
-      <a href="index.html#about">About</a>
-      <a href="index.html#work">Work</a>
-      <a href="index.html#process">Process</a>
-      <a href="index.html#skills">Skills</a>
-    </div>
-    <a href="index.html#contact" class="nav-cta">Get in touch</a>
   </nav>
 
   <!-- ============================ TOP BAR ============================ -->

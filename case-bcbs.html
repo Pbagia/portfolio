@@ -33,7 +33,7 @@
 
   /* ---------- NAV ---------- */
   nav{ position:fixed; top:0; left:0; right:0; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
+    display:flex; align-items:center; gap:28px;
     padding:18px 7vw; background:rgba(251,249,244,.93);
     backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline); }
   @media(min-width:900px){ nav{ padding:15px 64px; } }
@@ -129,6 +129,7 @@
   .figframe{ border-radius:5px; overflow:hidden; border:1px solid var(--hairline);
     background:#fff; }
   .figframe img{ width:100%; height:auto; display:block; }
+  .figframe.hero img{ height:500px; object-fit:cover; object-position:center; }
   figcaption{ font-family:var(--sans); font-weight:300; font-size:13px;
     color:var(--warm-grey); margin-top:14px; text-align:center;
     letter-spacing:.02em; }
@@ -241,11 +242,13 @@
 
 <!-- ================= NAV ================= -->
 <nav>
-  <a href="portfolio.html" class="nav-logo" aria-label="Prina Bagia home">
+  <a href="index.html" class="nav-back"
+     onclick="if (history.length > 1) { event.preventDefault(); history.back(); }"
+     aria-label="Back to previous page"><span class="ar">←</span> Back</a>
+  <a href="index.html" class="nav-logo" aria-label="Prina Bagia home">
     <svg width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
     <span class="nm">Prina Bagia</span>
   </a>
-  <a href="work.html" class="nav-back"><span class="ar">←</span> All work</a>
 </nav>
 
 <!-- ================= HERO ================= -->
@@ -332,7 +335,7 @@
 <section style="padding-top:0; padding-bottom:clamp(40px,7vh,80px);">
   <div class="wrap">
     <figure class="reveal" style="margin-top:8px;">
-      <div class="figframe">
+      <div class="figframe hero">
         <img src="images/bcbs-hero.png" alt="The BCBS claims platform — overview of key screens">
       </div>
       <figcaption><strong>The Platform</strong> — Claim Summary, Search
