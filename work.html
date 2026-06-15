@@ -128,6 +128,8 @@
   /* device-mockup images: show the full laptop on the ivory tile */
   .thumb.thumb-device img{ object-fit:contain; object-position:center;
     padding:8% 9%; }
+  /* foxo source has more built-in margin around the laptop — trim padding to match */
+  .thumb.thumb-device.is-foxo img{ padding:2.5% 3.5%; }
   .thumb .placeholder{ display:flex; flex-direction:column; align-items:center;
     gap:13px; }
   .thumb .placeholder .pl{ font-family:var(--sans); font-weight:400;
@@ -331,7 +333,20 @@
   <div class="wrap">
     <div class="grid">
 
-      <!-- 0 — FINANCE PROTOTYPE / LIQUIFY -->
+      <!-- 0 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
+      <a class="card reveal" href="maritime-prototype.html">
+        <div class="thumb thumb-device">
+          <img src="images/case-maritime.png" alt="Meridian autonomous maritime operations console in a laptop">
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Product Design · Maritime Autonomy</div>
+          <h3>Meridian</h3>
+          <div class="role">Designer &amp; prototyper — autonomous fleet ops, operator &amp; crew views</div>
+          <span class="read">View prototype →</span>
+        </div>
+      </a>
+
+      <!-- 1 — FINANCE PROTOTYPE / LIQUIFY -->
       <a class="card reveal" href="finance-prototype.html">
         <div class="thumb thumb-device">
           <img src="images/case-liquify.png" alt="Liquify personal finance app">
@@ -344,7 +359,7 @@
         </div>
       </a>
 
-      <!-- 1 — APOGEE DYNAMICS / MISSION CONTROL -->
+      <!-- 2 — APOGEE DYNAMICS / MISSION CONTROL -->
       <a class="card reveal" href="mission-control-prototype.html">
         <div class="thumb thumb-device">
           <img src="images/case-mission-control.png" alt="Apogee Dynamics mission control dashboard">
@@ -357,7 +372,7 @@
         </div>
       </a>
 
-      <!-- 2 — FIRST CHICAGO -->
+      <!-- 3 — FIRST CHICAGO -->
       <a class="card reveal" href="case-first-chicago.html">
         <div class="thumb thumb-device">
           <img src="images/case-first-chicago.png" alt="First Chicago Insurance claims platform">
@@ -370,7 +385,7 @@
         </div>
       </a>
 
-      <!-- 3 — BLUE CROSS BLUE SHIELD -->
+      <!-- 4 — BLUE CROSS BLUE SHIELD -->
       <a class="card reveal" href="case-bcbs.html" style="transition-delay:.06s">
         <div class="thumb thumb-device">
           <img src="images/case-bcbs.png" alt="Blue Cross Blue Shield website">
@@ -383,9 +398,9 @@
         </div>
       </a>
 
-      <!-- 4 — FOXO -->
+      <!-- 5 — FOXO -->
       <a class="card reveal" href="case-foxo.html" style="transition-delay:.12s">
-        <div class="thumb thumb-device">
+        <div class="thumb thumb-device is-foxo">
           <img src="images/foxo-laptop-ivory.png" alt="FOXO Technologies marketing site">
         </div>
         <div class="card-body">
