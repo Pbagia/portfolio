@@ -39,10 +39,15 @@ import {
   Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, ArrowUpRight, Filter, AlertTriangle, Mail, Zap,
 } from "lucide-react";
 
-/* embed control: ?exp=fan | ?exp=business opens straight into one product */
+/* embed control: #fan | #business (or ?exp=fan|business) opens straight into one product */
 const params = new URLSearchParams(location.search);
-const INITIAL_EXP = params.get("exp") || null;
+const _rawExp = (params.get("exp") || location.hash.replace(/^#/, "") || "").toLowerCase();
+const INITIAL_EXP = (_rawExp === "fan" || _rawExp === "business") ? _rawExp : null;
 const EMBED = !!INITIAL_EXP;
+/* top-level (opened full-page) vs embedded in an iframe on the case study */
+const IS_TOP = (function(){ try { return window.self === window.top; } catch (e) { return false; } })();
+const SHOW_BACK = EMBED && IS_TOP;   /* show a "back to case study" control only when opened full-page */
+function backToCase(e){ if (window.history.length > 1){ e.preventDefault(); window.history.back(); } }
 
 /* ============================== DESIGN TOKENS / STYLE ============================== */
 const Style = () => (
@@ -111,6 +116,8 @@ const Style = () => (
     .phone-scroll::-webkit-scrollbar{display:none}
     .tabbar{flex:none;display:flex;justify-content:space-around;padding:9px 6px calc(9px + env(safe-area-inset-bottom));background:rgba(8,11,22,.96);border-top:1px solid var(--line2);}
     .switch-pill{position:fixed;top:22px;left:22px;z-index:30;}
+    .cs-backfloat{position:fixed;top:22px;left:22px;z-index:40;text-decoration:none;}
+    @media (max-width:520px){ .cs-backfloat{ top:8px; left:10px; } }
     @media (max-width:520px){
       .stage{padding:0;background:var(--ink);}
       .phone{width:100%;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none;}
@@ -1748,6 +1755,7 @@ function BusinessShell({ onExit }) {
     <div style={{ minHeight: "100vh", background: "var(--ink)" }}>
       <header style={{ borderBottom: "1px solid var(--line)", position: "sticky", top: 0, zIndex: 10, background: "rgba(237,241,247,.88)", backdropFilter: "blur(8px)" }}>
         <div style={{ maxWidth: 1320, margin: "0 auto", padding: "13px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+          {SHOW_BACK && <a href="case-courtside.html" onClick={backToCase} className="btn btn-sm btn-ghost" style={{ textDecoration: "none", marginRight: 2 }}><ChevronLeft size={15} />Case study</a>}
           <div className="display" style={{ width: 32, height: 32, borderRadius: 9, background: "var(--cyan)", color: "#04201d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>C</div>
           <div className="heading" style={{ fontWeight: 900, fontSize: 16 }}>COURTSIDE <span style={{ color: "var(--muted)", fontWeight: 700 }}>· Business</span></div>
           <div style={{ flex: 1 }} />
@@ -1890,6 +1898,7 @@ function App() {
       <Style />
       <div className="stage">
         {!EMBED && <button className="btn btn-sm btn-ghost switch-pill" onClick={() => setExperience(null)}><ArrowRightLeft size={13} />Switch</button>}
+        {SHOW_BACK && <a href="case-courtside.html" onClick={backToCase} className="btn btn-sm btn-ghost cs-backfloat"><ChevronLeft size={15} />Case study</a>}
         <div className="phone">
           <div className="phone-screen">
             {/* status bar */}

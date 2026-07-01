@@ -118,7 +118,7 @@
   .card-soon:hover{ transform:none; }
   .card-soon:hover .thumb{ border-color:var(--hairline); }
   .card-soon:hover .read{ color:var(--warm-grey); }
-  .thumb{ aspect-ratio:4/3; border-radius:5px; overflow:hidden;
+  .thumb{ position:relative; aspect-ratio:4/3; border-radius:5px; overflow:hidden;
     background:var(--ivory); border:1px solid var(--hairline);
     display:flex; align-items:center; justify-content:center;
     transition:border-color .4s ease; }
@@ -136,31 +136,25 @@
     font-size:10px; letter-spacing:.2em; text-transform:uppercase;
     color:var(--warm-grey); }
 
-  /* Courtside card — laptop (console) + phone (fan app) device shot, to scale */
-  .cs-shot{ position:absolute; inset:0; background:var(--ivory); overflow:hidden; }
-  .cs-lap{ position:absolute; left:8%; top:21%; width:61%; }
-  .cs-lap__scr{ background:#EDF1F7; border:5px solid #14171c; border-radius:7px 7px 2px 2px;
-    aspect-ratio:16/10; padding:6.5% 7%; display:flex; flex-direction:column; }
-  .cs-lap__bar{ display:flex; align-items:center; gap:5px; margin-bottom:7%; }
-  .cs-lap__bar i{ width:6px; height:6px; border-radius:2px; background:#0C9C92; display:block; flex:none; }
-  .cs-lap__bar b{ flex:1; height:4px; border-radius:2px; background:#d6dde7; }
-  .cs-lap__kpi{ display:flex; gap:5%; margin-bottom:7%; }
-  .cs-lap__kpi span{ flex:1; height:12px; border-radius:3px; background:#f5f8fc; border:1px solid #e4eaf1; }
-  .cs-lap__chart{ flex:1; min-height:0; width:100%; display:block; }
-  .cs-lap__base{ width:112%; height:5px; margin-left:-6%; border-radius:0 0 7px 7px;
-    background:linear-gradient(#dfe3e8,#b4bac3); box-shadow:0 8px 12px -7px rgba(0,0,0,.4); }
-  .cs-phone{ position:absolute; right:9%; bottom:9%; width:18.5%; z-index:2; }
-  .cs-phone__scr{ background:#0B1020; border:3px solid #2b2f39; border-radius:14px;
-    aspect-ratio:9/19; padding:9% 8%; display:flex; flex-direction:column;
+  /* Courtside card — live hero shot: laptop (console) + phone (fan app), to scale */
+  .cst{ position:absolute; inset:0; background:var(--ivory); overflow:hidden; }
+  .cst iframe{ pointer-events:none; }
+  .cst-shadow{ position:absolute; left:14%; right:14%; bottom:9%; height:6%; z-index:0;
+    background:radial-gradient(ellipse at center, rgba(46,44,40,.18), transparent 70%); filter:blur(2px); }
+  .cst-lap{ position:absolute; left:6%; top:15%; width:64%; z-index:1; }
+  .cst-lap__scr{ position:relative; width:100%; aspect-ratio:16/10; overflow:hidden;
+    background:#EDF1F7; border:5px solid #14171c; border-radius:8px 8px 3px 3px; }
+  .cst-lap__scr iframe{ position:absolute; top:0; left:0; width:1280px; height:800px; border:0;
+    transform-origin:top left; background:#EDF1F7; }
+  .cst-lap__base{ width:112%; margin-left:-6%; height:5px; border-radius:0 0 8px 8px;
+    background:linear-gradient(#e4e8ed,#b4bac3); }
+  .cst-phone{ position:absolute; right:7%; bottom:11%; width:20%; z-index:2; }
+  .cst-phone__scr{ position:relative; width:100%; aspect-ratio:9/19; overflow:hidden;
+    background:#0B1020; border:3px solid #262b38; border-radius:15px;
     box-shadow:0 12px 24px -10px rgba(0,0,0,.55); }
-  .cs-phone__tick{ height:7px; border-radius:2px; background:#141a29; position:relative; overflow:hidden; margin-bottom:10%; }
-  .cs-phone__tick::before{ content:""; position:absolute; left:2px; top:1.5px; width:42%; height:4px; border-radius:2px; background:#FF7A2F; }
-  .cs-phone__stub{ background:#1D2640; border-radius:5px; padding:8px 7px; margin-bottom:auto; }
-  .cs-phone__stub b{ display:block; width:58%; height:5px; border-radius:2px; background:#FF7A2F; margin-bottom:6px; }
-  .cs-phone__stub i{ display:block; height:3px; border-radius:2px; background:#3a4364; margin-top:4px; }
-  .cs-phone__tabs{ display:flex; gap:3px; margin-top:9%; }
-  .cs-phone__tabs u{ flex:1; height:3px; border-radius:2px; background:#27314f; }
-  .cs-phone__tabs u:first-child{ background:#FF7A2F; }
+  .cst-phone__scr iframe{ position:absolute; top:0; left:0; width:392px; height:846px; border:0;
+    transform-origin:top left; background:#0B1020; }
+  .cst-hit{ position:absolute; inset:0; z-index:5; }   /* keeps the whole card clickable */
 
   .card-body{ padding:20px 4px 0; }
   .card-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
@@ -362,28 +356,20 @@
       <!-- 0 — COURTSIDE / LIVE SPORTS PLATFORM -->
       <a class="card reveal" href="case-courtside.html">
         <div class="thumb" style="padding:0;">
-          <div class="cs-shot">
-            <div class="cs-lap">
-              <div class="cs-lap__scr">
-                <div class="cs-lap__bar"><i></i><b></b></div>
-                <div class="cs-lap__kpi"><span></span><span></span><span></span></div>
-                <svg class="cs-lap__chart" viewBox="0 0 120 46" preserveAspectRatio="none" aria-hidden="true">
-                  <defs><linearGradient id="csChart" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#FF7A2F" stop-opacity=".38"/>
-                    <stop offset="1" stop-color="#FF7A2F" stop-opacity="0"/></linearGradient></defs>
-                  <path d="M0 34 L18 24 L34 30 L52 14 L70 22 L88 8 L106 18 L120 10 L120 46 L0 46 Z" fill="url(#csChart)"/>
-                  <path d="M0 34 L18 24 L34 30 L52 14 L70 22 L88 8 L106 18 L120 10" fill="none" stroke="#FF7A2F" stroke-width="1.6"/>
-                </svg>
+          <div class="cst">
+            <div class="cst-shadow"></div>
+            <div class="cst-lap">
+              <div class="cst-lap__scr">
+                <iframe src="courtside-app.html#business" title="Courtside business console" scrolling="no" loading="lazy" tabindex="-1"></iframe>
               </div>
-              <div class="cs-lap__base"></div>
+              <div class="cst-lap__base"></div>
             </div>
-            <div class="cs-phone">
-              <div class="cs-phone__scr">
-                <div class="cs-phone__tick"></div>
-                <div class="cs-phone__stub"><b></b><i style="width:88%"></i><i style="width:66%"></i></div>
-                <div class="cs-phone__tabs"><u></u><u></u><u></u><u></u></div>
+            <div class="cst-phone">
+              <div class="cst-phone__scr">
+                <iframe src="courtside-app.html#fan" title="Courtside fan app" scrolling="no" loading="lazy" tabindex="-1"></iframe>
               </div>
             </div>
+            <span class="cst-hit" aria-hidden="true"></span>
           </div>
         </div>
         <div class="card-body">
@@ -501,6 +487,22 @@
     function show(){ fb.classList.add('shown'); }
     if(document.readyState === 'complete') setTimeout(show, 350);
     else window.addEventListener('load', () => setTimeout(show, 350));
+  })();
+
+  // Courtside card: fit the live console (1280px) + fan app (392px) into their device screens
+  (function(){
+    const screens = document.querySelectorAll('.cst-lap__scr, .cst-phone__scr');
+    if(!screens.length) return;
+    function fit(){
+      screens.forEach(function(scr){
+        const f = scr.querySelector('iframe'); if(!f) return;
+        const lw = scr.classList.contains('cst-phone__scr') ? 392 : 1280;
+        f.style.transform = 'scale(' + (scr.clientWidth / lw) + ')';
+      });
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(fit); screens.forEach(function(s){ ro.observe(s); }); }
+    window.addEventListener('resize', fit);
+    fit();
   })();
 </script>
 
