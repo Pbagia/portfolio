@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courtside — Case Study | Prina Bagia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bone:#FBF9F4; --ivory:#F3EFE6; --sage:#9CA98C; --deep-sage:#6F7A5E;
+    --clay:#8A6253; --deep-clay:#6F4E42; --clay-tint:#E4D8D0;
+    --soft-black:#2E2C28; --warm-grey:#8A867D; --hairline:#D9D4C7;
+    --live:#FF7A2F;                       /* fan-world amber — the prototype's signature accent */
+    --court-cyan:#0C9C92;                 /* console-world cyan */
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Jost','Helvetica Neue',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{ font-family:var(--sans); font-weight:300; color:var(--soft-black);
+    background:var(--bone); line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; }
+  ::selection{ background:var(--sage); color:var(--bone); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 7vw; }
+  @media(min-width:900px){ .wrap{ padding:0 64px; } }
+  .narrow{ max-width:760px; }
+
+  .eyebrow{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.34em; text-transform:uppercase; color:var(--deep-sage); }
+  h1,h2,h3{ font-family:var(--serif); font-weight:500; letter-spacing:.01em; }
+  .reveal{ opacity:0; transform:translateY(26px);
+    transition:opacity 1s cubic-bezier(.2,.6,.2,1), transform 1s cubic-bezier(.2,.6,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- NAV ---------- */
+  nav{ position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; gap:28px;
+    padding:18px 7vw; background:rgba(251,249,244,.93);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline); }
+  @media(min-width:900px){ nav{ padding:15px 64px; } }
+  .nav-logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav-logo .nm{ font-family:var(--serif); font-weight:500; font-size:21px;
+    color:var(--soft-black); letter-spacing:.04em; }
+  .nav-back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    text-decoration:none; display:inline-flex; align-items:center; gap:9px;
+    transition:color .25s; }
+  .nav-back:hover{ color:var(--deep-clay); }
+  .nav-back .ar{ transition:transform .3s; }
+  .nav-back:hover .ar{ transform:translateX(-4px); }
+
+  /* ---------- HERO ---------- */
+  header{ padding:150px 0 70px; }
+  .hero-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    margin-bottom:20px; }
+  h1.title{ font-size:clamp(38px,5.6vw,68px); line-height:1.06; font-weight:500;
+    max-width:16ch; }
+  h1.title em{ font-style:italic; color:var(--deep-sage); }
+  .hero-sub{ font-family:var(--sans); font-weight:300;
+    font-size:clamp(15px,1.7vw,18px); color:#43403A; max-width:56ch;
+    margin-top:24px; line-height:1.75; }
+
+  /* ---------- META STRIP ---------- */
+  .meta{ border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline); margin-top:54px; }
+  .meta-grid{ display:grid; gap:0; }
+  @media(min-width:680px){ .meta-grid{ grid-template-columns:repeat(4,1fr); } }
+  .meta-cell{ padding:26px 0; }
+  @media(min-width:680px){ .meta-cell{ padding:30px 28px 30px 0; } }
+  .meta-cell + .meta-cell{ border-top:1px solid var(--hairline); }
+  @media(min-width:680px){ .meta-cell + .meta-cell{ border-top:0;
+    border-left:1px solid var(--hairline); padding-left:28px; } }
+  .meta-k{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-clay); }
+  .meta-v{ font-family:var(--serif); font-size:18px; color:var(--soft-black);
+    margin-top:7px; line-height:1.3; }
+
+  /* ---------- HERO DEVICE SCENE ---------- */
+  .hero-stage{ position:relative; width:100%; height:500px; margin-top:48px; }
+  .hero-scene{ position:absolute; left:50%; top:0; width:920px; height:500px;
+    transform:translateX(-50%) scale(1); transform-origin:top center; }
+  .hero-scene::after{ content:""; position:absolute; left:50%; bottom:20px; transform:translateX(-50%);
+    width:680px; height:42px; border-radius:50%; z-index:0;
+    background:radial-gradient(ellipse at center, rgba(46,44,40,.22), transparent 70%); filter:blur(4px); }
+
+  /* laptop — Meridian-style MacBook */
+  .laptop{ position:absolute; left:78px; top:14px; z-index:1; }
+  .laptop-lid{ position:relative; width:660px; padding:14px; background:#14171c;
+    border-radius:16px 16px 4px 4px;
+    box-shadow:0 44px 76px -36px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04); }
+  .laptop-lid::before{ content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; border-radius:50%; background:#2c2f36; }
+  .lap-view{ position:relative; width:632px; height:386px; overflow:hidden; border-radius:4px; background:#0B1020; }
+  .lap-view iframe{ width:1264px; height:772px; border:0; display:block;
+    transform:scale(.5); transform-origin:top left; }
+  .laptop-base{ position:relative; width:742px; height:15px; margin-left:-41px;
+    background:linear-gradient(#dfe3e8,#b4bac3); border-radius:2px 2px 11px 11px;
+    box-shadow:0 20px 28px -16px rgba(0,0,0,.4); }
+  .laptop-base::after{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:104px; height:8px; background:linear-gradient(#c2c7cf,#a9afb8); border-radius:0 0 9px 9px; }
+
+  /* phone — Liquify-style handset, smaller & in front */
+  .phone2{ position:absolute; left:600px; top:92px; z-index:3; }
+  .phone-frame{ position:relative; width:198px; padding:8px; background:#0a0c11;
+    border:2px solid #2b2f39; border-radius:32px;
+    box-shadow:0 44px 64px -24px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.05); }
+  .phone-frame::after{ content:""; position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    width:56px; height:17px; background:#0a0c11; border-radius:0 0 13px 13px; z-index:2; }
+  .ph-view{ position:relative; width:178px; height:384px; overflow:hidden; border-radius:24px; background:#0B1020; }
+  .ph-view iframe{ width:392px; height:846px; border:0; display:block;
+    transform:scale(.454); transform-origin:top left; }
+  @media(max-width:520px){ .hero-stage{ margin-top:34px; } }
+
+  /* ---------- SECTION ---------- */
+  section{ padding:clamp(56px,8vh,90px) 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:18px; }
+  .sec-head .idx{ font-family:var(--serif); font-style:italic; font-size:17px;
+    color:var(--clay); }
+  h2.sec-title{ font-size:clamp(27px,3.4vw,40px); line-height:1.12;
+    max-width:22ch; }
+  h2.sec-title em{ font-style:italic; color:var(--deep-sage); }
+  p.body{ font-size:clamp(15px,1.6vw,16.5px); color:#43403A; line-height:1.8;
+    margin-top:16px; }
+  p.body strong{ font-weight:500; color:var(--soft-black); }
+
+  /* three-column intro block */
+  .cols{ display:grid; gap:30px; margin-top:10px; }
+  @media(min-width:760px){ .cols{ grid-template-columns:repeat(3,1fr); gap:36px; } }
+  .col h3{ font-size:21px; color:var(--soft-black); }
+  .col .kicker{ font-family:var(--serif); font-style:italic; font-size:15px;
+    color:var(--clay); }
+  .col p{ font-family:var(--sans); font-weight:300; font-size:14.5px;
+    color:#43403A; line-height:1.74; margin-top:9px; }
+
+  /* alt background block */
+  .band{ background:var(--ivory); }
+  .band-dark{ background:var(--soft-black); color:var(--bone); }
+  .band-dark .eyebrow{ color:var(--sage); }
+  .band-dark h2.sec-title{ color:var(--bone); }
+  .band-dark h2.sec-title em{ color:var(--sage); }
+  .band-dark p.body{ color:#D8D3C8; }
+  .band-dark p.body strong{ color:var(--bone); }
+  .band-dark .sec-head .idx{ color:var(--live); }
+
+  /* goal / callout */
+  .goal{ display:flex; gap:16px; margin-top:26px; padding:22px 26px;
+    background:var(--bone); border:1px solid var(--hairline);
+    border-left:3px solid var(--sage); border-radius:0 4px 4px 0; }
+  .band .goal{ background:#fff; }
+  .goal .lbl{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    flex:none; padding-top:3px; }
+  .goal p{ font-family:var(--serif); font-style:italic; font-size:18px;
+    color:var(--soft-black); line-height:1.45; }
+
+  /* pull quote */
+  .pull{ margin:36px 0 0; padding-left:26px; border-left:2px solid var(--clay); }
+  .pull p{ font-family:var(--serif); font-style:italic;
+    font-size:clamp(20px,2.5vw,27px); line-height:1.35; color:var(--soft-black);
+    max-width:24ch; }
+  .band-dark .pull{ border-left-color:var(--live); }
+  .band-dark .pull p{ color:var(--bone); }
+
+  /* tag row */
+  .tags{ display:flex; flex-wrap:wrap; gap:10px; margin-top:28px; }
+  .tag{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--deep-sage);
+    border:1px solid var(--hairline); border-radius:20px; padding:7px 15px; }
+
+  /* ---------- FEATURE LIST ---------- */
+  .feat{ display:grid; gap:1px; margin-top:34px;
+    background:var(--hairline); border:1px solid var(--hairline);
+    border-radius:6px; overflow:hidden; }
+  .feat-row{ background:var(--bone); padding:24px 26px; display:grid; gap:6px 24px; }
+  @media(min-width:720px){ .feat-row{ grid-template-columns:210px 1fr; align-items:start; } }
+  .band .feat-row{ background:#fff; }
+  .band-dark .feat{ background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); }
+  .band-dark .feat-row{ background:#26241F; }
+  .feat-h{ font-family:var(--serif); font-size:20px; color:var(--soft-black); line-height:1.2; }
+  .band-dark .feat-h{ color:var(--bone); }
+  .feat-p{ font-family:var(--sans); font-weight:300; font-size:14.5px; color:#43403A; line-height:1.72; }
+  .band-dark .feat-p{ color:#CFCABE; }
+  .feat-p strong{ font-weight:500; color:var(--soft-black); }
+  .band-dark .feat-p strong{ color:var(--bone); }
+
+  /* ---------- LIVE PROTOTYPE EMBEDS ---------- */
+  .embed{ margin-top:38px; }
+  .embed-cap{ display:flex; align-items:center; gap:9px; margin-bottom:16px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; }
+  .embed-cap .live{ width:7px; height:7px; border-radius:50%; background:var(--live); flex:none;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--live) 20%, transparent); }
+  .band-dark .embed-cap{ color:var(--sage); }
+  .embed-cap span{ color:var(--warm-grey); }
+  .band-dark .embed-cap span{ color:#A9B0A0; }
+
+  .phone-bezel{ width:412px; max-width:100%; margin:0 auto;
+    background:#0b0e16; border:2px solid #232c46; border-radius:44px; padding:12px;
+    box-shadow:0 44px 100px -34px rgba(0,0,0,.75); }
+  .phone-bezel iframe{ width:100%; height:min(770px,80vh); border:0; border-radius:32px;
+    display:block; background:#0B1020; }
+
+  .laptop-embed{ max-width:980px; margin:0 auto; }
+  .laptop-embed__lid{ position:relative; background:#14171c; padding:14px;
+    border-radius:16px 16px 5px 5px;
+    box-shadow:0 44px 84px -40px rgba(46,44,40,.6), inset 0 0 0 1px rgba(255,255,255,.04); }
+  .laptop-embed__lid::before{ content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%);
+    width:6px; height:6px; border-radius:50%; background:#2c2f36; }
+  .laptop-embed__screen{ position:relative; width:100%; aspect-ratio:16/10;
+    overflow:hidden; border-radius:4px; background:#EDF1F7; }
+  .laptop-embed__screen iframe{ position:absolute; top:0; left:0; width:1280px; height:800px;
+    border:0; display:block; background:#EDF1F7; transform-origin:top left; }
+  .laptop-embed__base{ position:relative; width:108%; margin-left:-4%; height:17px;
+    background:linear-gradient(#e2e6eb,#b4bac3); border-radius:1px 1px 12px 12px;
+    box-shadow:0 24px 32px -18px rgba(0,0,0,.4); }
+  .laptop-embed__base::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:124px; height:9px; background:linear-gradient(#c8ccd3,#aab0b9); border-radius:0 0 10px 10px; }
+
+  .embed-open{ display:inline-flex; align-items:center; gap:8px; margin-top:18px;
+    font-family:var(--sans); font-weight:400; font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--deep-clay); text-decoration:none;
+    border-bottom:1px solid var(--clay-tint); padding-bottom:3px; transition:.25s; }
+  .embed-open:hover{ color:var(--soft-black); border-color:var(--soft-black); }
+  .band-dark .embed-open{ color:var(--sage); border-color:rgba(156,169,140,.4); }
+  .band-dark .embed-open:hover{ color:var(--bone); border-color:var(--bone); }
+  @media(max-width:700px){
+    .phone-bezel iframe{ height:74vh; }
+  }
+
+  /* ---------- PRINCIPLES ---------- */
+  .principles{ display:grid; gap:1px; margin-top:34px;
+    background:var(--hairline); border:1px solid var(--hairline);
+    border-radius:6px; overflow:hidden; }
+  @media(min-width:720px){ .principles{ grid-template-columns:1fr 1fr; } }
+  .principle{ background:var(--bone); padding:24px 26px; }
+  .band .principle{ background:#fff; }
+  .principle .pn{ font-family:var(--serif); font-style:italic; font-size:16px; color:var(--clay); }
+  .principle h3{ font-size:20px; margin-top:4px; color:var(--soft-black); }
+  .principle p{ font-family:var(--sans); font-weight:300; font-size:14px;
+    color:#43403A; line-height:1.68; margin-top:8px; }
+
+  /* ---------- NEXT / FOOTER ---------- */
+  .nextnav{ border-top:1px solid var(--hairline); padding:46px 0; }
+  .nextnav .wrap{ display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+  .nextnav a{ text-decoration:none; }
+  .nextnav .back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    display:inline-flex; align-items:center; gap:9px; transition:color .25s; }
+  .nextnav .back:hover{ color:var(--deep-clay); }
+  .nextnav .cta{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
+    background:var(--soft-black); padding:15px 28px; border-radius:3px; transition:background .3s; }
+  .nextnav .cta:hover{ background:var(--deep-clay); }
+
+  footer{ background:var(--soft-black); border-top:1px solid rgba(255,255,255,.1); padding:34px 0; }
+  .foot-row{ display:flex; flex-direction:column; gap:14px; align-items:center; text-align:center; }
+  @media(min-width:680px){ .foot-row{ flex-direction:row; justify-content:space-between; } }
+  .foot-row span, .foot-row a{ font-family:var(--sans); font-weight:300;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-grey); text-decoration:none; }
+  .foot-row a:hover{ color:var(--sage); }
+</style>
+</head>
+<body>
+
+<!-- petal mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="petalmark">
+      <path d="M40 6 A34 34 0 1 1 39.9 6" fill="none" stroke="#9CA98C"
+        stroke-width="1.8" stroke-dasharray="150 64" stroke-dashoffset="-43"/>
+      <g fill="none" stroke="#B98E80" stroke-width="2.4"
+        transform="translate(0,1) scale(0.86) translate(6.5,6.5)">
+        <path d="M40 40 C26 30 26 14 40 8 C54 14 54 30 40 40 Z"/>
+        <path d="M40 40 C54 30 70 38 72 52 C62 60 46 54 40 40 Z"/>
+        <path d="M40 40 C46 54 38 70 24 72 C16 62 22 46 40 40 Z"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <a href="index.html" class="nav-back"
+     onclick="if (history.length > 1) { event.preventDefault(); history.back(); }"
+     aria-label="Back to previous page"><span class="ar">←</span> Back</a>
+  <a href="index.html" class="nav-logo" aria-label="Prina Bagia home">
+    <svg width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
+    <span class="nm">Prina Bagia</span>
+  </a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header>
+  <div class="wrap">
+    <div class="hero-tag reveal">Product Design · Sports &amp; Live Events · Concept</div>
+    <h1 class="title reveal" style="transition-delay:.08s">
+      Courtside — two products, <em>one platform for live sports.</em>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.16s">
+      A fan's command center and an operator's console, built on a single shared
+      source of live events — so a decision made behind the turnstile shows up
+      instantly in a fan's pocket. Both prototypes are live on this page.
+    </p>
+  </div>
+  <div class="wrap">
+    <div class="hero-stage reveal" style="transition-delay:.24s">
+      <div class="hero-scene">
+        <div class="laptop">
+          <div class="laptop-lid">
+            <div class="lap-view"><iframe src="courtside-app.html?exp=business" title="Courtside business console — running on a laptop" scrolling="no"></iframe></div>
+          </div>
+          <div class="laptop-base"></div>
+        </div>
+        <div class="phone2">
+          <div class="phone-frame">
+            <div class="ph-view"><iframe src="courtside-app.html?exp=fan" title="Courtside fan app — running on a phone" scrolling="no"></iframe></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="meta reveal" style="transition-delay:.32s">
+      <div class="meta-grid">
+        <div class="meta-cell">
+          <div class="meta-k">Type</div>
+          <div class="meta-v">Two-product platform</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Role</div>
+          <div class="meta-v">Product design<br>&amp; prototyping</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Prototypes</div>
+          <div class="meta-v">Fan app — mobile<br>Console — web</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Status</div>
+          <div class="meta-v">Interactive prototype</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= WHY IT EXISTS ================= -->
+<section style="padding-bottom:48px;">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">01</span>
+        <div class="eyebrow">Why it exists</div></div>
+      <h2 class="sec-title">Following a team is simple. <em>Acting on it is not.</em></h2>
+    </div>
+    <div class="cols">
+      <div class="col reveal">
+        <div class="kicker">The fan</div>
+        <h3>Five apps, none aware of the others</h3>
+        <p>A single fan bounces between a ticketing site, a team app, a news
+          feed, a streaming guide and a shop — none of which know the others
+          exist. It fragments exactly when it matters most: game day, a big
+          signing, a new drop, a playoff push.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.08s">
+        <div class="kicker">The operator</div>
+        <h3>Data in silos, decisions in spreadsheets</h3>
+        <p>Teams and venues face the mirror image. Sales in one tool, the
+          schedule in another, fan sentiment in a survey nobody reads — and the
+          decisions that connect them happen far from the data.</p>
+      </div>
+      <div class="col reveal" style="transition-delay:.16s">
+        <div class="kicker">The bet</div>
+        <h3>Close both gaps at once</h3>
+        <p>One place for fans to follow, attend and buy. One place for operators
+          to schedule, sell and learn. Both reading from the same underlying
+          events, so the two sides always see the same game.</p>
+      </div>
+    </div>
+    <div class="tags reveal" style="margin-bottom:0;">
+      <span class="tag">Fan experience</span>
+      <span class="tag">Operator tooling</span>
+      <span class="tag">Ticketing</span>
+      <span class="tag">Two-sided platform</span>
+      <span class="tag">Live sports</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE CENTRAL BET ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">02</span>
+        <div class="eyebrow">The central bet</div></div>
+      <h2 class="sec-title">Two products, <em>deliberately separated.</em></h2>
+      <p class="body narrow">The most important early call was to <strong>not</strong>
+        build one app with a "mode switch." Fans and operators are different
+        people, in different contexts. A fan is on a phone, on the move, making a
+        quick personal choice. An operator is at a desk, scanning dense numbers,
+        making a commercial call across thousands of seats. So Courtside is two
+        products that meet at a launcher — dark, high-energy and broadcast-style
+        for fans; clean, light and analytical for operators.</p>
+    </div>
+    <div class="pull reveal">
+      <p>The visual split isn't decoration — it signals which world you're in.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE FAN APP (live) ================= -->
+<section class="band-dark">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">03</span>
+        <div class="eyebrow">The Fan app · Mobile-first</div></div>
+      <h2 class="sec-title">Everything you follow, <em>in one pocket.</em></h2>
+      <p class="body narrow">The job: make it effortless to keep up with the teams
+        you follow — and act on them. Five fragmented apps collapse into one
+        coherent place, optimized for the phone and for game day. Try it — follow
+        a team, buy a seat, switch it, or shop the drop.</p>
+    </div>
+
+    <div class="embed reveal">
+      <div class="embed-cap"><span class="live"></span>Live prototype · <span>tap around the phone</span></div>
+      <div class="phone-bezel">
+        <iframe src="courtside-app.html?exp=fan" title="Courtside fan app — interactive prototype" loading="lazy"></iframe>
+      </div>
+      <a class="embed-open" href="courtside-app.html?exp=fan" target="_blank" rel="noopener">Open the fan app fullscreen ↗</a>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-row">
+        <div class="feat-h">Home is a launchpad, not a feed</div>
+        <div class="feat-p">Stripped to the few things that matter today:
+          <strong>your next ticket, your teams, what's coming up, the latest
+          headline.</strong> A glanceable answer to "what's next for me?", not an
+          endless scroll — everything heavier is one tap away.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-h">The ticket stub is the heart</div>
+        <div class="feat-p">A <strong>real, perforated ticket stub</strong> — team
+          colors, monospace seat printout, barcode — because holding tickets is
+          the emotional core of being a fan. From there: switch seats, or list
+          for resale.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-h">Everything consolidated</div>
+        <div class="feat-p">Discover games with clear <strong>where and how to
+          watch</strong>, buy single or season tickets, follow any team across
+          five US leagues, read team news, and shop official merch end to end —
+          with a live scoreboard ticker running across the top.</div>
+      </div>
+    </div>
+
+    <div class="pull reveal">
+      <p>Collapse five fragmented apps into one coherent place — made for the phone, and for game day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE BUSINESS CONSOLE (live) ================= -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">04</span>
+        <div class="eyebrow">The Business console · Web</div></div>
+      <h2 class="sec-title">Sell, understand and act — <em>in one place.</em></h2>
+      <p class="body narrow">The same events, seen from behind the turnstile. The
+        job: give the people who put games on sale a single place to sell,
+        understand and act — with the insight sitting inside the work, not in a
+        report nobody opens. Add an event, compare two, or read the fan voice.</p>
+    </div>
+
+    <div class="embed reveal">
+      <div class="embed-cap"><span class="live" style="background:var(--court-cyan);box-shadow:0 0 0 4px color-mix(in srgb,var(--court-cyan) 20%,transparent)"></span>Live prototype · <span>use the left nav to move between modules</span></div>
+      <div class="laptop-embed">
+        <div class="laptop-embed__lid">
+          <div class="laptop-embed__screen">
+            <iframe src="courtside-app.html?exp=business" title="Courtside business console — interactive prototype" loading="lazy"></iframe>
+          </div>
+        </div>
+        <div class="laptop-embed__base"></div>
+      </div>
+      <a class="embed-open" href="courtside-app.html?exp=business" target="_blank" rel="noopener">Open the console fullscreen ↗</a>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-row">
+        <div class="feat-h">Sales &amp; inventory</div>
+        <div class="feat-p">Revenue, ticket mix, sell-through by tier, resale and a
+          live inventory table. Every card ends with plain-language next steps —
+          <strong>promote a slow game, reprice a tier, release holds</strong> —
+          written where the numbers already are. Decisions happen at the data.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-h">Compare &amp; feedback</div>
+        <div class="feat-p">Put <strong>up to three events side by side</strong>
+          with the leading value highlighted; and make the <strong>fan voice
+          operational</strong> — a complaint about entry waits surfaces as an
+          opportunity on the sales dashboard.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-h">Schedule &amp; events</div>
+        <div class="feat-p">Publish games and put them on sale — single or full
+          series — reusing the same inventory table and shared data, so an event
+          created here appears <strong>instantly in the sales view and in every
+          fan's app.</strong></div>
+      </div>
+    </div>
+
+    <div class="goal reveal">
+      <div class="lbl">Coming<br>soon</div>
+      <p>Four more modules — Merch &amp; drops, Fan comms &amp; news, Audience &amp;
+        CRM and Broadcast &amp; watch — sit in the nav marked <em>Coming soon</em>,
+        signalling the full vision without pretending capabilities exist before
+        they're ready.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DESIGN PRINCIPLES ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">05</span>
+        <div class="eyebrow">Design principles</div></div>
+      <h2 class="sec-title">Five decisions <em>that shaped both sides.</em></h2>
+    </div>
+
+    <div class="principles reveal">
+      <div class="principle">
+        <div class="pn">01</div>
+        <h3>Match the medium to the user</h3>
+        <p>Fans get mobile; operators get web. Form follows who's holding the device.</p>
+      </div>
+      <div class="principle">
+        <div class="pn">02</div>
+        <h3>Give each product its own identity</h3>
+        <p>Dark and energetic for fans; light and calm for operators — so the two are never confused.</p>
+      </div>
+      <div class="principle">
+        <div class="pn">03</div>
+        <h3>Spend boldness in one place</h3>
+        <p>In the fan app, that's the ticket stub. Everything around it stays quiet and disciplined.</p>
+      </div>
+      <div class="principle">
+        <div class="pn">04</div>
+        <h3>Put insight where the work is</h3>
+        <p>Recommendations live inside the charts they come from, not in a separate analytics tab.</p>
+      </div>
+      <div class="principle" style="grid-column:1/-1">
+        <div class="pn">05</div>
+        <h3>One shared spine</h3>
+        <p>Fans and operators read from the same events, so the platform stays
+          coherent as it grows — the schedule is the single source of truth that
+          connects the two products.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHERE IT GOES NEXT ================= -->
+<section class="band-dark">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">06</span>
+        <div class="eyebrow">Where it goes next</div></div>
+      <h2 class="sec-title">Build on the spine <em>both products share.</em></h2>
+      <p class="body narrow">The foundation is two connected products sharing a
+        single source of events. The natural next steps build on it: turn the
+        "Coming soon" operator modules into live tools, make insights actionable
+        so a recommended price change updates the inventory it came from, and
+        eventually bring a web experience to fans.</p>
+    </div>
+    <div class="pull reveal">
+      <p>Meet fans where they are, give operators what they're missing, and keep both sides looking at the same game.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEXT NAV ================= -->
+<div class="nextnav">
+  <div class="wrap">
+    <a href="work.html" class="back"><span>←</span> All work</a>
+    <a href="portfolio.html#contact" class="cta">Get in touch</a>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <span>Prina Bagia — Product Designer · UX / UI</span>
+      <a href="portfolio.html">← Back to home</a>
+      <span>© 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    const reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    if(!reveals.length) return;
+    function check(){
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for(let i = reveals.length - 1; i >= 0; i--){
+        const el = reveals[i];
+        const r = el.getBoundingClientRect();
+        if(r.top < vh * 0.92 && r.bottom > 0){ el.classList.add('in'); reveals.splice(i, 1); }
+      }
+      if(!reveals.length){
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+    }
+    let ticking = false;
+    function onScroll(){ if(ticking) return; ticking = true; requestAnimationFrame(function(){ check(); ticking = false; }); }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    check();
+  })();
+
+  /* fit the fixed-size device scene to the available width (phone stays to scale) */
+  (function(){
+    const stage = document.querySelector('.hero-stage');
+    const scene = document.querySelector('.hero-scene');
+    if(!stage || !scene) return;
+    const DW = 920, DH = 500;
+    function fit(){
+      const s = Math.min(1, stage.clientWidth / DW);
+      scene.style.transform = 'translateX(-50%) scale(' + s + ')';
+      stage.style.height = (DH * s) + 'px';
+    }
+    if(window.ResizeObserver) new ResizeObserver(fit).observe(stage);
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+
+  /* scale the in-page laptop console so the full 1280px desktop fits the screen */
+  (function(){
+    const screens = document.querySelectorAll('.laptop-embed__screen');
+    if(!screens.length) return;
+    const LW = 1280;
+    function fit(){
+      screens.forEach(function(sc){
+        const f = sc.querySelector('iframe'); if(!f) return;
+        f.style.transform = 'scale(' + (sc.clientWidth / LW) + ')';
+      });
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(fit); screens.forEach(function(sc){ ro.observe(sc); }); }
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('load', function(){ window.scrollTo(0, 0); });
+</script>
+</body>
+</html>

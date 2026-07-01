@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Courtside — Prototype</title>
+<style>
+  html,body,#root{ height:100%; }
+  body{ margin:0; background:#0B1020; }
+  #boot{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:system-ui,sans-serif; color:#8A93AC; font-size:14px; letter-spacing:.02em; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1?external=react"
+  }
+}
+</script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"><div id="boot">Loading prototype…</div></div>
+
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useRef, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import {
+  Home as HomeIc, Users, Ticket, ShoppingBag, User, Search, Bell, Calendar, MapPin,
+  Tv, Radio, Play, TrendingUp, TrendingDown, Heart, Plus, Minus, X,
+  ChevronRight, ChevronLeft, Star, ArrowRightLeft, Tag, Trophy, Shirt, Check,
+  Building2, BarChart3, ShoppingCart, Smartphone, Wifi, BatteryFull, Clock,
+  Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, ArrowUpRight, Filter, AlertTriangle, Mail, Zap,
+} from "lucide-react";
+
+/* embed control: ?exp=fan | ?exp=business opens straight into one product */
+const params = new URLSearchParams(location.search);
+const INITIAL_EXP = params.get("exp") || null;
+const EMBED = !!INITIAL_EXP;
+
+/* ============================== DESIGN TOKENS / STYLE ============================== */
+const Style = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+    :root{
+      --ink:#0B1020; --panel:#151B30; --panel2:#1D2640; --panel3:#27314f;
+      --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+      --text:#EAEEF7; --muted:#8A93AC; --faint:#5A627C;
+      --amber:#FF7A2F; --amber-soft:rgba(255,122,47,.14);
+      --cyan:#34E0D0; --cyan-soft:rgba(52,224,208,.13);
+      --good:#4ADE80; --bad:#F87171;
+    }
+    .cs-biz{
+      --ink:#EDF1F7; --panel:#FFFFFF; --panel2:#F4F6FB; --panel3:#E6EBF3;
+      --line:rgba(16,28,54,.10); --line2:rgba(16,28,54,.17);
+      --text:#15203A; --muted:#5C6B86; --faint:#9AA6BD;
+      --amber:#EA5B0C; --amber-soft:rgba(234,91,12,.12);
+      --cyan:#0C9C92; --cyan-soft:rgba(12,156,146,.13);
+      --good:#15924E; --bad:#D6453C;
+    }
+    .cs-biz .card{box-shadow:0 1px 2px rgba(16,28,54,.05),0 4px 14px rgba(16,28,54,.04);}
+    .cs-biz .btn:hover{border-color:var(--muted);}
+    *{box-sizing:border-box;}
+    .cs-root{font-family:'Inter',system-ui,sans-serif;color:var(--text);background:var(--ink);}
+    .cs-root ::selection{background:var(--amber);color:#0B1020;}
+    .display{font-family:'Anton',sans-serif;letter-spacing:.01em;font-weight:400;}
+    .heading{font-family:'Archivo',sans-serif;}
+    .mono{font-family:'Space Mono',monospace;}
+    .eyebrow{font-family:'Archivo',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;}
+    .card-2{background:var(--panel2);border:1px solid var(--line);border-radius:14px;}
+    .btn{font-family:'Archivo',sans-serif;font-weight:700;font-size:13px;border-radius:10px;padding:10px 16px;border:1px solid var(--line2);background:transparent;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;}
+    .btn:hover{border-color:var(--text);}
+    .btn-accent{background:var(--amber);color:#160a02;border-color:var(--amber);}
+    .btn-accent:hover{filter:brightness(1.08);border-color:var(--amber);}
+    .btn-ghost{background:var(--panel2);border-color:var(--line);}
+    .btn-sm{padding:7px 12px;font-size:12px;border-radius:9px;}
+    .pill{font-family:'Archivo',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;padding:4px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;}
+    .link{color:var(--muted);cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:3px;}
+    .link:hover{color:var(--amber);}
+    input.cs-in{background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-family:'Inter';font-size:14px;outline:none;width:100%;}
+    input.cs-in:focus{border-color:var(--amber);}
+    .ticker-mask{overflow:hidden;}
+    .ticker-track{display:flex;width:max-content;animation:ticker 46s linear infinite;}
+    .ticker-mask:hover .ticker-track{animation-play-state:paused;}
+    @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+    .livedot{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pulse 1.3s ease-in-out infinite;}
+    .barcode{background:repeating-linear-gradient(90deg,var(--text) 0 1.5px,transparent 1.5px 3.5px,var(--text) 3.5px 4.5px,transparent 4.5px 8px);}
+    .scrollx{overflow-x:auto;scrollbar-width:none;}
+    .scrollx::-webkit-scrollbar{display:none}
+    .fade{animation:fade .4s ease both}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .hoverable{transition:.16s}
+    .hoverable:hover{transform:translateY(-2px);border-color:var(--line2)}
+    button:focus-visible,.hoverable:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+    /* ---- phone frame ---- */
+    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:26px;background:radial-gradient(120% 90% at 25% 10%,#19213c,#0B1020 60%);}
+    .phone{position:relative;width:392px;max-width:100%;height:min(852px,92vh);background:#04060d;border-radius:48px;padding:11px;box-shadow:0 50px 100px rgba(0,0,0,.6),0 0 0 2px #232c46;}
+    .phone-screen{position:relative;width:100%;height:100%;background:var(--ink);border-radius:38px;overflow:hidden;display:flex;flex-direction:column;}
+    .statusbar{flex:none;height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 26px;}
+    .appbar{flex:none;display:flex;align-items:center;gap:10px;padding:6px 16px 10px;}
+    .phone-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+    .phone-scroll::-webkit-scrollbar{display:none}
+    .tabbar{flex:none;display:flex;justify-content:space-around;padding:9px 6px calc(9px + env(safe-area-inset-bottom));background:rgba(8,11,22,.96);border-top:1px solid var(--line2);}
+    .switch-pill{position:fixed;top:22px;left:22px;z-index:30;}
+    @media (max-width:520px){
+      .stage{padding:0;background:var(--ink);}
+      .phone{width:100%;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none;}
+      .phone-screen{border-radius:0;}
+      .switch-pill{display:none!important;}
+      .statusbar{height:env(safe-area-inset-top,18px);min-height:14px;}
+    }
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  `}</style>
+);
+
+/* ============================== MOCK DATA ============================== */
+const TODAY = new Date(2026, 5, 25);
+const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const addDays = (b, n) => { const d = new Date(b); d.setDate(d.getDate() + n); return d; };
+
+const TEAMS = [
+  { id: 1, abbr: "LAL", name: "Lakers", city: "Los Angeles", league: "NBA", c1: "#552583", c2: "#FDB927", venue: "Crypto.com Arena", rank: "2nd · Pacific", rec: [49, 33], streak: "W3", off: 88, def: 79, form: 84, last5: ["W", "W", "L", "W", "W"] },
+  { id: 2, abbr: "BOS", name: "Celtics", city: "Boston", league: "NBA", c1: "#007A33", c2: "#BA9653", venue: "TD Garden", rank: "1st · Atlantic", rec: [57, 25], streak: "W5", off: 92, def: 90, form: 95, last5: ["W", "W", "W", "W", "L"] },
+  { id: 3, abbr: "GSW", name: "Warriors", city: "Golden State", league: "NBA", c1: "#1D428A", c2: "#FFC72C", venue: "Chase Center", rank: "6th · Pacific", rec: [44, 38], streak: "L1", off: 86, def: 74, form: 71, last5: ["L", "W", "W", "L", "W"] },
+  { id: 4, abbr: "KC", name: "Chiefs", city: "Kansas City", league: "NFL", c1: "#E31837", c2: "#FFB81C", venue: "Arrowhead Stadium", rank: "1st · AFC West", rec: [14, 3], streak: "W4", off: 91, def: 83, form: 93, last5: ["W", "W", "W", "L", "W"] },
+  { id: 5, abbr: "PHI", name: "Eagles", city: "Philadelphia", league: "NFL", c1: "#004C54", c2: "#A5ACAF", venue: "Lincoln Financial Field", rank: "2nd · NFC East", rec: [11, 6], streak: "W2", off: 84, def: 81, form: 80, last5: ["W", "L", "W", "W", "L"] },
+  { id: 6, abbr: "SF", name: "49ers", city: "San Francisco", league: "NFL", c1: "#AA0000", c2: "#B3995D", venue: "Levi's Stadium", rank: "1st · NFC West", rec: [12, 5], streak: "W1", off: 89, def: 85, form: 88, last5: ["W", "L", "W", "W", "W"] },
+  { id: 7, abbr: "LAD", name: "Dodgers", city: "Los Angeles", league: "MLB", c1: "#005A9C", c2: "#EF3E42", venue: "Dodger Stadium", rank: "1st · NL West", rec: [58, 31], streak: "W6", off: 90, def: 82, form: 94, last5: ["W", "W", "W", "W", "W"] },
+  { id: 8, abbr: "NYY", name: "Yankees", city: "New York", league: "MLB", c1: "#0C2340", c2: "#C4CED4", venue: "Yankee Stadium", rank: "2nd · AL East", rec: [52, 37], streak: "L2", off: 87, def: 80, form: 77, last5: ["L", "L", "W", "W", "L"] },
+  { id: 9, abbr: "CHC", name: "Cubs", city: "Chicago", league: "MLB", c1: "#0E3386", c2: "#CC3433", venue: "Wrigley Field", rank: "3rd · NL Central", rec: [46, 43], streak: "W1", off: 78, def: 75, form: 72, last5: ["W", "L", "L", "W", "W"] },
+  { id: 10, abbr: "NYR", name: "Rangers", city: "New York", league: "NHL", c1: "#0038A8", c2: "#CE1126", venue: "Madison Square Garden", rank: "2nd · Metro", rec: [46, 26, 10], streak: "W2", off: 83, def: 86, form: 82, last5: ["W", "W", "L", "W", "L"] },
+  { id: 11, abbr: "COL", name: "Avalanche", city: "Colorado", league: "NHL", c1: "#6F263D", c2: "#236192", venue: "Ball Arena", rank: "1st · Central", rec: [51, 24, 7], streak: "W4", off: 89, def: 84, form: 90, last5: ["W", "W", "W", "L", "W"] },
+  { id: 12, abbr: "VGK", name: "Golden Knights", city: "Las Vegas", league: "NHL", c1: "#B4975A", c2: "#333F42", venue: "T-Mobile Arena", rank: "3rd · Pacific", rec: [44, 28, 10], streak: "L1", off: 81, def: 82, form: 76, last5: ["L", "W", "L", "W", "W"] },
+  { id: 13, abbr: "LAFC", name: "LAFC", city: "Los Angeles", league: "MLS", c1: "#0d0d0d", c2: "#C39E6D", venue: "BMO Stadium", rank: "1st · West", rec: [13, 4, 6], streak: "W3", off: 85, def: 80, form: 87, last5: ["W", "D", "W", "W", "L"] },
+  { id: 14, abbr: "MIA", name: "Inter Miami", city: "Miami", league: "MLS", c1: "#F7B5CD", c2: "#231F20", venue: "Chase Stadium", rank: "2nd · East", rec: [12, 5, 5], streak: "W2", off: 90, def: 71, form: 83, last5: ["W", "W", "L", "D", "W"] },
+];
+const T = (id) => TEAMS.find((t) => t.id === id);
+const TA = (abbr) => TEAMS.find((t) => t.abbr === abbr);
+
+const GAMES = [
+  { id: 101, home: 1, away: 3, day: 0, time: "7:30 PM", tv: "Spectrum SN", stream: "NBA League Pass", from: 64 },
+  { id: 102, home: 7, away: 9, day: 0, time: "7:10 PM", tv: "SportsNet LA", stream: "MLB.TV", from: 28 },
+  { id: 103, home: 4, away: 6, day: 2, time: "1:00 PM", tv: "CBS", stream: "Paramount+", from: 145 },
+  { id: 104, home: 13, away: 14, day: 3, time: "7:30 PM", tv: "Apple TV", stream: "MLS Season Pass", from: 55 },
+  { id: 105, home: 1, away: 2, day: 4, time: "6:00 PM", tv: "ABC", stream: "ESPN+", from: 88 },
+  { id: 106, home: 8, away: 7, day: 5, time: "4:05 PM", tv: "FOX", stream: "MLB.TV", from: 42 },
+  { id: 107, home: 11, away: 10, day: 6, time: "8:00 PM", tv: "TNT", stream: "Max", from: 73 },
+  { id: 108, home: 7, away: 8, day: 8, time: "7:10 PM", tv: "SportsNet LA", stream: "MLB.TV", from: 35 },
+  { id: 109, home: 5, away: 4, day: 9, time: "8:20 PM", tv: "NBC", stream: "Peacock", from: 165 },
+  { id: 110, home: 13, away: 3, day: 11, time: "7:30 PM", tv: "FS1", stream: "MLS Season Pass", from: 48 },
+  { id: 111, home: 1, away: 6, day: 13, time: "7:00 PM", tv: "ESPN", stream: "ESPN+", from: 95 },
+  { id: 112, home: 12, away: 11, day: 14, time: "9:00 PM", tv: "TNT", stream: "Max", from: 67 },
+  { id: 113, home: 7, away: 9, day: 16, time: "6:40 PM", tv: "SportsNet LA", stream: "MLB.TV", from: 30 },
+  { id: 114, home: 2, away: 1, day: 18, time: "7:30 PM", tv: "TNT", stream: "Max", from: 110 },
+  { id: 115, home: 4, away: 5, day: 20, time: "4:25 PM", tv: "FOX", stream: "Paramount+", from: 130 },
+  { id: 116, home: 13, away: 14, day: 23, time: "7:30 PM", tv: "Apple TV", stream: "MLS Season Pass", from: 58 },
+];
+const gDate = (g) => addDays(TODAY, g.day);
+const fmtFull = (d) => `${WD[d.getDay()]}, ${MO[d.getMonth()]} ${d.getDate()}`;
+const fmtRel = (g) => { if (g.day === 0) return "Tonight"; if (g.day === 1) return "Tomorrow"; if (g.day < 7) return WD[gDate(g).getDay()]; return fmtFull(gDate(g)); };
+
+const LIVE = [
+  { a: "GSW", h: "LAL", as: 88, hs: 92, st: "Q3 04:12", live: true },
+  { a: "NYY", h: "BOS", as: 3, hs: 2, st: "TOP 7", live: true },
+  { a: "COL", h: "VGK", as: 1, hs: 1, st: "P2 11:30", live: true },
+  { a: "MIA", h: "LAFC", as: 0, hs: 2, st: "65'", live: true },
+  { a: "PHI", h: "KC", as: 21, hs: 24, st: "FINAL", live: false },
+  { a: "CHC", h: "LAD", as: 5, hs: 7, st: "FINAL", live: false },
+];
+
+const MERCH = [
+  { id: 201, team: 1, name: "City Edition Jersey", cat: "Jersey", price: 134.99, sale: 99.99, status: "sale", icon: Shirt },
+  { id: 202, team: 1, name: "Showtime Snapback", cat: "Headwear", price: 39.99, status: "new", icon: Trophy },
+  { id: 203, team: 4, name: "Arrowhead Hoodie", cat: "Hoodie", price: 84.99, status: "drop", drop: 3, icon: Shirt },
+  { id: 204, team: 7, name: "Home Authentic Jersey", cat: "Jersey", price: 159.99, status: "new", icon: Shirt },
+  { id: 205, team: 7, name: "Stadium Cap '26", cat: "Headwear", price: 34.99, sale: 24.99, status: "sale", icon: Trophy },
+  { id: 206, team: 13, name: "Black & Gold Scarf", cat: "Accessory", price: 44.99, status: "drop", drop: 5, icon: Tag },
+  { id: 207, team: 2, name: "Banner 18 Tee", cat: "Tee", price: 32.99, status: "new", icon: Shirt },
+  { id: 208, team: 11, name: "Avalanche Beanie", cat: "Headwear", price: 28.99, status: "reg", icon: Trophy },
+  { id: 209, team: 4, name: "Game Day Crewneck", cat: "Hoodie", price: 74.99, sale: 54.99, status: "sale", icon: Shirt },
+  { id: 210, team: 13, name: "Matchday Kit '26", cat: "Jersey", price: 129.99, status: "new", icon: Shirt },
+  { id: 211, team: 7, name: "Throwback Windbreaker", cat: "Jacket", price: 114.99, status: "drop", drop: 8, icon: Shirt },
+  { id: 212, team: 1, name: "Court Logo Tee", cat: "Tee", price: 29.99, status: "reg", icon: Shirt },
+];
+
+const NEWS = [
+  { id: 1, team: 1, tag: "Roster", h: "Lakers finalize playoff rotation ahead of Pacific clash", body: "Coaching staff confirmed a tightened nine-man rotation for the stretch run.", hrs: 2 },
+  { id: 2, team: 7, tag: "Streak", h: "Dodgers extend win streak to six with late-inning rally", body: "A two-run double in the eighth keeps LA atop the NL West by four games.", hrs: 5 },
+  { id: 3, team: 4, tag: "Injury", h: "Chiefs list starting tackle as questionable for Sunday", body: "He returned to limited practice and is day-to-day ahead of the divisional matchup.", hrs: 8 },
+  { id: 4, team: 13, tag: "Transfers", h: "LAFC complete signing of attacking midfielder", body: "The designated-player move strengthens the front line in the Shield race.", hrs: 11 },
+  { id: 5, team: 11, tag: "Standings", h: "Avalanche clinch Central Division title", body: "A 4-1 road win locks up home ice through at least the second round.", hrs: 19 },
+  { id: 6, team: 2, tag: "League", h: "Celtics set franchise mark for road wins in a season", body: "Boston's defense ranks first in the league heading into the weekend slate.", hrs: 26 },
+];
+
+/* ============================== SHARED BITS ============================== */
+function Badge({ id, size = 44, r = 12 }) {
+  const t = T(id);
+  return (
+    <div className="display" style={{
+      width: size, height: size, minWidth: size, borderRadius: r, display: "flex",
+      alignItems: "center", justifyContent: "center", background: t.c1, color: t.c2,
+      fontSize: size * 0.34, boxShadow: `inset 0 0 0 2px ${t.c2}55`, letterSpacing: 0,
+    }}>{t.abbr}</div>
+  );
+}
+const money = (n) => "$" + n.toFixed(2);
+function Form5({ arr }) {
+  return (
+    <div style={{ display: "flex", gap: 4 }}>
+      {arr.map((r, i) => (
+        <span key={i} className="mono" style={{
+          width: 18, height: 18, borderRadius: 5, fontSize: 10, fontWeight: 700,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: r === "W" ? "rgba(74,222,128,.16)" : r === "L" ? "rgba(248,113,113,.16)" : "var(--panel3)",
+          color: r === "W" ? "var(--good)" : r === "L" ? "var(--bad)" : "var(--muted)",
+        }}>{r}</span>
+      ))}
+    </div>
+  );
+}
+function RatingBar({ label, val }) {
+  const col = val >= 86 ? "var(--cyan)" : val >= 76 ? "var(--amber)" : "var(--muted)";
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span className="eyebrow" style={{ letterSpacing: ".1em" }}>{label}</span>
+        <span className="mono" style={{ fontSize: 12, color: col, fontWeight: 700 }}>{val}</span>
+      </div>
+      <div style={{ height: 6, borderRadius: 6, background: "var(--panel3)", overflow: "hidden" }}>
+        <div style={{ width: `${val}%`, height: "100%", background: col, borderRadius: 6 }} />
+      </div>
+    </div>
+  );
+}
+function SectionTitle({ kicker, title, action }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 14, gap: 12 }}>
+      <div>
+        {kicker && <div className="eyebrow" style={{ color: "var(--amber)", marginBottom: 6 }}>{kicker}</div>}
+        <h2 className="heading" style={{ fontSize: 19, fontWeight: 800, margin: 0 }}>{title}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+function RowHead({ title, onAll, allLabel = "See all" }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <h2 className="heading" style={{ fontSize: 17, fontWeight: 800, margin: 0 }}>{title}</h2>
+      {onAll && <span className="link" onClick={onAll} style={{ fontSize: 12 }}>{allLabel}<ChevronRight size={14} /></span>}
+    </div>
+  );
+}
+
+/* ============================== TICKET STUB (signature) ============================== */
+function TicketStub({ tk, onSwitch, onResale, featured }) {
+  const g = GAMES.find((x) => x.id === tk.gameId);
+  if (!g) return null;
+  const home = T(g.home), away = T(g.away);
+  const d = gDate(g);
+  return (
+    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "var(--panel2)", border: "1px solid var(--line2)", display: "flex", minHeight: featured ? 164 : 148 }}>
+      <div style={{ width: 6, background: `linear-gradient(${home.c1},${away.c1})` }} />
+      <div style={{ flex: 1, padding: featured ? "16px 16px" : "14px 14px", display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)" }}>
+            {tk.type === "season" ? <Star size={11} /> : <Ticket size={11} />}{tk.type === "season" ? "Season seat" : "Single game"}
+          </div>
+          <span className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>#{tk.id}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Badge id={g.away} size={42} />
+          <span className="display" style={{ fontSize: 16, color: "var(--faint)" }}>@</span>
+          <Badge id={g.home} size={42} />
+          <div style={{ marginLeft: 2, minWidth: 0 }}>
+            <div className="heading" style={{ fontWeight: 800, fontSize: 15 }}>{away.abbr} at {home.abbr}</div>
+            <div className="mono" style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{fmtFull(d)} · {g.time}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+          <div className="mono" style={{ fontSize: 10.5, color: "var(--muted)", display: "flex", gap: 12 }}>
+            <span><b style={{ color: "var(--text)" }}>SEC</b> {tk.sec}</span>
+            <span><b style={{ color: "var(--text)" }}>ROW</b> {tk.row}</span>
+            <span><b style={{ color: "var(--text)" }}>SEAT</b> {tk.seat}</span>
+          </div>
+          <div style={{ display: "flex", gap: 7 }}>
+            <button className="btn btn-sm btn-ghost" onClick={() => onSwitch(tk)}><ArrowRightLeft size={13} />Switch</button>
+            <button className="btn btn-sm btn-ghost" onClick={() => onResale(tk)}><Tag size={13} />Resell</button>
+          </div>
+        </div>
+      </div>
+      <div style={{ position: "relative", width: 74, borderLeft: "2px dashed var(--line2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 4px" }}>
+        <div style={{ position: "absolute", top: -9, left: -10, width: 18, height: 18, borderRadius: "50%", background: "var(--ink)" }} />
+        <div style={{ position: "absolute", bottom: -9, left: -10, width: 18, height: 18, borderRadius: "50%", background: "var(--ink)" }} />
+        <div className="display" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: 11, color: "var(--muted)", letterSpacing: ".16em" }}>ADMIT&nbsp;ONE</div>
+        <div className="barcode" style={{ width: 40, height: 28, opacity: .8 }} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================== GAME CARD ============================== */
+function GameCard({ g, onTickets, onTeam }) {
+  const home = T(g.home), away = T(g.away);
+  return (
+    <div className="card-2 hoverable" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12, minWidth: 244 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span className="pill" style={{ background: "var(--panel3)", color: "var(--muted)" }}>{home.league}</span>
+        <span className="mono" style={{ fontSize: 11, color: g.day === 0 ? "var(--cyan)" : "var(--muted)" }}>{fmtRel(g)} · {g.time}</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <div onClick={() => onTeam(away.id)} style={{ cursor: "pointer" }}><Badge id={away.id} size={40} /></div>
+        <div style={{ flex: 1, textAlign: "center" }} className="display"><span style={{ fontSize: 12, color: "var(--faint)" }}>VS</span></div>
+        <div onClick={() => onTeam(home.id)} style={{ cursor: "pointer" }}><Badge id={home.id} size={40} /></div>
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{away.city} at {home.city}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 4, color: "var(--muted)", fontSize: 11 }}><MapPin size={11} />{home.venue}</div>
+      </div>
+      <div style={{ display: "flex", gap: 10, fontSize: 11, color: "var(--muted)", flexWrap: "wrap", justifyContent: "center" }}>
+        <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Tv size={12} style={{ color: "var(--amber)" }} />{g.tv}</span>
+        <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Play size={12} style={{ color: "var(--cyan)" }} />{g.stream}</span>
+      </div>
+      <button className="btn btn-accent btn-sm" style={{ justifyContent: "center" }} onClick={() => onTickets(g)}><Ticket size={13} />Tickets · from {money(g.from)}</button>
+    </div>
+  );
+}
+
+/* ============================== MERCH CARD ============================== */
+function MerchCard({ m, onAdd }) {
+  const t = T(m.team), Ic = m.icon;
+  return (
+    <div className="card-2 hoverable" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", height: 142, background: `linear-gradient(135deg,${t.c1},${t.c1}cc)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Ic size={52} style={{ color: t.c2, opacity: .92 }} strokeWidth={1.4} />
+        <div style={{ position: "absolute", top: 10, left: 10 }}><Badge id={t.id} size={28} r={8} /></div>
+        {m.status === "sale" && <span className="pill" style={{ position: "absolute", top: 11, right: 11, background: "var(--bad)", color: "#fff" }}>Sale</span>}
+        {m.status === "new" && <span className="pill" style={{ position: "absolute", top: 11, right: 11, background: "var(--cyan)", color: "#04201d" }}>New</span>}
+        {m.status === "drop" && <span className="pill" style={{ position: "absolute", top: 11, right: 11, background: "var(--amber)", color: "#160a02" }}>Drops {fmtRel({ day: m.drop })}</span>}
+      </div>
+      <div style={{ padding: 13, display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 4 }}>{m.cat}</div>
+          <div className="heading" style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>{m.name}</div>
+        </div>
+        <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
+            <span className="mono" style={{ fontWeight: 700, fontSize: 15 }}>{money(m.sale || m.price)}</span>
+            {m.sale && <span className="mono" style={{ fontSize: 11, color: "var(--faint)", textDecoration: "line-through" }}>{money(m.price)}</span>}
+          </div>
+          {m.status === "drop"
+            ? <button className="btn btn-sm btn-ghost"><Bell size={13} />Notify</button>
+            : <button className="btn btn-sm btn-accent" onClick={() => onAdd(m)}><Plus size={14} />Add</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+function MerchCardMini({ m, go }) {
+  const t = T(m.team), Ic = m.icon;
+  return (
+    <div className="card-2 hoverable" style={{ padding: 12, display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }} onClick={go}>
+      <div style={{ width: 50, height: 50, borderRadius: 11, background: t.c1, display: "flex", alignItems: "center", justifyContent: "center" }}><Ic size={24} style={{ color: t.c2 }} /></div>
+      <div style={{ flex: 1 }}>
+        <div className="heading" style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name}</div>
+        <div className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>{money(m.sale || m.price)}</div>
+      </div>
+      <ChevronRight size={16} style={{ color: "var(--muted)" }} />
+    </div>
+  );
+}
+
+/* ============================== HOME (simplified) ============================== */
+function Home({ user, tickets, onTickets, onTeam, onSwitch, onResale, go }) {
+  const attending = tickets.map((tk) => ({ tk, g: GAMES.find((x) => x.id === tk.gameId) })).filter((x) => x.g).sort((a, b) => a.g.day - b.g.day);
+  const next = attending[0];
+  const myTeams = user.follow.map(T);
+  const upNext = GAMES.filter((g) => user.follow.includes(g.home) || user.follow.includes(g.away)).slice(0, 4);
+  const headline = NEWS.filter((n) => user.follow.includes(n.team)).slice(0, 2);
+  return (
+    <div className="fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <div className="eyebrow" style={{ color: "var(--amber)", marginBottom: 5 }}>{fmtFull(TODAY)}</div>
+        <h1 className="heading" style={{ fontSize: 23, fontWeight: 900, margin: 0 }}>Hey {user.name.split(" ")[0]} 👋</h1>
+      </div>
+
+      {next ? (
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Your next game · {fmtRel(next.g)}</div>
+          <TicketStub tk={next.tk} featured onSwitch={onSwitch} onResale={onResale} />
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 22, textAlign: "center" }}>
+          <Ticket size={26} style={{ color: "var(--amber)", marginBottom: 8 }} />
+          <div className="heading" style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>No games on your calendar</div>
+          <p style={{ color: "var(--muted)", fontSize: 13, margin: "0 0 14px" }}>Find a game and grab your seat.</p>
+          <button className="btn btn-accent" style={{ margin: "0 auto" }} onClick={() => go("tickets")}><Ticket size={14} />Browse tickets</button>
+        </div>
+      )}
+
+      <section>
+        <RowHead title="Your teams" onAll={() => go("teams")} />
+        <div className="scrollx" style={{ display: "flex", gap: 10, paddingBottom: 2 }}>
+          {myTeams.map((t) => (
+            <button key={t.id} onClick={() => onTeam(t.id)} className="card-2 hoverable" style={{ minWidth: 132, padding: 12, textAlign: "left", cursor: "pointer" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <Badge id={t.id} size={34} />
+                <span className="pill" style={{ background: t.streak[0] === "W" ? "rgba(74,222,128,.15)" : "rgba(248,113,113,.15)", color: t.streak[0] === "W" ? "var(--good)" : "var(--bad)" }}>{t.streak}</span>
+              </div>
+              <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
+              <div className="mono" style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{t.rec.join("–")}</div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <RowHead title="Up next" onAll={() => go("tickets")} allLabel="Schedule" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {upNext.map((g) => {
+            const have = tickets.some((t) => t.gameId === g.id);
+            const home = T(g.home), away = T(g.away);
+            return (
+              <div key={g.id} className="card-2" style={{ padding: 12, display: "flex", alignItems: "center", gap: 11 }}>
+                <div style={{ textAlign: "center", minWidth: 32 }}>
+                  <div className="display" style={{ fontSize: 16, lineHeight: 1 }}>{gDate(g).getDate()}</div>
+                  <div className="eyebrow" style={{ letterSpacing: ".08em" }}>{MO[gDate(g).getMonth()]}</div>
+                </div>
+                <div style={{ display: "flex", gap: 5 }}><Badge id={away.id} size={30} /><Badge id={home.id} size={30} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{away.abbr} at {home.abbr}</div>
+                  <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{fmtRel(g)} · {g.time}</div>
+                </div>
+                {have
+                  ? <span className="pill" style={{ background: "var(--cyan-soft)", color: "var(--cyan)" }}><Check size={11} />Going</span>
+                  : <button className="btn btn-sm btn-ghost" onClick={() => onTickets(g)}><Ticket size={12} />{money(g.from)}</button>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section>
+        <RowHead title="Latest" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {headline.map((n) => (
+            <div key={n.id} className="card-2 hoverable" style={{ padding: 13, cursor: "pointer" }} onClick={() => onTeam(n.team)}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 7 }}>
+                <Badge id={n.team} size={24} r={7} />
+                <span className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)" }}>{n.tag}</span>
+                <span className="mono" style={{ fontSize: 10, color: "var(--faint)", marginLeft: "auto" }}>{n.hrs}h</span>
+              </div>
+              <div className="heading" style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{n.h}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ============================== TEAMS DIRECTORY ============================== */
+function Teams({ onTeam, follow, onFollow }) {
+  const [q, setQ] = useState("");
+  const [lg, setLg] = useState("All");
+  const leagues = ["All", "NBA", "NFL", "MLB", "NHL", "MLS"];
+  const list = TEAMS.filter((t) => (lg === "All" || t.league === lg) &&
+    (t.name.toLowerCase().includes(q.toLowerCase()) || t.city.toLowerCase().includes(q.toLowerCase()) || t.abbr.toLowerCase().includes(q.toLowerCase())));
+  return (
+    <div className="fade">
+      <SectionTitle kicker="Every team, every league" title="Team directory" />
+      <div style={{ position: "relative", marginBottom: 12 }}>
+        <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--muted)" }} />
+        <input className="cs-in" style={{ paddingLeft: 36 }} placeholder="Search teams or cities" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      <div className="scrollx" style={{ display: "flex", gap: 7, marginBottom: 18, paddingBottom: 2 }}>
+        {leagues.map((l) => (
+          <button key={l} className="btn btn-sm" onClick={() => setLg(l)} style={lg === l ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)" } : {}}>{l}</button>
+        ))}
+      </div>
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
+        {list.map((t) => {
+          const f = follow.includes(t.id);
+          return (
+            <div key={t.id} className="card hoverable" style={{ padding: 15, cursor: "pointer" }} onClick={() => onTeam(t.id)}>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 13 }}>
+                <Badge id={t.id} size={50} r={14} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="heading" style={{ fontWeight: 800, fontSize: 15 }}>{t.city}</div>
+                  <div className="heading" style={{ fontWeight: 800, fontSize: 15, color: "var(--muted)" }}>{t.name}</div>
+                </div>
+                <button className="btn btn-sm" onClick={(e) => { e.stopPropagation(); onFollow(t.id); }} style={f ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)" } : {}}>
+                  <Heart size={13} fill={f ? "#160a02" : "none"} />{f ? "Following" : "Follow"}
+                </button>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div className="mono" style={{ fontSize: 13, fontWeight: 700 }}>{t.rec.join("–")}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)" }}>{t.rank}</div>
+                </div>
+                <Form5 arr={t.last5} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== TEAM DETAIL ============================== */
+function TeamDetail({ id, back, follow, onFollow, onTickets, onTeam, go, setShopTeam }) {
+  const t = T(id);
+  const f = follow.includes(id);
+  const games = GAMES.filter((g) => g.home === id || g.away === id).slice(0, 5);
+  const news = NEWS.filter((n) => n.team === id);
+  const merch = MERCH.filter((m) => m.team === id);
+  return (
+    <div className="fade">
+      <span className="link" onClick={back} style={{ marginBottom: 16 }}><ChevronLeft size={15} />Directory</span>
+      <div className="card" style={{ overflow: "hidden", marginBottom: 22, marginTop: 10 }}>
+        <div style={{ background: `linear-gradient(120deg,${t.c1},${t.c1}99)`, padding: "22px 18px", display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+          <Badge id={id} size={64} r={16} />
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <div className="eyebrow" style={{ color: t.c2 }}>{t.league} · {t.rank}</div>
+            <h1 className="heading" style={{ fontSize: 26, fontWeight: 900, margin: "2px 0", lineHeight: 1 }}>{t.city} {t.name}</h1>
+            <div className="mono" style={{ display: "flex", gap: 14, marginTop: 7, fontSize: 12, flexWrap: "wrap" }}>
+              <span><b>{t.rec.join("–")}</b></span>
+              <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><MapPin size={12} />{t.venue}</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn btn-sm" onClick={() => onFollow(id)} style={f ? { background: "#fff", color: "#111", borderColor: "#fff" } : { background: "rgba(0,0,0,.3)", borderColor: "rgba(255,255,255,.4)" }}>
+              <Heart size={13} fill={f ? "#111" : "none"} />{f ? "Following" : "Follow"}
+            </button>
+            <button className="btn btn-sm btn-accent" onClick={() => { setShopTeam(id); go("shop"); }}><ShoppingBag size={13} />Shop</button>
+          </div>
+        </div>
+      </div>
+
+      <section className="card" style={{ padding: 16, marginBottom: 22 }}>
+        <SectionTitle title="Team form" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <RatingBar label="Offense" val={t.off} />
+          <RatingBar label="Defense" val={t.def} />
+          <RatingBar label="Recent form" val={t.form} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 6, borderTop: "1px solid var(--line)" }}>
+            <span className="eyebrow">Last 5</span><Form5 arr={t.last5} />
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <SectionTitle title="Upcoming games" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {games.map((g) => {
+            const opp = g.home === id ? T(g.away) : T(g.home);
+            const homeGame = g.home === id;
+            return (
+              <div key={g.id} className="card-2" style={{ padding: 13, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ textAlign: "center", minWidth: 44 }}>
+                  <div className="display" style={{ fontSize: 18, lineHeight: 1 }}>{gDate(g).getDate()}</div>
+                  <div className="eyebrow" style={{ letterSpacing: ".08em" }}>{MO[gDate(g).getMonth()]}</div>
+                </div>
+                <div onClick={() => onTeam(opp.id)} style={{ cursor: "pointer" }}><Badge id={opp.id} size={38} /></div>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{homeGame ? "vs" : "@"} {opp.name}</div>
+                  <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{g.time} · {homeGame ? "Home" : "Away"}</div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 10.5, color: "var(--muted)" }}>
+                    <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}><Tv size={11} style={{ color: "var(--amber)" }} />{g.tv}</span>
+                    <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}><Play size={11} style={{ color: "var(--cyan)" }} />{g.stream}</span>
+                  </div>
+                </div>
+                <button className="btn btn-sm btn-accent" onClick={() => onTickets(g)}><Ticket size={13} />{money(g.from)}</button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <SectionTitle title="Latest on the team" />
+        {news.length ? news.map((n) => (
+          <div key={n.id} className="card-2" style={{ padding: 14, marginBottom: 10 }}>
+            <div style={{ display: "flex", gap: 9, marginBottom: 7 }}>
+              <span className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)" }}>{n.tag}</span>
+              <span className="mono" style={{ fontSize: 11, color: "var(--faint)", marginLeft: "auto" }}>{n.hrs}h ago</span>
+            </div>
+            <div className="heading" style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{n.h}</div>
+            <p style={{ margin: 0, color: "var(--muted)", fontSize: 12.5 }}>{n.body}</p>
+          </div>
+        )) : <div className="card-2" style={{ padding: 16, color: "var(--muted)" }}>No recent headlines.</div>}
+      </section>
+
+      {merch.length > 0 && (
+        <section>
+          <SectionTitle title="Team store" />
+          <div style={{ display: "grid", gap: 11 }}>{merch.slice(0, 2).map((m) => <MerchCardMini key={m.id} m={m} go={() => { setShopTeam(id); go("shop"); }} />)}</div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+/* ============================== TICKETING (calendar) ============================== */
+function Tickets({ onTickets, onTeam }) {
+  const [sel, setSel] = useState(null);
+  const firstDow = new Date(2026, 5, 1).getDay();
+  const daysInMonth = new Date(2026, 6, 0).getDate();
+  const gamesByDay = {};
+  GAMES.forEach((g) => { const d = gDate(g); if (d.getMonth() === 5) (gamesByDay[d.getDate()] = gamesByDay[d.getDate()] || []).push(g); });
+  const selGames = sel ? (gamesByDay[sel] || []) : [];
+  return (
+    <div className="fade">
+      <SectionTitle kicker="Find your seat" title="Tickets & schedule" />
+      <div className="scrollx" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <span className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)" }}><Ticket size={11} />Single</span>
+        <span className="pill" style={{ background: "var(--cyan-soft)", color: "var(--cyan)" }}><Star size={11} />Season</span>
+        <span className="pill" style={{ background: "var(--panel3)", color: "var(--muted)" }}><ArrowRightLeft size={11} />Resale</span>
+      </div>
+
+      <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <button className="btn btn-sm btn-ghost"><ChevronLeft size={15} /></button>
+          <div className="heading" style={{ fontWeight: 800, fontSize: 17 }}>June 2026</div>
+          <button className="btn btn-sm btn-ghost"><ChevronRight size={15} /></button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5, marginBottom: 5 }}>
+          {WD.map((d) => <div key={d} className="eyebrow" style={{ textAlign: "center", fontSize: 9 }}>{d[0]}</div>)}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5 }}>
+          {Array.from({ length: firstDow }).map((_, i) => <div key={"e" + i} />)}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const gs = gamesByDay[day] || [];
+            const isToday = day === 25, isSel = sel === day, past = day < 25;
+            return (
+              <button key={day} disabled={!gs.length} onClick={() => setSel(day)} style={{
+                aspectRatio: "1", borderRadius: 10, border: "1px solid " + (isSel ? "var(--amber)" : "var(--line)"),
+                background: isSel ? "var(--amber-soft)" : gs.length ? "var(--panel2)" : "transparent",
+                color: "var(--text)", cursor: gs.length ? "pointer" : "default", padding: 4,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", opacity: past ? .4 : 1, position: "relative",
+              }}>
+                <span className="mono" style={{ fontSize: 11, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--cyan)" : "var(--text)" }}>{day}</span>
+                {gs.length > 0 && (
+                  <div style={{ display: "flex", gap: 2, marginTop: 3, flexWrap: "wrap", justifyContent: "center" }}>
+                    {gs.slice(0, 2).map((g) => <span key={g.id} style={{ width: 5, height: 5, borderRadius: "50%", background: T(g.home).c1, boxShadow: `0 0 0 1px ${T(g.home).c2}` }} />)}
+                  </div>
+                )}
+                {isToday && <span className="livedot" style={{ position: "absolute", top: 5, right: 5 }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 16 }}>
+        {sel ? (
+          <>
+            <div className="eyebrow" style={{ color: "var(--amber)", marginBottom: 4 }}>{WD[new Date(2026, 5, sel).getDay()]}, June {sel}</div>
+            <div className="heading" style={{ fontWeight: 800, fontSize: 17, marginBottom: 14 }}>{selGames.length} game{selGames.length !== 1 ? "s" : ""}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+              {selGames.map((g) => (
+                <div key={g.id} className="card-2" style={{ padding: 13 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div onClick={() => onTeam(g.away)} style={{ cursor: "pointer" }}><Badge id={g.away} size={36} /></div>
+                    <span className="display" style={{ color: "var(--faint)", fontSize: 12 }}>@</span>
+                    <div onClick={() => onTeam(g.home)} style={{ cursor: "pointer" }}><Badge id={g.home} size={36} /></div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{T(g.away).abbr} at {T(g.home).abbr}</div>
+                      <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{g.time} · {T(g.home).venue}</div>
+                    </div>
+                  </div>
+                  <button className="btn btn-accent btn-sm" style={{ width: "100%", justifyContent: "center" }} onClick={() => onTickets(g)}><Ticket size={14} />Buy tickets · from {money(g.from)}</button>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: "40px 12px", color: "var(--muted)" }}>
+            <Calendar size={36} strokeWidth={1.3} style={{ marginBottom: 12, color: "var(--faint)" }} />
+            <div className="heading" style={{ fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Pick a date</div>
+            <p style={{ margin: 0, fontSize: 13 }}>Dots mark game days. Tap one to see matchups and buy tickets.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== SHOP ============================== */
+function Shop({ onAdd, shopTeam, setShopTeam }) {
+  const [cat, setCat] = useState("All");
+  const cats = ["All", "Jersey", "Headwear", "Hoodie", "Tee", "Accessory", "Jacket"];
+  const list = MERCH.filter((m) => (cat === "All" || m.cat === cat) && (!shopTeam || m.team === shopTeam));
+  const fresh = list.filter((m) => m.status === "new" || m.status === "drop");
+  const sales = list.filter((m) => m.status === "sale");
+  const rest = list.filter((m) => m.status === "reg");
+  return (
+    <div className="fade">
+      <SectionTitle kicker="Official team gear" title="Merch shop" action={shopTeam ?
+        <button className="btn btn-sm" onClick={() => setShopTeam(null)}><X size={13} />{T(shopTeam).abbr}</button> : null} />
+      <div className="scrollx" style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+        {cats.map((c) => <button key={c} className="btn btn-sm" onClick={() => setCat(c)} style={cat === c ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)" } : {}}>{c}</button>)}
+      </div>
+      {fresh.length > 0 && <Block title="New & upcoming drops" kicker="Just in" items={fresh} onAdd={onAdd} />}
+      {sales.length > 0 && <Block title="On sale" kicker="Markdowns" items={sales} onAdd={onAdd} />}
+      {rest.length > 0 && <Block title="More gear" items={rest} onAdd={onAdd} />}
+      {list.length === 0 && <div className="card-2" style={{ padding: 26, textAlign: "center", color: "var(--muted)" }}>No items match this filter.</div>}
+    </div>
+  );
+}
+function Block({ title, kicker, items, onAdd }) {
+  return (
+    <section style={{ marginBottom: 26 }}>
+      <SectionTitle kicker={kicker} title={title} />
+      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))" }}>
+        {items.map((m) => <MerchCard key={m.id} m={m} onAdd={onAdd} />)}
+      </div>
+    </section>
+  );
+}
+
+/* ============================== PROFILE ============================== */
+function Profile({ user, tickets, follow, onFollow, onTeam, onSwitch, onResale, go, onExit }) {
+  const myTeams = follow.map(T);
+  const att = tickets.map((tk) => ({ tk, g: GAMES.find((x) => x.id === tk.gameId) })).filter((x) => x.g).sort((a, b) => a.g.day - b.g.day);
+  const season = tickets.filter((t) => t.type === "season");
+  return (
+    <div className="fade">
+      <div className="card" style={{ padding: 18, display: "flex", gap: 14, alignItems: "center", marginBottom: 22, background: "linear-gradient(120deg,#151B30,#1b1330)" }}>
+        <div className="display" style={{ width: 58, height: 58, borderRadius: 16, background: "var(--amber)", color: "#160a02", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>
+          {user.name.split(" ").map((n) => n[0]).join("")}
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 className="heading" style={{ fontSize: 20, fontWeight: 900, margin: 0 }}>{user.name}</h1>
+          <div className="mono" style={{ color: "var(--muted)", fontSize: 11.5, marginTop: 3 }}>Member since 2021</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+        <Stat n={follow.length} l="Teams" /><Stat n={tickets.length} l="Tickets" /><Stat n={season.length} l="Season" />
+      </div>
+
+      <section style={{ marginBottom: 24 }}>
+        <RowHead title="Upcoming game tickets" onAll={() => go("tickets")} allLabel="Find more" />
+        {att.length ? <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {att.map(({ tk }) => <TicketStub key={tk.id} tk={tk} onSwitch={onSwitch} onResale={onResale} />)}
+        </div> : <div className="card-2" style={{ padding: 20, color: "var(--muted)" }}>No tickets yet.</div>}
+      </section>
+
+      <section style={{ marginBottom: 24 }}>
+        <SectionTitle kicker="Full-season packages" title="Season tickets" />
+        {season.length ? season.map((tk) => {
+          const g = GAMES.find((x) => x.id === tk.gameId); const home = T(g.home);
+          return (
+            <div key={tk.id} className="card" style={{ padding: 14, display: "flex", gap: 13, alignItems: "center", marginBottom: 11 }}>
+              <Badge id={home.id} size={46} r={12} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="heading" style={{ fontWeight: 800, fontSize: 14 }}>{home.name}</div>
+                <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>Sec {tk.sec} · Row {tk.row} · Seat {tk.seat}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className="display" style={{ fontSize: 20 }}>41</div>
+                <div className="eyebrow" style={{ fontSize: 9 }}>Home</div>
+              </div>
+            </div>
+          );
+        }) : <div className="card-2" style={{ padding: 20, color: "var(--muted)" }}>No season packages.</div>}
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <RowHead title="Teams you follow" onAll={() => go("teams")} allLabel="Add" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {myTeams.map((t) => (
+            <div key={t.id} className="card-2" style={{ padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
+              <div onClick={() => onTeam(t.id)} style={{ cursor: "pointer" }}><Badge id={t.id} size={38} /></div>
+              <div style={{ flex: 1 }}>
+                <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{t.city} {t.name}</div>
+                <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{t.rec.join("–")} · {t.league}</div>
+              </div>
+              <button className="btn btn-sm" onClick={() => onFollow(t.id)}><Heart size={13} fill="var(--amber)" style={{ color: "var(--amber)" }} /></button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {!EMBED && (
+        <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={onExit}>
+          <ArrowRightLeft size={14} />Switch experience
+        </button>
+      )}
+    </div>
+  );
+}
+function Stat({ n, l }) {
+  return (<div className="card-2" style={{ flex: 1, textAlign: "center", padding: "12px 4px" }}><div className="display" style={{ fontSize: 24 }}>{n}</div><div className="eyebrow" style={{ fontSize: 9 }}>{l}</div></div>);
+}
+
+/* ============================== MODALS ============================== */
+function BuyModal({ game, close, confirm }) {
+  const [sec, setSec] = useState(null);
+  const [qty, setQty] = useState(2);
+  if (!game) return null;
+  const home = T(game.home), away = T(game.away);
+  const tiers = [
+    { name: "Upper Level", price: game.from, area: "300s" },
+    { name: "Lower Bowl", price: Math.round(game.from * 2.1), area: "100s" },
+    { name: "Club / Premium", price: Math.round(game.from * 3.6), area: "Club" },
+    { name: "Courtside / Field", price: Math.round(game.from * 7.5), area: "VIP" },
+  ];
+  return (
+    <Overlay close={close}>
+      <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
+        <Badge id={away.id} size={38} /><span className="display" style={{ color: "var(--faint)" }}>@</span><Badge id={home.id} size={38} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="heading" style={{ fontWeight: 800, fontSize: 15 }}>{away.abbr} at {home.abbr}</div>
+          <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{fmtFull(gDate(game))} · {game.time}</div>
+        </div>
+        <button className="btn btn-sm btn-ghost" onClick={close}><X size={15} /></button>
+      </div>
+      <div className="eyebrow" style={{ marginBottom: 10 }}>Choose a section</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {tiers.map((t) => (
+          <button key={t.name} onClick={() => setSec(t)} className="card-2" style={{ padding: 12, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", border: "1px solid " + (sec?.name === t.name ? "var(--amber)" : "var(--line)"), background: sec?.name === t.name ? "var(--amber-soft)" : "var(--panel2)" }}>
+            <div style={{ textAlign: "left" }}>
+              <div className="heading" style={{ fontWeight: 700, fontSize: 13.5 }}>{t.name}</div>
+              <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>Sections {t.area}</div>
+            </div>
+            <div className="mono" style={{ fontWeight: 700 }}>{money(t.price)}</div>
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <span className="eyebrow">Quantity</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button className="btn btn-sm btn-ghost" onClick={() => setQty(Math.max(1, qty - 1))}><Minus size={14} /></button>
+          <span className="display" style={{ fontSize: 20, width: 24, textAlign: "center" }}>{qty}</span>
+          <button className="btn btn-sm btn-ghost" onClick={() => setQty(Math.min(8, qty + 1))}><Plus size={14} /></button>
+        </div>
+      </div>
+      <button className="btn btn-accent" disabled={!sec} style={{ width: "100%", justifyContent: "center", opacity: sec ? 1 : .5 }} onClick={() => confirm(game, sec, qty)}>
+        {sec ? `Confirm · ${money(sec.price * qty)}` : "Select a section to continue"}
+      </button>
+      <p className="mono" style={{ textAlign: "center", fontSize: 11, color: "var(--faint)", marginTop: 12, marginBottom: 0 }}>Demo checkout — no payment is taken.</p>
+    </Overlay>
+  );
+}
+
+function SeatModal({ data, close, confirm }) {
+  if (!data) return null;
+  const { tk, mode } = data;
+  const g = GAMES.find((x) => x.id === tk.gameId); const home = T(g.home);
+  const [price, setPrice] = useState(Math.round((tk.price || 120) * 1.15));
+  const swaps = [
+    { sec: "104", row: "G", seat: "8", note: "Closer to center, aisle" },
+    { sec: "112", row: "C", seat: "14", note: "Lower, behind bench" },
+    { sec: "Club", row: "B", seat: "3", note: "Premium · +$140" },
+  ];
+  return (
+    <Overlay close={close}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div className="heading" style={{ fontWeight: 800, fontSize: 17 }}>{mode === "resale" ? "List for resale" : "Switch your seat"}</div>
+        <button className="btn btn-sm btn-ghost" onClick={close}><X size={15} /></button>
+      </div>
+      <div className="card-2" style={{ padding: 12, marginBottom: 16, display: "flex", gap: 11, alignItems: "center" }}>
+        <Badge id={home.id} size={36} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{T(g.away).abbr} at {home.abbr}</div>
+          <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>Current · Sec {tk.sec} · Row {tk.row} · Seat {tk.seat}</div>
+        </div>
+      </div>
+      {mode === "resale" ? (
+        <>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>Set your asking price (per seat)</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <span className="display" style={{ fontSize: 28 }}>{money(price)}</span>
+            <span className="pill" style={{ background: "var(--cyan-soft)", color: "var(--cyan)" }}>Face {money(tk.price || 120)}</span>
+          </div>
+          <input type="range" min={40} max={500} value={price} onChange={(e) => setPrice(+e.target.value)} style={{ width: "100%", accentColor: "var(--amber)", marginBottom: 18 }} />
+          <button className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }} onClick={() => confirm(`Listed Sec ${tk.sec} for resale at ${money(price)}`)}><Tag size={14} />List for {money(price)}</button>
+        </>
+      ) : (
+        <>
+          <div className="eyebrow" style={{ marginBottom: 10 }}>Available upgrades & swaps</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            {swaps.map((s, i) => (
+              <button key={i} className="card-2" style={{ padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => confirm(`Seat switched to Sec ${s.sec}, Row ${s.row}, Seat ${s.seat}`)}>
+                <div style={{ textAlign: "left" }}>
+                  <div className="mono" style={{ fontWeight: 700, fontSize: 12.5 }}>Sec {s.sec} · Row {s.row} · Seat {s.seat}</div>
+                  <div style={{ fontSize: 11, color: "var(--muted)" }}>{s.note}</div>
+                </div>
+                <ArrowRightLeft size={16} style={{ color: "var(--amber)" }} />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </Overlay>
+  );
+}
+
+function Overlay({ children, close }) {
+  return (
+    <div onClick={close} style={{ position: "absolute", inset: 0, background: "rgba(5,8,18,.72)", backdropFilter: "blur(4px)", zIndex: 60, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      <div onClick={(e) => e.stopPropagation()} className="card fade" style={{ width: "100%", padding: 18, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, maxHeight: "88%", overflowY: "auto" }}>{children}</div>
+    </div>
+  );
+}
+
+/* ============================== CART DRAWER ============================== */
+function Cart({ open, close, cart, setCart, checkout }) {
+  const items = cart.map((c) => ({ ...c, m: MERCH.find((x) => x.id === c.id) }));
+  const total = items.reduce((s, i) => s + (i.m.sale || i.m.price) * i.qty, 0);
+  const setQty = (id, q) => setCart((c) => q <= 0 ? c.filter((x) => x.id !== id) : c.map((x) => x.id === id ? { ...x, qty: q } : x));
+  if (!open) return null;
+  return (
+    <div onClick={close} style={{ position: "absolute", inset: 0, background: "rgba(5,8,18,.6)", zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={(e) => e.stopPropagation()} className="fade" style={{ width: "100%", background: "var(--panel)", height: "100%", display: "flex", flexDirection: "column" }}>
+        <div style={{ padding: 16, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="heading" style={{ fontWeight: 800, fontSize: 17, display: "flex", alignItems: "center", gap: 9 }}><ShoppingCart size={18} />Your cart</div>
+          <button className="btn btn-sm btn-ghost" onClick={close}><X size={15} /></button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 11 }}>
+          {items.length ? items.map((i) => {
+            const t = T(i.m.team), Ic = i.m.icon;
+            return (
+              <div key={i.id} className="card-2" style={{ padding: 11, display: "flex", gap: 11, alignItems: "center" }}>
+                <div style={{ width: 46, height: 46, borderRadius: 10, background: t.c1, display: "flex", alignItems: "center", justifyContent: "center" }}><Ic size={22} style={{ color: t.c2 }} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="heading" style={{ fontWeight: 700, fontSize: 12.5 }}>{i.m.name}</div>
+                  <div className="mono" style={{ fontSize: 11.5, color: "var(--muted)" }}>{money(i.m.sale || i.m.price)}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <button className="btn btn-sm btn-ghost" style={{ padding: 6 }} onClick={() => setQty(i.id, i.qty - 1)}><Minus size={13} /></button>
+                  <span className="mono" style={{ width: 14, textAlign: "center" }}>{i.qty}</span>
+                  <button className="btn btn-sm btn-ghost" style={{ padding: 6 }} onClick={() => setQty(i.id, i.qty + 1)}><Plus size={13} /></button>
+                </div>
+              </div>
+            );
+          }) : <div style={{ textAlign: "center", color: "var(--muted)", padding: "60px 0" }}><ShoppingBag size={34} style={{ color: "var(--faint)", marginBottom: 12 }} /><div>Your cart is empty.</div></div>}
+        </div>
+        {items.length > 0 && (
+          <div style={{ padding: 16, borderTop: "1px solid var(--line)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span className="eyebrow">Subtotal</span><span className="display" style={{ fontSize: 22 }}>{money(total)}</span>
+            </div>
+            <button className="btn btn-accent" style={{ width: "100%", justifyContent: "center" }} onClick={checkout}>Checkout · {money(total)}</button>
+            <p className="mono" style={{ textAlign: "center", fontSize: 11, color: "var(--faint)", marginTop: 10, marginBottom: 0 }}>Demo — no payment is taken.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== LAUNCHER ============================== */
+function Launcher({ onPick }) {
+  const cards = [
+    { k: "fan", ic: Smartphone, t: "Fan app", d: "Tickets, teams, merch and live scores.", tag: "Mobile · live now", c: "var(--amber)" },
+    { k: "business", ic: Building2, t: "Business console", d: "For teams & venues to run the operation.", tag: "Web · preview", c: "var(--cyan)" },
+  ];
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "radial-gradient(120% 90% at 25% 10%,#19213c,#0B1020 60%)" }}>
+      <div className="fade" style={{ width: "100%", maxWidth: 760 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <div className="display" style={{ width: 44, height: 44, borderRadius: 12, background: "var(--amber)", color: "#160a02", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>C</div>
+          <div className="heading" style={{ fontWeight: 900, fontSize: 26, letterSpacing: "-.01em" }}>COURTSIDE</div>
+        </div>
+        <p style={{ color: "var(--muted)", margin: "0 0 28px", fontSize: 15 }}>Two products, one platform. Pick an experience to open.</p>
+        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))" }}>
+          {cards.map((c) => (
+            <button key={c.k} onClick={() => onPick(c.k)} className="card hoverable" style={{ padding: 22, textAlign: "left", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <div style={{ width: 50, height: 50, borderRadius: 14, background: "var(--panel2)", display: "flex", alignItems: "center", justifyContent: "center" }}><c.ic size={24} style={{ color: c.c }} /></div>
+                <span className="pill" style={{ background: "var(--panel2)", color: c.c }}>{c.tag}</span>
+              </div>
+              <div className="heading" style={{ fontWeight: 800, fontSize: 20, marginBottom: 6 }}>{c.t}</div>
+              <p style={{ margin: "0 0 16px", color: "var(--muted)", fontSize: 13.5, lineHeight: 1.5 }}>{c.d}</p>
+              <span className="link" style={{ color: c.c }}>Open{c.k === "fan" ? " app" : " console"}<ChevronRight size={15} /></span>
+            </button>
+          ))}
+        </div>
+        <p className="mono" style={{ color: "var(--faint)", fontSize: 12, marginTop: 22 }}>Fan app is mobile-only for now — the web version comes later.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== BUSINESS (web, 2nd product) ============================== */
+const BIZ_REVENUE = [
+  { d: "Jun 12", rev: 162000, sold: 1980 }, { d: "Jun 13", rev: 174500, sold: 2110 },
+  { d: "Jun 14", rev: 233000, sold: 2870 }, { d: "Jun 15", rev: 198000, sold: 2390 },
+  { d: "Jun 16", rev: 151000, sold: 1840 }, { d: "Jun 17", rev: 168000, sold: 2020 },
+  { d: "Jun 18", rev: 181000, sold: 2180 }, { d: "Jun 19", rev: 246000, sold: 2960 },
+  { d: "Jun 20", rev: 271000, sold: 3210 }, { d: "Jun 21", rev: 229000, sold: 2740 },
+  { d: "Jun 22", rev: 174000, sold: 2090 }, { d: "Jun 23", rev: 188000, sold: 2260 },
+  { d: "Jun 24", rev: 205000, sold: 2450 }, { d: "Jun 25", rev: 262000, sold: 3080 },
+];
+const BIZ_TIERS = [
+  { name: "Upper level", sold: 11820, cap: 14000, c: "#FF7A2F" },
+  { name: "Lower bowl", sold: 9240, cap: 10500, c: "#FFA45C" },
+  { name: "Club", sold: 2680, cap: 3200, c: "#34E0D0" },
+  { name: "Premium / Courtside", sold: 740, cap: 900, c: "#7C83FF" },
+];
+const BIZ_MIX = [
+  { name: "Single game", value: 14820, c: "#FF7A2F" },
+  { name: "Season", value: 6240, c: "#34E0D0" },
+  { name: "Resale", value: 2310, c: "#7C83FF" },
+  { name: "Group", value: 1110, c: "#4ADE80" },
+];
+const BIZ_CAP = { NBA: 18500, NFL: 70000, MLB: 45000, NHL: 18000, MLS: 22000 };
+const BIZ_FILLS = [0.99, 0.91, 0.78, 0.86, 0.62, 0.71, 0.55];
+const BIZ_MODS = [
+  { k: "sales", t: "Ticket sales & inventory", ic: BarChart3, live: true, d: "Live sell-through, revenue, pricing and resale across every event." },
+  { k: "feedback", t: "Customer feedback", ic: MessageSquare, live: true, d: "Voice of the fan: ratings, sentiment and themes across every channel." },
+  { k: "schedule", t: "Schedule & events", ic: Calendar, live: true, d: "Publish games, set on-sale dates and manage season-ticket renewals." },
+  { k: "merch", t: "Merch & drops", ic: ShoppingBag, d: "Schedule drops, track stock and run sales for followed-team fans." },
+  { k: "comms", t: "Fan comms & news", ic: Megaphone, d: "Push headlines and offers to fans who follow your team." },
+  { k: "crm", t: "Audience & CRM", ic: Users, d: "See who follows and attends, and win back lapsed season holders." },
+  { k: "broadcast", t: "Broadcast & watch", ic: Radio, d: "Set where-and-how-to-watch info on every fan's home screen." },
+];
+const bmoney = (n) => n >= 1e6 ? "$" + (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? "$" + (n / 1e3).toFixed(1) + "K" : "$" + n;
+const bnum = (n) => n.toLocaleString("en-US");
+function bizEvents() {
+  return GAMES.filter((g) => g.day >= 0).sort((a, b) => a.day - b.day).slice(0, 7).map((g, i) => {
+    const cap = BIZ_CAP[T(g.home).league]; const fill = BIZ_FILLS[i % BIZ_FILLS.length];
+    const sold = Math.round(cap * fill); const avg = Math.round(g.from * 2.4); const gross = sold * avg;
+    const status = fill >= 0.98 ? "Sold out" : fill >= 0.85 ? "Selling fast" : "On sale";
+    return { g, cap, sold, fill, avg, gross, status };
+  });
+}
+
+function KPI({ label, value, delta, up, children }) {
+  return (
+    <div className="card" style={{ padding: 16 }}>
+      <div className="eyebrow" style={{ marginBottom: 10 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+        <span className="display" style={{ fontSize: 26 }}>{value}</span>
+        {delta != null && (
+          <span className="pill" style={{ background: up ? "rgba(74,222,128,.15)" : "rgba(248,113,113,.15)", color: up ? "var(--good)" : "var(--bad)" }}>
+            {up ? <TrendingUp size={11} /> : <TrendingDown size={11} />}{delta}
+          </span>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+function ChartCard({ title, kicker, right, children }) {
+  return (
+    <div className="card" style={{ padding: 18, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          {kicker && <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 5 }}>{kicker}</div>}
+          <div className="heading" style={{ fontWeight: 800, fontSize: 16 }}>{title}</div>
+        </div>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+function BizTooltip({ active, payload, label }) {
+  if (!active || !payload || !payload.length) return null;
+  const p = payload[0].payload;
+  return (
+    <div className="card-2" style={{ padding: "9px 12px", border: "1px solid var(--line2)" }}>
+      <div className="mono" style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>{label}</div>
+      <div className="heading" style={{ fontWeight: 800, fontSize: 15 }}>{bmoney(p.rev)}</div>
+      <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>{bnum(p.sold)} tickets</div>
+    </div>
+  );
+}
+function StatusPill({ status }) {
+  const map = { "Sold out": ["rgba(248,113,113,.15)", "var(--bad)"], "Selling fast": ["var(--amber-soft)", "var(--amber)"], "On sale": ["var(--cyan-soft)", "var(--cyan)"] };
+  const [bg, c] = map[status];
+  return <span className="pill" style={{ background: bg, color: c }}>{status}</span>;
+}
+
+const VENUES = {
+  1: ["Crypto.com Arena", "Intuit Dome", "BMO Stadium", "SoFi Stadium"],
+  3: ["Chase Center", "Oracle Park", "Levi's Stadium"],
+  6: ["Levi's Stadium", "Chase Center", "Oracle Park"],
+  7: ["Dodger Stadium", "Crypto.com Arena", "BMO Stadium"],
+  8: ["Yankee Stadium", "Citi Field", "MetLife Stadium"],
+  10: ["Madison Square Garden", "Barclays Center", "UBS Arena"],
+  13: ["BMO Stadium", "SoFi Stadium", "Rose Bowl", "Dignity Health Sports Park"],
+};
+const venuesFor = (id) => VENUES[id] || [T(id).venue];
+
+function NewEventField({ label, children }) {
+  return (<label style={{ display: "block" }}><span className="eyebrow" style={{ display: "block", marginBottom: 7 }}>{label}</span>{children}</label>);
+}
+function NewEventModal({ close, onCreate }) {
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const def = new Date(TODAY); def.setDate(def.getDate() + 14);
+  const [home, setHome] = useState(1);
+  const [away, setAway] = useState(3);
+  const [venue, setVenue] = useState(venuesFor(1)[0]);
+  const [date, setDate] = useState(iso(def));
+  const [time, setTime] = useState("7:30 PM");
+  const [cap, setCap] = useState(BIZ_CAP[T(1).league]);
+  const [price, setPrice] = useState(65);
+  const [onsale, setOnsale] = useState(iso(TODAY));
+  const [mode, setMode] = useState("single");
+  const [games, setGames] = useState(3);
+  useEffect(() => { try { window.scrollTo(0, 0); } catch (e) { /* noop */ } }, []);
+  const venueOpts = venuesFor(home);
+  const seriesCount = Math.max(2, Math.min(7, Number(games) || 0));
+  const seriesDatesLabel = (() => {
+    if (mode !== "series" || !date) return "";
+    const [y, mo, d] = date.split("-").map(Number);
+    const start = new Date(y, mo - 1, d);
+    return Array.from({ length: seriesCount }, (_, i) => { const dd = addDays(start, i); return `${MO[dd.getMonth()]} ${dd.getDate()}`; }).join(" · ");
+  })();
+  const valid = home !== away && date && venue.trim() && Number(cap) > 0 && Number(price) > 0 && (mode === "single" || seriesCount >= 2);
+  const field = { background: "var(--panel2)", border: "1px solid var(--line)", borderRadius: 10, color: "var(--text)", padding: "10px 12px", fontFamily: "Inter", fontSize: 14, outline: "none", width: "100%" };
+  const changeHome = (v) => { setHome(v); setCap(BIZ_CAP[T(v).league]); setVenue(venuesFor(v)[0]); };
+  const submit = () => {
+    if (!valid) return;
+    const [y, mo, d] = date.split("-").map(Number);
+    const base = Math.round((new Date(y, mo - 1, d) - TODAY) / 86400000);
+    const count = mode === "series" ? seriesCount : 1;
+    const sid = Date.now();
+    const evs = Array.from({ length: count }, (_, i) => {
+      const g = { id: sid + i, home, away, day: base + i, time, from: Number(price), venue: venue.trim() };
+      if (count > 1) g.series = { id: sid, label: `G${i + 1}/${count}` };
+      return { g, cap: Number(cap), sold: 0, fill: 0, gross: 0, status: "On sale" };
+    });
+    onCreate(evs);
+  };
+  return (
+    <div onClick={close} style={{ position: "fixed", top: 0, left: 0, right: 0, height: "100vh", background: "rgba(16,28,54,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} className="cs-biz card fade" style={{ width: "100%", maxWidth: 480, padding: 22, maxHeight: "92vh", overflowY: "auto", background: "var(--panel)", color: "var(--text)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 6 }}>New on-sale</div>
+            <h2 className="heading" style={{ fontWeight: 800, fontSize: 20, margin: 0 }}>Add an event</h2>
+          </div>
+          <button className="btn btn-sm btn-ghost" onClick={close}><X size={15} /></button>
+        </div>
+        <p style={{ color: "var(--muted)", fontSize: 13, margin: "8px 0 16px" }}>Set the matchup and details, then open ticket sales.</p>
+
+        <div style={{ display: "flex", background: "var(--panel2)", border: "1px solid var(--line)", borderRadius: 10, padding: 3, marginBottom: 16 }}>
+          {[["single", "Single game"], ["series", "Series / multi-day"]].map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setMode(k)} className="heading"
+              style={{ flex: 1, padding: "8px 10px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 700, fontSize: 12.5, background: mode === k ? "var(--amber)" : "transparent", color: mode === k ? "#160a02" : "var(--muted)" }}>{l}</button>
+          ))}
+        </div>
+
+        <div className="card-2" style={{ padding: 14, display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+          <Badge id={away} size={38} /><span className="display" style={{ color: "var(--faint)" }}>@</span><Badge id={home} size={38} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="heading" style={{ fontWeight: 700, fontSize: 14 }}>{T(away).abbr} at {T(home).abbr}</div>
+            <div className="mono" style={{ fontSize: 11.5, color: "var(--muted)", display: "flex", alignItems: "center", gap: 5 }}><MapPin size={11} />{venue}</div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <NewEventField label="Home team"><select value={home} onChange={(e) => changeHome(Number(e.target.value))} style={field}>{TEAMS.map((t) => <option key={t.id} value={t.id}>{t.city} {t.name}</option>)}</select></NewEventField>
+            <NewEventField label="Away team"><select value={away} onChange={(e) => setAway(Number(e.target.value))} style={field}>{TEAMS.map((t) => <option key={t.id} value={t.id}>{t.city} {t.name}</option>)}</select></NewEventField>
+          </div>
+          {home === away && <div style={{ color: "var(--bad)", fontSize: 12, marginTop: -6 }}>Home and away must be different teams.</div>}
+          <NewEventField label="Venue">
+            <select value={venue} onChange={(e) => setVenue(e.target.value)} style={field}>
+              {venueOpts.map((v, i) => <option key={v} value={v}>{v}{i === 0 ? " (best)" : ""}</option>)}
+            </select>
+          </NewEventField>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <NewEventField label={mode === "series" ? "Series start date" : "Event date"}><input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={field} /></NewEventField>
+            <NewEventField label="Start time"><input value={time} onChange={(e) => setTime(e.target.value)} style={field} /></NewEventField>
+          </div>
+          {mode === "series" && (
+            <NewEventField label="Games in series">
+              <input type="number" min={2} max={7} value={games} onChange={(e) => setGames(e.target.value)} style={field} />
+              <div className="mono" style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>{seriesCount} consecutive dates · {seriesDatesLabel}</div>
+            </NewEventField>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <NewEventField label="Capacity"><input type="number" value={cap} onChange={(e) => setCap(e.target.value)} style={field} /></NewEventField>
+            <NewEventField label="Price from ($)"><input type="number" value={price} onChange={(e) => setPrice(e.target.value)} style={field} /></NewEventField>
+          </div>
+          <NewEventField label="On-sale date"><input type="date" value={onsale} onChange={(e) => setOnsale(e.target.value)} style={field} /></NewEventField>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+          <button className="btn btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={close}>Cancel</button>
+          <button className="btn btn-accent" style={{ flex: 1, justifyContent: "center", opacity: valid ? 1 : .5 }} disabled={!valid} onClick={submit}><Plus size={14} />{mode === "series" ? `Put series on sale (${seriesCount})` : "Put on sale"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardInsights({ items }) {
+  const ICON = { good: ArrowUpRight, warn: AlertTriangle, op: Zap };
+  const COL = { good: "var(--good)", warn: "var(--bad)", op: "var(--amber)" };
+  return (
+    <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+      <div className="eyebrow" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 11, color: "var(--amber)" }}><Lightbulb size={12} />Insights & opportunities</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {items.map((it, i) => {
+          const Ic = ICON[it.t] || Zap;
+          return (
+            <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+              <Ic size={13} style={{ color: COL[it.t], flex: "none", marginTop: 2 }} />
+              <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.45 }}>
+                {it.text}{it.impact && <span className="mono" style={{ color: "var(--good)", fontWeight: 700, marginLeft: 6 }}>{it.impact}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function EventsTable({ events, kicker = "Upcoming home events", title = "Inventory by event", footer }) {
+  const [status, setStatus] = useState("All");
+  const [sortKey, setSortKey] = useState("date");
+  const DESC = { date: false, sell: true, gross: true, sold: true, cap: true };
+  const [page, setPage] = useState(0);
+  const PER = 6;
+  const STATUSES = ["All", "On sale", "Selling fast", "Sold out"];
+  const SORTS = [["date", "Date"], ["sell", "Sell-through"], ["gross", "Gross"], ["sold", "Sold"], ["cap", "Capacity"]];
+  const getv = { date: (e) => e.g.day, sell: (e) => e.fill, gross: (e) => e.gross, sold: (e) => e.sold, cap: (e) => e.cap };
+  const filtered = events.filter((e) => status === "All" || e.status === status);
+  const sortedRows = [...filtered].sort((a, b) => { const d = getv[sortKey](a) - getv[sortKey](b); return DESC[sortKey] ? -d : d; });
+  const pages = Math.max(1, Math.ceil(sortedRows.length / PER));
+  const cur = Math.min(page, pages - 1);
+  const rows = sortedRows.slice(cur * PER, cur * PER + PER);
+  const start = sortedRows.length ? cur * PER + 1 : 0;
+  const end = Math.min(cur * PER + PER, sortedRows.length);
+  const setStat = (v) => { setStatus(v); setPage(0); };
+  const setSort = (v) => { setSortKey(v); setPage(0); };
+  return (
+    <div className="card" style={{ padding: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 5 }}>{kicker}</div>
+          <div className="heading" style={{ fontWeight: 800, fontSize: 16 }}>{title}</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div className="scrollx" style={{ display: "flex", gap: 6 }}>
+            {STATUSES.map((s) => (
+              <button key={s} onClick={() => setStat(s)} className="btn btn-sm"
+                style={status === s ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)", padding: "6px 11px", fontSize: 11 } : { padding: "6px 11px", fontSize: 11 }}>{s}</button>
+            ))}
+          </div>
+          <select value={sortKey} onChange={(e) => setSort(e.target.value)} style={{ background: "var(--panel2)", border: "1px solid var(--line)", borderRadius: 9, color: "var(--text)", padding: "7px 10px", fontFamily: "Archivo", fontWeight: 700, fontSize: 12, cursor: "pointer", outline: "none" }}>
+            {SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="scrollx">
+        <div style={{ minWidth: 720 }}>
+          <div className="biz-trow biz-thead">
+            <span>Event</span><span>Date</span><span style={{ textAlign: "right" }}>Capacity</span><span style={{ textAlign: "right" }}>Sold</span><span>Sell-through</span><span style={{ textAlign: "right" }}>Gross</span><span style={{ textAlign: "right" }}>Status</span>
+          </div>
+          {rows.map(({ g, cap, sold, fill, gross, status: st }) => {
+            const pct = Math.round(fill * 100);
+            return (
+              <div key={g.id} className="biz-trow biz-tbody">
+                <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                  <Badge id={g.away} size={26} r={7} /><Badge id={g.home} size={26} r={7} />
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{T(g.away).abbr} at {T(g.home).abbr}</span>
+                      {g.series && <span className="pill" style={{ background: "var(--cyan-soft)", color: "var(--cyan)", fontSize: 9 }}>{g.series.label}</span>}
+                    </span>
+                    <span className="mono" style={{ fontSize: 10.5, color: "var(--muted)", display: "block", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{g.venue || T(g.home).venue}</span>
+                  </span>
+                </span>
+                <span className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>{MO[gDate(g).getMonth()]} {gDate(g).getDate()}</span>
+                <span className="mono" style={{ fontSize: 12, textAlign: "right" }}>{bnum(cap)}</span>
+                <span className="mono" style={{ fontSize: 12, textAlign: "right" }}>{bnum(sold)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ flex: 1, height: 6, borderRadius: 5, background: "var(--panel3)", overflow: "hidden", minWidth: 60 }}>
+                    <span style={{ display: "block", width: pct + "%", height: "100%", background: pct >= 98 ? "var(--bad)" : pct >= 85 ? "var(--amber)" : "var(--cyan)" }} />
+                  </span>
+                  <span className="mono" style={{ fontSize: 11.5, width: 32, color: "var(--muted)" }}>{pct}%</span>
+                </span>
+                <span className="mono" style={{ fontSize: 12.5, fontWeight: 700, textAlign: "right" }}>{bmoney(gross)}</span>
+                <span style={{ textAlign: "right" }}><StatusPill status={st} /></span>
+              </div>
+            );
+          })}
+          {rows.length === 0 && <div style={{ padding: "28px 0", textAlign: "center", color: "var(--muted)", fontSize: 13 }}>No events match this filter.</div>}
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", gap: 10, flexWrap: "wrap" }}>
+        <span className="mono" style={{ fontSize: 11.5, color: "var(--muted)" }}>Showing {start}–{end} of {sortedRows.length}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button className="btn btn-sm btn-ghost" disabled={cur === 0} style={{ padding: 7, opacity: cur === 0 ? .45 : 1 }} onClick={() => setPage(cur - 1)}><ChevronLeft size={15} /></button>
+          <span className="mono" style={{ fontSize: 12, minWidth: 48, textAlign: "center" }}>{cur + 1} / {pages}</span>
+          <button className="btn btn-sm btn-ghost" disabled={cur >= pages - 1} style={{ padding: 7, opacity: cur >= pages - 1 ? .45 : 1 }} onClick={() => setPage(cur + 1)}><ChevronRight size={15} /></button>
+        </div>
+      </div>
+      {footer}
+    </div>
+  );
+}
+function BizSchedule({ events, openNew }) {
+  const c = (st) => events.filter((e) => e.status === st).length;
+  const chips = [
+    ["Total events", events.length, "var(--text)"],
+    ["On sale", c("On sale"), "var(--cyan)"],
+    ["Selling fast", c("Selling fast"), "var(--amber)"],
+    ["Sold out", c("Sold out"), "var(--bad)"],
+  ];
+  return (
+    <div className="fade">
+      <div style={{ marginBottom: 20 }}>
+        <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 7 }}>Operations</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <h1 className="heading" style={{ fontSize: 26, fontWeight: 900, margin: 0 }}>Schedule & events</h1>
+          <button className="btn btn-sm btn-accent" onClick={openNew}><Plus size={14} />New on-sale</button>
+        </div>
+        <p style={{ color: "var(--muted)", fontSize: 14, margin: "8px 0 0", maxWidth: 540, lineHeight: 1.5 }}>Publish games and put them on sale. Anything you add here flows through to the sales dashboard and the fan app.</p>
+      </div>
+      <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", marginBottom: 16 }}>
+        {chips.map(([l, v, col]) => (
+          <div key={l} className="card" style={{ padding: 16 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>{l}</div>
+            <div className="display" style={{ fontSize: 26, color: col }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <EventsTable events={events} kicker="All scheduled" title="Events" />
+    </div>
+  );
+}
+
+function CompareModal({ events, close }) {
+  useEffect(() => { try { window.scrollTo(0, 0); } catch (e) { /* noop */ } }, []);
+  const byGross = [...events].sort((a, b) => b.gross - a.gross);
+  const [sel, setSel] = useState(() => byGross.slice(0, 2).map((e) => e.g.id));
+  const toggle = (id) => setSel((s) => s.includes(id) ? s.filter((x) => x !== id) : (s.length >= 3 ? s : [...s, id]));
+  const chosen = sel.map((id) => events.find((e) => e.g.id === id)).filter(Boolean);
+  const avg = (e) => e.sold > 0 ? Math.round(e.gross / e.sold) : e.g.from;
+  const rows = [
+    { label: "Date", txt: (e) => `${MO[gDate(e.g).getMonth()]} ${gDate(e.g).getDate()}` },
+    { label: "Venue", txt: (e) => e.g.venue || T(e.g.home).venue },
+    { label: "Capacity", num: (e) => e.cap, fmt: bnum },
+    { label: "Sold", num: (e) => e.sold, fmt: bnum, best: true },
+    { label: "Sell-through", pct: (e) => e.fill, best: true },
+    { label: "Gross", num: (e) => e.gross, fmt: bmoney, best: true },
+    { label: "Avg price", num: (e) => avg(e), fmt: (v) => "$" + v, best: true },
+    { label: "Status", status: true },
+  ];
+  const N = chosen.length;
+  const tmpl = `minmax(104px,.9fr) repeat(${N}, minmax(128px,1fr))`;
+  return (
+    <div onClick={close} style={{ position: "fixed", top: 0, left: 0, right: 0, height: "100vh", background: "rgba(16,28,54,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} className="cs-biz card fade" style={{ width: "100%", maxWidth: 720, padding: 22, maxHeight: "92vh", overflowY: "auto", background: "var(--panel)", color: "var(--text)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 6 }}>Analysis</div>
+            <h2 className="heading" style={{ fontWeight: 800, fontSize: 20, margin: 0 }}>Compare events</h2>
+          </div>
+          <button className="btn btn-sm btn-ghost" onClick={close}><X size={15} /></button>
+        </div>
+        <p style={{ color: "var(--muted)", fontSize: 13, margin: "8px 0 16px" }}>Pick up to three events to compare side by side. The best value in each row is highlighted.</p>
+
+        <div className="scrollx" style={{ display: "flex", gap: 7, marginBottom: 18, paddingBottom: 4 }}>
+          {events.map((e) => {
+            const on = sel.includes(e.g.id);
+            return (
+              <button key={e.g.id} onClick={() => toggle(e.g.id)} className="btn btn-sm"
+                style={on ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)", padding: "6px 11px", fontSize: 11, whiteSpace: "nowrap" } : { padding: "6px 11px", fontSize: 11, whiteSpace: "nowrap" }}>
+                {T(e.g.away).abbr}@{T(e.g.home).abbr} · {MO[gDate(e.g).getMonth()]} {gDate(e.g).getDate()}
+              </button>
+            );
+          })}
+        </div>
+
+        {N < 2 ? (
+          <div className="card-2" style={{ padding: 28, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Select at least two events to compare.</div>
+        ) : (
+          <div className="scrollx">
+            <div style={{ minWidth: 110 + N * 150 }}>
+              <div style={{ display: "grid", gridTemplateColumns: tmpl, gap: 10, alignItems: "end", paddingBottom: 12, borderBottom: "1px solid var(--line)" }}>
+                <span />
+                {chosen.map((e) => (
+                  <div key={e.g.id}>
+                    <div style={{ display: "flex", gap: 5, marginBottom: 7 }}><Badge id={e.g.away} size={24} r={7} /><Badge id={e.g.home} size={24} r={7} /></div>
+                    <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{T(e.g.away).abbr} at {T(e.g.home).abbr}</div>
+                  </div>
+                ))}
+              </div>
+              {rows.map((r) => {
+                let best = new Set();
+                if (r.best) {
+                  const vals = chosen.map((e) => (r.pct ? r.pct(e) : r.num(e)));
+                  const mx = Math.max(...vals);
+                  vals.forEach((v, i) => { if (v === mx) best.add(i); });
+                }
+                return (
+                  <div key={r.label} style={{ display: "grid", gridTemplateColumns: tmpl, gap: 10, alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+                    <span className="eyebrow">{r.label}</span>
+                    {chosen.map((e, i) => {
+                      const hot = best.has(i);
+                      if (r.txt) return <span key={i} className="mono" style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.txt(e)}</span>;
+                      if (r.status) return <span key={i}><StatusPill status={e.status} /></span>;
+                      if (r.pct) {
+                        const p = Math.round(r.pct(e) * 100);
+                        return (
+                          <span key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ flex: 1, height: 6, borderRadius: 5, background: "var(--panel3)", overflow: "hidden", minWidth: 36 }}><span style={{ display: "block", width: p + "%", height: "100%", background: hot ? "var(--amber)" : "var(--cyan)" }} /></span>
+                            <span className="mono" style={{ fontSize: 12, fontWeight: hot ? 700 : 400, color: hot ? "var(--amber)" : "var(--text)" }}>{p}%</span>
+                          </span>
+                        );
+                      }
+                      return <span key={i} className="mono" style={{ fontSize: 13, fontWeight: hot ? 700 : 400, color: hot ? "var(--amber)" : "var(--text)" }}>{r.fmt(r.num(e))}</span>;
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BizDashboard({ events, base }) {
+  const [showCompare, setShowCompare] = useState(false);
+  const totalRev = BIZ_REVENUE.reduce((s, x) => s + x.rev, 0);
+  const totalSold = BIZ_REVENUE.reduce((s, x) => s + x.sold, 0);
+  const tierSold = BIZ_TIERS.reduce((s, x) => s + x.sold, 0);
+  const tierCap = BIZ_TIERS.reduce((s, x) => s + x.cap, 0);
+  const sellThrough = Math.round((tierSold / tierCap) * 1000) / 10;
+  const avgPrice = Math.round(totalRev / totalSold);
+  const mixTotal = BIZ_MIX.reduce((s, x) => s + x.value, 0);
+  const sorted = [...base].sort((a, b) => a.fill - b.fill);
+  const slow = sorted[0], hot = sorted[sorted.length - 1];
+  const slowName = `${T(slow.g.away).abbr} at ${T(slow.g.home).abbr}`;
+  const hotName = `${T(hot.g.away).abbr} at ${T(hot.g.home).abbr}`;
+  return (
+    <div className="fade">
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 22 }}>
+        <div>
+          <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 7 }}>Courtside Venue Group · 7 venues</div>
+          <h1 className="heading" style={{ fontSize: 26, fontWeight: 900, margin: 0 }}>Ticket sales & inventory</h1>
+        </div>
+        <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+          <button className="btn btn-sm btn-ghost" onClick={() => setShowCompare(true)}><ArrowRightLeft size={14} />Compare</button>
+          <button className="btn btn-sm btn-ghost"><Calendar size={14} />Last 14 days<ChevronRight size={13} style={{ transform: "rotate(90deg)" }} /></button>
+          <button className="btn btn-sm btn-ghost">Export</button>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", marginBottom: 16 }}>
+        <KPI label="Gross revenue" value={bmoney(totalRev)} delta="12.4%" up />
+        <KPI label="Tickets sold" value={bnum(totalSold)} delta="8.1%" up />
+        <KPI label="Sell-through" value={sellThrough + "%"} delta="3.2 pts" up>
+          <div style={{ height: 5, borderRadius: 5, background: "var(--panel3)", marginTop: 10, overflow: "hidden" }}>
+            <div style={{ width: sellThrough + "%", height: "100%", background: "var(--amber)" }} />
+          </div>
+        </KPI>
+        <KPI label="Avg ticket price" value={"$" + avgPrice} delta="4.0%" up />
+        <KPI label="Active resale" value={bnum(1284)} delta="2.1%" up={false} />
+      </div>
+
+      <div className="biz-2col" style={{ marginBottom: 16 }}>
+        <ChartCard title="Revenue trend" kicker="Daily gross" right={<span className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)" }}>{bmoney(totalRev)}</span>}>
+          <div style={{ width: "100%", height: 240 }}>
+            <ResponsiveContainer>
+              <AreaChart data={BIZ_REVENUE} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="revgrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF7A2F" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#FF7A2F" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="rgba(20,32,58,.08)" />
+                <XAxis dataKey="d" tick={{ fill: "#61708C", fontSize: 10, fontFamily: "Space Mono" }} tickLine={false} axisLine={false} interval={1} />
+                <YAxis tick={{ fill: "#61708C", fontSize: 10, fontFamily: "Space Mono" }} tickLine={false} axisLine={false} width={42} tickFormatter={(v) => "$" + v / 1000 + "k"} />
+                <Tooltip content={<BizTooltip />} cursor={{ stroke: "rgba(20,32,58,.18)" }} />
+                <Area type="monotone" dataKey="rev" stroke="#FF7A2F" strokeWidth={2.4} fill="url(#revgrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <CardInsights items={[
+            { t: "good", text: "Today's gross is pacing ahead of the 14-day average.", impact: "+12%" },
+            { t: "op", text: "Weekend slates outperform weekday by ~35% — shift marquee games to Fri–Sat.", impact: "+6% ST" },
+            { t: "warn", text: "Mid-week dip on Jun 16 — a light promo could smooth demand." },
+          ]} />
+        </ChartCard>
+
+        <ChartCard title="Ticket mix" kicker="By order type">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ position: "relative", width: 150, height: 170 }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={BIZ_MIX} dataKey="value" nameKey="name" innerRadius={46} outerRadius={70} paddingAngle={2} stroke="none">
+                    {BIZ_MIX.map((e) => <Cell key={e.name} fill={e.c} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <div className="display" style={{ fontSize: 20 }}>{bnum(mixTotal)}</div>
+                <div className="eyebrow" style={{ fontSize: 9 }}>Orders</div>
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 130, display: "flex", flexDirection: "column", gap: 9 }}>
+              {BIZ_MIX.map((e) => (
+                <div key={e.name} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 3, background: e.c, flex: "none" }} />
+                  <span style={{ fontSize: 12.5, flex: 1 }}>{e.name}</span>
+                  <span className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>{Math.round((e.value / mixTotal) * 100)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <CardInsights items={[
+            { t: "op", text: "Resale is ~9% of orders at +18% markup — face value looks underpriced.", impact: "+$36K" },
+            { t: "op", text: "Group orders are thin — add corporate bundle offers." },
+            { t: "good", text: "Season share up 4 pts; renewals trending strong." },
+          ]} />
+        </ChartCard>
+      </div>
+
+      <div className="biz-2col" style={{ marginBottom: 16 }}>
+        <ChartCard title="Sell-through by seating tier" kicker="Current cycle">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {BIZ_TIERS.map((t) => {
+              const pct = Math.round((t.sold / t.cap) * 100);
+              return (
+                <div key={t.name}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                    <span className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</span>
+                    <span className="mono" style={{ fontSize: 11.5, color: "var(--muted)" }}>{bnum(t.sold)} / {bnum(t.cap)} · <b style={{ color: "var(--text)" }}>{pct}%</b></span>
+                  </div>
+                  <div style={{ height: 9, borderRadius: 6, background: "var(--panel3)", overflow: "hidden" }}>
+                    <div style={{ width: pct + "%", height: "100%", background: t.c, borderRadius: 6 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <CardInsights items={[
+            { t: "warn", text: "Upper level lags on slower events — a 48h flash promo lifts comparable games ~9%.", impact: "+$48K" },
+            { t: "op", text: "Premium tiers near sell-out — a dynamic price bump captures excess demand.", impact: "+$19K" },
+          ]} />
+        </ChartCard>
+
+        <ChartCard title="Resale & holds" kicker="Secondary market">
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {[
+              ["Active listings", bnum(1284), null],
+              ["Avg resale markup", "+18%", "up"],
+              ["Sold via resale (14d)", bnum(2310), null],
+              ["Face value recovered", bmoney(412000), null],
+              ["Holds released", bnum(640), null],
+            ].map(([l, v, t], i) => (
+              <div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderTop: i ? "1px solid var(--line)" : "none" }}>
+                <span style={{ fontSize: 13, color: "var(--muted)" }}>{l}</span>
+                <span className="mono" style={{ fontWeight: 700, fontSize: 14, color: t === "up" ? "var(--good)" : "var(--text)" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <CardInsights items={[
+            { t: "op", text: "Release ~200 holds on Dodgers home games to capture resale demand.", impact: "+$22K" },
+            { t: "warn", text: "Markup at +18% signals an underpriced base — consider an 8–10% raise." },
+          ]} />
+        </ChartCard>
+      </div>
+
+      <EventsTable events={events} footer={
+        <CardInsights items={[
+          { t: "warn", text: `${slowName} is pacing slow at ${Math.round(slow.fill * 100)}% — promote upper level now.`, impact: "+$48K" },
+          { t: "good", text: `${hotName} is ${Math.round(hot.fill * 100)}% sold — open a premium waitlist.` },
+        ]} />
+      } />
+      {showCompare && <CompareModal events={events} close={() => setShowCompare(false)} />}
+    </div>
+  );
+}
+
+function ComingSoon({ mod }) {
+  const Ic = mod.ic;
+  return (
+    <div className="fade" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 460 }}>
+      <div className="card" style={{ padding: "44px 32px", textAlign: "center", maxWidth: 460 }}>
+        <div style={{ width: 64, height: 64, borderRadius: 18, background: "var(--panel2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+          <Ic size={28} style={{ color: "var(--cyan)" }} />
+        </div>
+        <span className="pill" style={{ background: "var(--amber-soft)", color: "var(--amber)", marginBottom: 14 }}><Clock size={11} />Coming soon</span>
+        <h2 className="heading" style={{ fontWeight: 800, fontSize: 21, margin: "0 0 8px" }}>{mod.t}</h2>
+        <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.55, margin: "0 0 22px" }}>{mod.d}</p>
+        <button className="btn btn-ghost" disabled style={{ margin: "0 auto", opacity: .6 }}><Bell size={14} />Notify me when it's live</button>
+      </div>
+    </div>
+  );
+}
+
+/* ----- Customer feedback ----- */
+const FB_CATS = [
+  { name: "Ticketing", score: 4.5, n: 1120, up: true },
+  { name: "App experience", score: 4.6, n: 980, up: true },
+  { name: "Pricing", score: 3.4, n: 760, up: false },
+  { name: "Gameday / venue", score: 3.9, n: 540, up: false },
+  { name: "Merch", score: 4.2, n: 280, up: true },
+  { name: "Support", score: 4.1, n: 162, up: true },
+];
+const FB_THEMES = [
+  { t: "Smooth mobile entry", s: "pos" }, { t: "Great atmosphere", s: "pos" }, { t: "Easy seat switching", s: "pos" },
+  { t: "Fast checkout", s: "pos" }, { t: "Resale fees too high", s: "neg" }, { t: "Entry wait times", s: "neg" }, { t: "Concession prices", s: "neg" },
+];
+const FB_CHAN = { app: { ic: Smartphone, l: "In-app" }, store: { ic: Star, l: "App Store" }, email: { ic: Mail, l: "Email" }, survey: { ic: MessageSquare, l: "Survey" } };
+const FEEDBACK = [
+  { id: 1, name: "Marcus T.", rating: 5, channel: "app", cat: "Ticketing", s: "pos", text: "Switching seats from my phone took ten seconds. Best ticketing app I've used all year.", when: "2h" },
+  { id: 2, name: "Priya N.", rating: 2, channel: "store", cat: "Pricing", s: "neg", text: "Loved the game, but resale fees nearly doubled the price at checkout. Felt gouged.", when: "5h" },
+  { id: 3, name: "Devon W.", rating: 5, channel: "survey", cat: "Gameday / venue", s: "pos", text: "Mobile entry was instant — no paper, no line at our gate. Huge improvement.", when: "8h" },
+  { id: 4, name: "Sara L.", rating: 3, channel: "app", cat: "App experience", s: "neu", text: "App is great, but checkout failed twice before my merch order finally went through.", when: "11h" },
+  { id: 5, name: "James K.", rating: 1, channel: "email", cat: "Gameday / venue", s: "neg", text: "Waited 35 minutes at the north gate and missed the first quarter. Needs more lanes.", when: "1d" },
+  { id: 6, name: "Aisha R.", rating: 5, channel: "app", cat: "App experience", s: "pos", text: "Following my three teams in one place with tickets and scores is exactly what I wanted.", when: "1d" },
+  { id: 7, name: "Tom B.", rating: 2, channel: "store", cat: "Pricing", s: "neg", text: "Why are upper-level seats the same price as a month ago when the team is on a losing run?", when: "2d" },
+  { id: 8, name: "Elena V.", rating: 5, channel: "survey", cat: "Ticketing", s: "pos", text: "Bought a season package in five taps and the renewal was painless. Well done.", when: "2d" },
+  { id: 9, name: "Chris D.", rating: 4, channel: "app", cat: "Merch", s: "neu", text: "New jersey drop sold out before I got a notification. Please send drop alerts earlier.", when: "3d" },
+];
+const SENT = { pos: ["rgba(74,222,128,.15)", "var(--good)"], neu: ["var(--panel3)", "var(--muted)"], neg: ["rgba(248,113,113,.15)", "var(--bad)"] };
+function Stars({ n }) {
+  return <span style={{ display: "inline-flex", gap: 1 }}>{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={12} fill={i <= n ? "var(--amber)" : "none"} style={{ color: i <= n ? "var(--amber)" : "var(--faint)" }} />)}</span>;
+}
+
+function BizFeedback({ flash }) {
+  const [filt, setFilt] = useState("All");
+  const filters = ["All", "Positive", "Neutral", "Negative"];
+  const map = { Positive: "pos", Neutral: "neu", Negative: "neg" };
+  const list = filt === "All" ? FEEDBACK : FEEDBACK.filter((f) => f.s === map[filt]);
+  const csat = (FEEDBACK.reduce((s, f) => s + f.rating, 0) / FEEDBACK.length).toFixed(1);
+  const totalVol = FB_CATS.reduce((s, c) => s + c.n, 0);
+  const split = { pos: 64, neu: 21, neg: 15 };
+  return (
+    <div className="fade">
+      <div style={{ marginBottom: 22 }}>
+        <div className="eyebrow" style={{ color: "var(--cyan)", marginBottom: 7 }}>Voice of the fan · this month</div>
+        <h1 className="heading" style={{ fontSize: 26, fontWeight: 900, margin: 0 }}>Customer feedback</h1>
+      </div>
+
+      <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", marginBottom: 16 }}>
+        <KPI label="CSAT" value={csat + " / 5"} delta="0.2" up><div style={{ marginTop: 8 }}><Stars n={Math.round(csat)} /></div></KPI>
+        <KPI label="Net promoter (NPS)" value="+42" delta="5" up />
+        <KPI label="Responses" value={bnum(totalVol)} delta="14%" up />
+        <KPI label="Response rate" value="38%" delta="3 pts" up />
+      </div>
+
+      <div className="biz-2col" style={{ marginBottom: 16 }}>
+        <ChartCard title="Sentiment" kicker="All channels">
+          <div style={{ display: "flex", height: 14, borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
+            <div style={{ width: split.pos + "%", background: "var(--good)" }} />
+            <div style={{ width: split.neu + "%", background: "var(--panel3)" }} />
+            <div style={{ width: split.neg + "%", background: "var(--bad)" }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            {[["Positive", split.pos, "var(--good)"], ["Neutral", split.neu, "var(--muted)"], ["Negative", split.neg, "var(--bad)"]].map(([l, v, c]) => (
+              <div key={l}><div className="display" style={{ fontSize: 22, color: c }}>{v}%</div><div className="eyebrow" style={{ fontSize: 9 }}>{l}</div></div>
+            ))}
+          </div>
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>Top themes</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {FB_THEMES.map((th) => { const [bg, c] = SENT[th.s]; return <span key={th.t} className="pill" style={{ background: bg, color: c }}>{th.s === "pos" ? <ThumbsUp size={10} /> : <ThumbsDown size={10} />}{th.t}</span>; })}
+            </div>
+          </div>
+        </ChartCard>
+
+        <ChartCard title="By category" kicker="Avg rating">
+          <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+            {FB_CATS.map((c) => (
+              <div key={c.name}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
+                  <span className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{c.name}</span>
+                  <span className="mono" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                    {c.score.toFixed(1)}
+                    <span className="pill" style={{ background: c.up ? "rgba(74,222,128,.15)" : "rgba(248,113,113,.15)", color: c.up ? "var(--good)" : "var(--bad)" }}>{c.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}{bnum(c.n)}</span>
+                  </span>
+                </div>
+                <div style={{ height: 7, borderRadius: 5, background: "var(--panel3)", overflow: "hidden" }}><div style={{ width: (c.score / 5) * 100 + "%", height: "100%", background: c.score >= 4.3 ? "var(--cyan)" : c.score >= 3.7 ? "var(--amber)" : "var(--bad)" }} /></div>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+      </div>
+
+      <div className="card" style={{ padding: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
+          <div className="heading" style={{ fontWeight: 800, fontSize: 16 }}>Recent feedback</div>
+          <div className="scrollx" style={{ display: "flex", gap: 7 }}>
+            <Filter size={15} style={{ color: "var(--muted)", alignSelf: "center" }} />
+            {filters.map((f) => <button key={f} className="btn btn-sm" onClick={() => setFilt(f)} style={filt === f ? { background: "var(--amber)", color: "#160a02", borderColor: "var(--amber)" } : {}}>{f}</button>)}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {list.map((f) => {
+            const ch = FB_CHAN[f.channel]; const ChIc = ch.ic; const [bg, c] = SENT[f.s];
+            return (
+              <div key={f.id} className="card-2" style={{ padding: 15 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 9, flexWrap: "wrap" }}>
+                  <div className="display" style={{ width: 34, height: 34, borderRadius: 9, background: "var(--panel3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, flex: "none" }}>{f.name.split(" ").map((x) => x[0]).join("")}</div>
+                  <div>
+                    <div className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{f.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}><Stars n={f.rating} /><span className="mono" style={{ fontSize: 10.5, color: "var(--faint)", display: "inline-flex", alignItems: "center", gap: 3 }}><ChIc size={11} />{ch.l}</span></div>
+                  </div>
+                  <span className="pill" style={{ background: bg, color: c, marginLeft: "auto" }}>{f.cat}</span>
+                  <span className="mono" style={{ fontSize: 11, color: "var(--faint)" }}>{f.when}</span>
+                </div>
+                <p style={{ margin: "0 0 12px", fontSize: 13.5, lineHeight: 1.5, color: "var(--text)" }}>{f.text}</p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn btn-sm btn-ghost" onClick={() => flash("Reply drafted")}><MessageSquare size={13} />Respond</button>
+                  <button className="btn btn-sm btn-ghost" onClick={() => flash("Marked resolved")}><Check size={13} />Resolve</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BusinessShell({ onExit }) {
+  const [mod, setMod] = useState("sales");
+  const [collapsed, setCollapsed] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [extra, setExtra] = useState([]);
+  const [showNew, setShowNew] = useState(false);
+  const active = BIZ_MODS.find((m) => m.k === mod);
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2400); };
+  const base = bizEvents();
+  const events = [...base, ...extra].sort((a, b) => a.g.day - b.g.day);
+  const addEvent = (evs) => { const arr = Array.isArray(evs) ? evs : [evs]; setExtra((x) => [...x, ...arr]); setShowNew(false); flash(arr.length > 1 ? `Series added · ${arr.length} events on sale` : "Event added & put on sale"); };
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--ink)" }}>
+      <header style={{ borderBottom: "1px solid var(--line)", position: "sticky", top: 0, zIndex: 10, background: "rgba(237,241,247,.88)", backdropFilter: "blur(8px)" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "13px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="display" style={{ width: 32, height: 32, borderRadius: 9, background: "var(--cyan)", color: "#04201d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>C</div>
+          <div className="heading" style={{ fontWeight: 900, fontSize: 16 }}>COURTSIDE <span style={{ color: "var(--muted)", fontWeight: 700 }}>· Business</span></div>
+          <div style={{ flex: 1 }} />
+          {!EMBED && <button className="btn btn-sm btn-ghost" onClick={onExit}><ArrowRightLeft size={14} />Switch experience</button>}
+        </div>
+      </header>
+      <div className="biz-wrap" style={{ maxWidth: 1320, margin: "0 auto", display: "flex", alignItems: "flex-start" }}>
+        <aside className={"biz-nav" + (collapsed ? " collapsed" : "")}>
+          <div className="biz-navtop">
+            <span className="biz-menulabel eyebrow">Console</span>
+            <button className="biz-collapse" onClick={() => setCollapsed((c) => !c)} title={collapsed ? "Expand menu" : "Collapse menu"} aria-label="Toggle menu">
+              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          </div>
+          {BIZ_MODS.map((m) => (
+            <button key={m.k} type="button" onClick={() => setMod(m.k)} title={m.t}
+              className={"biz-navitem" + (mod === m.k ? " active" : "")}>
+              <span className="biz-navbar" />
+              <m.ic size={18} className="biz-navic" />
+              <span className="biz-navlabel">{m.t}</span>
+              {!m.live && <span className="pill biz-soon">Soon</span>}
+            </button>
+          ))}
+        </aside>
+        <main className="biz-main">
+          {active.k === "sales" ? <BizDashboard events={events} base={base} />
+            : active.k === "schedule" ? <BizSchedule events={events} openNew={() => setShowNew(true)} />
+            : active.k === "feedback" ? <BizFeedback flash={flash} />
+            : <ComingSoon mod={active} />}
+        </main>
+      </div>
+      <style>{`
+        .biz-nav{width:248px;flex:none;padding:16px 12px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--line);position:sticky;top:58px;transition:width .18s ease;}
+        .biz-nav.collapsed{width:68px;}
+        .biz-navtop{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);}
+        .biz-menulabel{color:var(--faint);}
+        .biz-collapse{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;transition:.15s;flex:none;}
+        .biz-collapse:hover{color:var(--text);border-color:var(--line2);background:var(--panel2);}
+        .biz-navitem{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;font-family:'Archivo';font-weight:700;font-size:13.5px;text-align:left;transition:background .15s,color .15s;}
+        .biz-navitem:hover{background:var(--panel2);color:var(--text);}
+        .biz-navitem:hover .biz-navic{color:var(--text);}
+        .biz-navitem:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+        .biz-navitem.active{background:var(--panel2);color:var(--text);border-color:var(--line);}
+        .biz-navitem.active .biz-navic{color:var(--amber);}
+        .biz-navic{flex:none;color:var(--muted);transition:color .15s;}
+        .biz-navlabel{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .biz-soon{background:var(--panel3);color:var(--muted);font-size:9px;flex:none;}
+        .biz-navbar{position:absolute;left:3px;top:50%;transform:translateY(-50%);width:3px;height:0;border-radius:3px;background:var(--amber);transition:height .18s ease,opacity .15s;opacity:0;}
+        .biz-navitem:hover .biz-navbar{height:42%;opacity:.5;}
+        .biz-navitem.active .biz-navbar{height:62%;opacity:1;}
+        .biz-nav.collapsed .biz-navlabel,.biz-nav.collapsed .biz-soon,.biz-nav.collapsed .biz-menulabel{display:none;}
+        .biz-nav.collapsed .biz-navitem{justify-content:center;gap:0;padding-left:0;padding-right:0;}
+        .biz-nav.collapsed .biz-navtop{justify-content:center;}
+        .biz-main{flex:1;min-width:0;padding:26px 22px 60px;}
+        .biz-2col{display:grid;grid-template-columns:1fr;gap:16px;}
+        .biz-trow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1.6fr 1.2fr 1.1fr;gap:12px;align-items:center;}
+        .biz-thead{padding:0 0 12px;border-bottom:1px solid var(--line);}
+        .biz-thead>span{font-family:'Archivo';font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:var(--muted);}
+        .biz-tbody{padding:13px 0;border-bottom:1px solid var(--line);}
+        @media(min-width:1000px){.biz-2col{grid-template-columns:1.7fr 1fr;}}
+        @media(max-width:820px){
+          .biz-wrap{flex-direction:column;}
+          .biz-nav,.biz-nav.collapsed{width:100%;flex-direction:row;overflow-x:auto;position:static;border-right:none;border-bottom:1px solid var(--line);padding:10px;gap:6px;scrollbar-width:none;}
+          .biz-nav::-webkit-scrollbar{display:none}
+          .biz-navtop{display:none;}
+          .biz-navitem{width:auto;white-space:nowrap;padding:9px 14px;}
+          .biz-navbar{display:none;}
+          .biz-nav.collapsed .biz-navlabel,.biz-nav.collapsed .biz-soon{display:inline;}
+          .biz-nav.collapsed .biz-navitem{justify-content:flex-start;gap:12px;padding:9px 14px;}
+          .biz-main{padding:20px 16px 60px;}
+        }
+      `}</style>
+      {showNew && <NewEventModal close={() => setShowNew(false)} onCreate={addEvent} />}
+      {toast && (
+        <div className="fade" style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", zIndex: 80, background: "var(--panel3)", border: "1px solid var(--line2)", borderRadius: 12, padding: "11px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 12px 40px rgba(0,0,0,.5)" }}>
+          <span style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--good)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Check size={13} style={{ color: "#04130a" }} /></span>
+          <span className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{toast}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+function Megaphone(p) { return (<svg className={p.className} width={p.size || 24} height={p.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={p.style}><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></svg>); }
+
+/* ============================== ROOT ============================== */
+function App() {
+  const [experience, setExperience] = useState(INITIAL_EXP);
+  const [view, setView] = useState("home");
+  const [teamId, setTeamId] = useState(null);
+  const [follow, setFollow] = useState([1, 4, 7, 13]);
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [buyGame, setBuyGame] = useState(null);
+  const [seatModal, setSeatModal] = useState(null);
+  const [shopTeam, setShopTeam] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [tickets, setTickets] = useState([
+    { id: 8841, gameId: 105, sec: "108", row: "F", seat: "12", price: 220, type: "season" },
+    { id: 8842, gameId: 104, sec: "121", row: "M", seat: "7", price: 95, type: "single" },
+    { id: 8843, gameId: 103, sec: "326", row: "P", seat: "4", price: 145, type: "single" },
+  ]);
+  const scrollRef = useRef(null);
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [view, teamId, experience]);
+
+  const user = { name: "Jordan Rivera", follow };
+  const cartCount = cart.reduce((s, c) => s + c.qty, 0);
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2600); };
+  const go = (v) => { setView(v); setTeamId(null); };
+  const openTeam = (id) => { setTeamId(id); setView("teams"); };
+  const toggleFollow = (id) => setFollow((f) => f.includes(id) ? f.filter((x) => x !== id) : [...f, id]);
+  const addToCart = (m) => { setCart((c) => { const e = c.find((x) => x.id === m.id); return e ? c.map((x) => x.id === m.id ? { ...x, qty: x.qty + 1 } : x) : [...c, { id: m.id, qty: 1 }]; }); flash(`Added ${m.name}`); };
+  const confirmBuy = (game, sec, qty) => {
+    const base = { id: 9000 + Math.floor(Math.random() * 999), gameId: game.id, sec: String(100 + Math.floor(Math.random() * 200)), row: "ABCDEFGH"[Math.floor(Math.random() * 8)], seat: String(1 + Math.floor(Math.random() * 20)), price: sec.price, type: "single" };
+    setTickets((t) => [...t, base]); setBuyGame(null);
+    flash(`${qty} ticket${qty > 1 ? "s" : ""} confirmed · ${sec.name}`);
+  };
+  const checkout = () => { setCartOpen(false); flash(`Order placed — ${cartCount} item${cartCount > 1 ? "s" : ""}`); setCart([]); };
+
+  if (!experience) return <div className="cs-root"><Style /><Launcher onPick={setExperience} /></div>;
+  if (experience === "business") return <div className="cs-root cs-biz"><Style /><BusinessShell onExit={() => setExperience(null)} /></div>;
+
+  const NAV = [
+    { k: "home", label: "Home", ic: HomeIc },
+    { k: "teams", label: "Teams", ic: Users },
+    { k: "tickets", label: "Tickets", ic: Ticket },
+    { k: "shop", label: "Shop", ic: ShoppingBag },
+    { k: "profile", label: "Profile", ic: User },
+  ];
+  let body;
+  if (view === "home") body = <Home user={user} tickets={tickets} onTickets={setBuyGame} onTeam={openTeam} onSwitch={(tk) => setSeatModal({ tk, mode: "switch" })} onResale={(tk) => setSeatModal({ tk, mode: "resale" })} go={go} />;
+  else if (view === "teams") body = teamId ? <TeamDetail id={teamId} back={() => setTeamId(null)} follow={follow} onFollow={toggleFollow} onTickets={setBuyGame} onTeam={openTeam} go={go} setShopTeam={setShopTeam} /> : <Teams onTeam={openTeam} follow={follow} onFollow={toggleFollow} />;
+  else if (view === "tickets") body = <Tickets onTickets={setBuyGame} onTeam={openTeam} />;
+  else if (view === "shop") body = <Shop onAdd={addToCart} shopTeam={shopTeam} setShopTeam={setShopTeam} />;
+  else if (view === "profile") body = <Profile user={user} tickets={tickets} follow={follow} onFollow={toggleFollow} onTeam={openTeam} onSwitch={(tk) => setSeatModal({ tk, mode: "switch" })} onResale={(tk) => setSeatModal({ tk, mode: "resale" })} go={go} onExit={() => setExperience(null)} />;
+
+  const now = new Date(); const time = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+  return (
+    <div className="cs-root">
+      <Style />
+      <div className="stage">
+        {!EMBED && <button className="btn btn-sm btn-ghost switch-pill" onClick={() => setExperience(null)}><ArrowRightLeft size={13} />Switch</button>}
+        <div className="phone">
+          <div className="phone-screen">
+            {/* status bar */}
+            <div className="statusbar">
+              <span className="mono" style={{ fontSize: 13, fontWeight: 700 }}>{time}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text)" }}>
+                <Radio size={13} /><Wifi size={14} /><BatteryFull size={18} />
+              </span>
+            </div>
+            {/* app bar */}
+            <div className="appbar">
+              <div style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", flex: 1 }} onClick={() => go("home")}>
+                <div className="display" style={{ width: 30, height: 30, borderRadius: 8, background: "var(--amber)", color: "#160a02", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>C</div>
+                <div className="heading" style={{ fontWeight: 900, fontSize: 16, letterSpacing: "-.01em" }}>COURTSIDE</div>
+              </div>
+              <button className="btn btn-sm btn-ghost" style={{ padding: 8, position: "relative" }} aria-label="Notifications">
+                <Bell size={16} /><span style={{ position: "absolute", top: 5, right: 5, width: 6, height: 6, borderRadius: "50%", background: "var(--amber)" }} />
+              </button>
+              <button className="btn btn-sm btn-ghost" style={{ padding: 8, position: "relative" }} onClick={() => setCartOpen(true)} aria-label="Cart">
+                <ShoppingCart size={16} />
+                {cartCount > 0 && <span className="mono" style={{ position: "absolute", top: -6, right: -6, minWidth: 17, height: 17, padding: "0 4px", borderRadius: 9, background: "var(--amber)", color: "#160a02", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</span>}
+              </button>
+            </div>
+            {/* ticker */}
+            <div className="ticker-mask" style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "#0a0e1c", flex: "none" }}>
+              <div className="ticker-track">
+                {[0, 1].map((dup) => (
+                  <div key={dup} style={{ display: "flex" }} aria-hidden={dup === 1}>
+                    {LIVE.map((s, i) => {
+                      const a = TA(s.a), h = TA(s.h);
+                      return (
+                        <div key={dup + "-" + i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 16px", borderRight: "1px solid var(--line)" }}>
+                          {s.live ? <span className="livedot" /> : <span className="mono" style={{ fontSize: 9, color: "var(--faint)" }}>FT</span>}
+                          <span className="display" style={{ fontSize: 12, color: a.c2 }}>{s.a}</span>
+                          <span className="mono" style={{ fontWeight: 700, fontSize: 12, color: s.as > s.hs ? "var(--text)" : "var(--muted)" }}>{s.as}</span>
+                          <span style={{ color: "var(--faint)" }}>·</span>
+                          <span className="mono" style={{ fontWeight: 700, fontSize: 12, color: s.hs > s.as ? "var(--text)" : "var(--muted)" }}>{s.hs}</span>
+                          <span className="display" style={{ fontSize: 12, color: h.c2 }}>{s.h}</span>
+                          <span className="mono" style={{ fontSize: 9.5, color: s.live ? "var(--cyan)" : "var(--faint)" }}>{s.st}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* scroll body */}
+            <div className="phone-scroll" ref={scrollRef} style={{ padding: "16px 16px 28px" }}>{body}</div>
+            {/* bottom nav */}
+            <nav className="tabbar">
+              {NAV.map((n) => {
+                const on = view === n.k;
+                return (
+                  <button key={n.k} onClick={() => go(n.k)} style={{ background: "none", border: "none", cursor: "pointer", color: on ? "var(--amber)" : "var(--muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "3px 8px" }}>
+                    <n.ic size={21} />
+                    <span className="heading" style={{ fontSize: 10, fontWeight: 700 }}>{n.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            {/* overlays (scoped to phone) */}
+            <Cart open={cartOpen} close={() => setCartOpen(false)} cart={cart} setCart={setCart} checkout={checkout} />
+            {buyGame && <BuyModal game={buyGame} close={() => setBuyGame(null)} confirm={confirmBuy} />}
+            {seatModal && <SeatModal data={seatModal} close={() => setSeatModal(null)} confirm={(msg) => { setSeatModal(null); flash(msg); }} />}
+            {toast && (
+              <div className="fade" style={{ position: "absolute", bottom: 78, left: "50%", transform: "translateX(-50%)", zIndex: 70, background: "var(--panel3)", border: "1px solid var(--line2)", borderRadius: 12, padding: "11px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 12px 40px rgba(0,0,0,.5)", maxWidth: "86%" }}>
+                <span style={{ width: 20, height: 20, borderRadius: "50%", background: "var(--good)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Check size={13} style={{ color: "#04130a" }} /></span>
+                <span className="heading" style={{ fontWeight: 700, fontSize: 13 }}>{toast}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

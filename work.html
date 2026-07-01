@@ -136,6 +136,32 @@
     font-size:10px; letter-spacing:.2em; text-transform:uppercase;
     color:var(--warm-grey); }
 
+  /* Courtside card — laptop (console) + phone (fan app) device shot, to scale */
+  .cs-shot{ position:absolute; inset:0; background:var(--ivory); overflow:hidden; }
+  .cs-lap{ position:absolute; left:8%; top:21%; width:61%; }
+  .cs-lap__scr{ background:#EDF1F7; border:5px solid #14171c; border-radius:7px 7px 2px 2px;
+    aspect-ratio:16/10; padding:6.5% 7%; display:flex; flex-direction:column; }
+  .cs-lap__bar{ display:flex; align-items:center; gap:5px; margin-bottom:7%; }
+  .cs-lap__bar i{ width:6px; height:6px; border-radius:2px; background:#0C9C92; display:block; flex:none; }
+  .cs-lap__bar b{ flex:1; height:4px; border-radius:2px; background:#d6dde7; }
+  .cs-lap__kpi{ display:flex; gap:5%; margin-bottom:7%; }
+  .cs-lap__kpi span{ flex:1; height:12px; border-radius:3px; background:#f5f8fc; border:1px solid #e4eaf1; }
+  .cs-lap__chart{ flex:1; min-height:0; width:100%; display:block; }
+  .cs-lap__base{ width:112%; height:5px; margin-left:-6%; border-radius:0 0 7px 7px;
+    background:linear-gradient(#dfe3e8,#b4bac3); box-shadow:0 8px 12px -7px rgba(0,0,0,.4); }
+  .cs-phone{ position:absolute; right:9%; bottom:9%; width:18.5%; z-index:2; }
+  .cs-phone__scr{ background:#0B1020; border:3px solid #2b2f39; border-radius:14px;
+    aspect-ratio:9/19; padding:9% 8%; display:flex; flex-direction:column;
+    box-shadow:0 12px 24px -10px rgba(0,0,0,.55); }
+  .cs-phone__tick{ height:7px; border-radius:2px; background:#141a29; position:relative; overflow:hidden; margin-bottom:10%; }
+  .cs-phone__tick::before{ content:""; position:absolute; left:2px; top:1.5px; width:42%; height:4px; border-radius:2px; background:#FF7A2F; }
+  .cs-phone__stub{ background:#1D2640; border-radius:5px; padding:8px 7px; margin-bottom:auto; }
+  .cs-phone__stub b{ display:block; width:58%; height:5px; border-radius:2px; background:#FF7A2F; margin-bottom:6px; }
+  .cs-phone__stub i{ display:block; height:3px; border-radius:2px; background:#3a4364; margin-top:4px; }
+  .cs-phone__tabs{ display:flex; gap:3px; margin-top:9%; }
+  .cs-phone__tabs u{ flex:1; height:3px; border-radius:2px; background:#27314f; }
+  .cs-phone__tabs u:first-child{ background:#FF7A2F; }
+
   .card-body{ padding:20px 4px 0; }
   .card-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
     letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage); }
@@ -333,7 +359,42 @@
   <div class="wrap">
     <div class="grid">
 
-      <!-- 0 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
+      <!-- 0 — COURTSIDE / LIVE SPORTS PLATFORM -->
+      <a class="card reveal" href="case-courtside.html">
+        <div class="thumb" style="padding:0;">
+          <div class="cs-shot">
+            <div class="cs-lap">
+              <div class="cs-lap__scr">
+                <div class="cs-lap__bar"><i></i><b></b></div>
+                <div class="cs-lap__kpi"><span></span><span></span><span></span></div>
+                <svg class="cs-lap__chart" viewBox="0 0 120 46" preserveAspectRatio="none" aria-hidden="true">
+                  <defs><linearGradient id="csChart" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#FF7A2F" stop-opacity=".38"/>
+                    <stop offset="1" stop-color="#FF7A2F" stop-opacity="0"/></linearGradient></defs>
+                  <path d="M0 34 L18 24 L34 30 L52 14 L70 22 L88 8 L106 18 L120 10 L120 46 L0 46 Z" fill="url(#csChart)"/>
+                  <path d="M0 34 L18 24 L34 30 L52 14 L70 22 L88 8 L106 18 L120 10" fill="none" stroke="#FF7A2F" stroke-width="1.6"/>
+                </svg>
+              </div>
+              <div class="cs-lap__base"></div>
+            </div>
+            <div class="cs-phone">
+              <div class="cs-phone__scr">
+                <div class="cs-phone__tick"></div>
+                <div class="cs-phone__stub"><b></b><i style="width:88%"></i><i style="width:66%"></i></div>
+                <div class="cs-phone__tabs"><u></u><u></u><u></u><u></u></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Product Design · Live Sports</div>
+          <h3>Courtside</h3>
+          <div class="role">Designer &amp; prototyper — a fan command center &amp; an operator console</div>
+          <span class="read">Read case study →</span>
+        </div>
+      </a>
+
+      <!-- 1 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
       <a class="card reveal" href="maritime-prototype.html">
         <div class="thumb thumb-device">
           <img src="images/case-maritime.png" alt="Meridian autonomous maritime operations console in a laptop">
