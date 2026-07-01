@@ -118,7 +118,7 @@
   .card-soon:hover{ transform:none; }
   .card-soon:hover .thumb{ border-color:var(--hairline); }
   .card-soon:hover .read{ color:var(--warm-grey); }
-  .thumb{ aspect-ratio:4/3; border-radius:5px; overflow:hidden;
+  .thumb{ position:relative; aspect-ratio:4/3; border-radius:5px; overflow:hidden;
     background:var(--ivory); border:1px solid var(--hairline);
     display:flex; align-items:center; justify-content:center;
     transition:border-color .4s ease; }
@@ -135,6 +135,26 @@
   .thumb .placeholder .pl{ font-family:var(--sans); font-weight:400;
     font-size:10px; letter-spacing:.2em; text-transform:uppercase;
     color:var(--warm-grey); }
+
+  /* Courtside card — live hero shot: laptop (console) + phone (fan app), to scale */
+  .cst{ position:absolute; inset:0; background:var(--ivory); overflow:hidden; }
+  .cst iframe{ pointer-events:none; }
+  .cst-shadow{ position:absolute; left:14%; right:14%; bottom:9%; height:6%; z-index:0;
+    background:radial-gradient(ellipse at center, rgba(46,44,40,.18), transparent 70%); filter:blur(2px); }
+  .cst-lap{ position:absolute; left:6%; top:15%; width:64%; z-index:1; }
+  .cst-lap__scr{ position:relative; width:100%; aspect-ratio:16/10; overflow:hidden;
+    background:#EDF1F7; border:5px solid #14171c; border-radius:8px 8px 3px 3px; }
+  .cst-lap__scr iframe{ position:absolute; top:0; left:0; width:1280px; height:800px; border:0;
+    transform-origin:top left; background:#EDF1F7; }
+  .cst-lap__base{ width:112%; margin-left:-6%; height:5px; border-radius:0 0 8px 8px;
+    background:linear-gradient(#e4e8ed,#b4bac3); }
+  .cst-phone{ position:absolute; right:7%; bottom:11%; width:20%; z-index:2; }
+  .cst-phone__scr{ position:relative; width:100%; aspect-ratio:9/19; overflow:hidden;
+    background:#0B1020; border:3px solid #262b38; border-radius:15px;
+    box-shadow:0 12px 24px -10px rgba(0,0,0,.55); }
+  .cst-phone__scr iframe{ position:absolute; top:0; left:0; width:392px; height:846px; border:0;
+    transform-origin:top left; background:#0B1020; }
+  .cst-hit{ position:absolute; inset:0; z-index:5; }   /* keeps the whole card clickable */
 
   .card-body{ padding:20px 4px 0; }
   .card-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
@@ -333,7 +353,34 @@
   <div class="wrap">
     <div class="grid">
 
-      <!-- 0 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
+      <!-- 0 — COURTSIDE / LIVE SPORTS PLATFORM -->
+      <a class="card reveal" href="case-courtside.html">
+        <div class="thumb" style="padding:0;">
+          <div class="cst">
+            <div class="cst-shadow"></div>
+            <div class="cst-lap">
+              <div class="cst-lap__scr">
+                <iframe src="courtside-app.html#business" title="Courtside business console" scrolling="no" loading="lazy" tabindex="-1"></iframe>
+              </div>
+              <div class="cst-lap__base"></div>
+            </div>
+            <div class="cst-phone">
+              <div class="cst-phone__scr">
+                <iframe src="courtside-app.html#fan" title="Courtside fan app" scrolling="no" loading="lazy" tabindex="-1"></iframe>
+              </div>
+            </div>
+            <span class="cst-hit" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Product Design · Live Sports</div>
+          <h3>Courtside</h3>
+          <div class="role">Designer &amp; prototyper — a fan command center &amp; an operator console</div>
+          <span class="read">Read case study →</span>
+        </div>
+      </a>
+
+      <!-- 1 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
       <a class="card reveal" href="maritime-prototype.html">
         <div class="thumb thumb-device">
           <img src="images/case-maritime.png" alt="Meridian autonomous maritime operations console in a laptop">
@@ -440,6 +487,22 @@
     function show(){ fb.classList.add('shown'); }
     if(document.readyState === 'complete') setTimeout(show, 350);
     else window.addEventListener('load', () => setTimeout(show, 350));
+  })();
+
+  // Courtside card: fit the live console (1280px) + fan app (392px) into their device screens
+  (function(){
+    const screens = document.querySelectorAll('.cst-lap__scr, .cst-phone__scr');
+    if(!screens.length) return;
+    function fit(){
+      screens.forEach(function(scr){
+        const f = scr.querySelector('iframe'); if(!f) return;
+        const lw = scr.classList.contains('cst-phone__scr') ? 392 : 1280;
+        f.style.transform = 'scale(' + (scr.clientWidth / lw) + ')';
+      });
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(fit); screens.forEach(function(s){ ro.observe(s); }); }
+    window.addEventListener('resize', fit);
+    fit();
   })();
 </script>
 
