@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>base360 — dashboard</title>
+<style>
+  html,body,#root{ height:100%; }
+  body{ margin:0; background:#FBFAF5; }
+  #boot{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:system-ui,sans-serif; color:#A98A94; font-size:14px; letter-spacing:.02em; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/": "https://esm.sh/react@18.3.1/",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1?external=react"
+  }
+}
+</script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"><div id="boot">Loading dashboard…</div></div>
+
+<script type="text/babel" data-type="module" data-presets="react">
+import React, { useState, useEffect, useRef } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  LayoutDashboard, Inbox, Target, Megaphone, BarChart3, Settings, Link2,
+  Search, Bell, Plus, Sparkles, Send, ChevronRight, ChevronDown, Filter,
+  Clock, Mail, MousePointerClick, UserPlus, ArrowUpRight, ArrowRight, Menu, X,
+  Check, CheckCheck, MoreHorizontal, Flame, Wand2, RefreshCw, Globe, Eye,
+  DollarSign, Activity, Paperclip, Smile, Reply, TrendingUp, TrendingDown,
+  Star, Calendar, Users, Zap, ChevronLeft,
+} from "lucide-react";
+import {
+  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, Cell,
+} from "recharts";
+
+/* ------------------------------------------------------------------ */
+/*  Channel metadata — real brand colors thread through the whole app  */
+/* ------------------------------------------------------------------ */
+const CH = {
+  instagram: { name: "Instagram", abbr: "IG", color: "#E1306C", grad: "linear-gradient(135deg,#F9CE34,#EE2A7B,#6228D7)" },
+  facebook:  { name: "Facebook",  abbr: "f",  color: "#1877F2", grad: "linear-gradient(135deg,#1877F2,#0A5BD6)" },
+  x:         { name: "X",         abbr: "X",  color: "#17171C", grad: "linear-gradient(135deg,#2b2b31,#17171C)" },
+  tiktok:    { name: "TikTok",    abbr: "TT", color: "#111",    grad: "linear-gradient(135deg,#25F4EE,#111 55%,#FE2C55)" },
+  whatsapp:  { name: "WhatsApp",  abbr: "WA", color: "#25D366", grad: "linear-gradient(135deg,#25D366,#128C7E)" },
+  linkedin:  { name: "LinkedIn",  abbr: "in", color: "#0A66C2", grad: "linear-gradient(135deg,#0A66C2,#004182)" },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Mock data — grounded in a real-feeling homewares brand            */
+/* ------------------------------------------------------------------ */
+const ACTIVITY = [
+  { d: "Mon", conv: 42, lead: 9 }, { d: "Tue", conv: 55, lead: 12 },
+  { d: "Wed", conv: 48, lead: 8 }, { d: "Thu", conv: 61, lead: 15 },
+  { d: "Fri", conv: 73, lead: 19 }, { d: "Sat", conv: 58, lead: 14 },
+  { d: "Sun", conv: 64, lead: 17 },
+];
+const CHANNEL_VOL = [
+  { k: "instagram", v: 186, un: 14 }, { k: "facebook", v: 122, un: 9 }, { k: "whatsapp", v: 94, un: 5 },
+  { k: "tiktok", v: 71, un: 8 }, { k: "x", v: 44, un: 3 }, { k: "linkedin", v: 28, un: 1 },
+];
+const SUB_GROWTH = [
+  { w: "W1", s: 120 }, { w: "W2", s: 168 }, { w: "W3", s: 149 }, { w: "W4", s: 205 },
+  { w: "W5", s: 238 }, { w: "W6", s: 221 }, { w: "W7", s: 284 }, { w: "W8", s: 331 },
+];
+const RESP = [
+  { d: "Mon", m: 14 }, { d: "Tue", m: 11 }, { d: "Wed", m: 9 }, { d: "Thu", m: 12 },
+  { d: "Fri", m: 7 }, { d: "Sat", m: 8 }, { d: "Sun", m: 6 },
+];
+
+const spark = (arr) => arr.map((v, i) => ({ i, v }));
+
+const INSIGHTS = [
+  { tone: "up",   title: "WhatsApp replies are landing faster", body: "Median first-response dropped to 6 min this week, down from 14. Keep the AI drafts on for peak hours.", cta: "See response times" },
+  { tone: "warn", title: "3 high-intent leads are waiting", body: "A wholesale enquiry from @thefernco has sat unanswered for 2h 40m. Intent score 94.", cta: "Open leads" },
+  { tone: "up",   title: "“The Winter Table” beat your average", body: "Opens hit 58% — 12 points above your baseline. Consider a follow-up to non-openers.", cta: "View campaign" },
+  { tone: "info", title: "A TikTok is driving comment volume", body: "Your stoneware mug clip is up 3.1× in comments today. 22 mention colour options you don't list.", cta: "Review thread" },
+];
+
+const CONVERSATIONS = [
+  {
+    id: "c1", channel: "instagram", name: "Priya Menon", handle: "@priya.makes", intent: 94,
+    stage: "New lead", unread: true, tag: "Wholesale", last: "Do you offer trade pricing?", time: "2m",
+    avatarBg: "#EAD8FF",
+    messages: [
+      { from: "them", t: "Hi! I run a small café in Portland and I'm obsessed with your stoneware mugs 🤍", time: "10:02" },
+      { from: "them", t: "Do you offer trade pricing for a wholesale order? Looking at ~120 units to start.", time: "10:03" },
+    ],
+  },
+  {
+    id: "c2", channel: "whatsapp", name: "Daniel Rourke", handle: "+1 (503) 555-0148", intent: 61,
+    stage: "Open", unread: true, tag: "Order help", last: "One of the bowls arrived chipped", time: "18m",
+    avatarBg: "#D8F0E4",
+    messages: [
+      { from: "them", t: "Hey, order #M&S-20418 arrived today — thank you!", time: "09:31" },
+      { from: "them", t: "One of the serving bowls has a chip on the rim though 😕 photo attached", time: "09:32" },
+      { from: "me",   t: "Oh no, sorry about that Daniel! We'll get a replacement out today — no need to return the chipped one.", time: "09:40" },
+      { from: "them", t: "Amazing, thank you. Will definitely order again.", time: "09:44" },
+    ],
+  },
+  {
+    id: "c3", channel: "tiktok", name: "leaf & loom", handle: "@leafandloom", intent: 78,
+    stage: "New lead", unread: false, tag: "Collab", last: "Would love to do a collab 🌿", time: "1h",
+    avatarBg: "#FFE7D1",
+    messages: [
+      { from: "them", t: "your glaze work is unreal. would you be open to a paid collab for our spring launch?", time: "08:50" },
+    ],
+  },
+  {
+    id: "c4", channel: "facebook", name: "Marion Webb", handle: "Marion Webb", intent: 30,
+    stage: "Resolved", unread: false, tag: "Product Q", last: "Perfect, thanks so much!", time: "3h",
+    avatarBg: "#D6E4FF",
+    messages: [
+      { from: "them", t: "Is the Fern dinner set dishwasher safe?", time: "07:12" },
+      { from: "me",   t: "It is! Dishwasher and microwave safe. Just avoid sudden temperature shocks 😊", time: "07:20" },
+      { from: "them", t: "Perfect, thanks so much!", time: "07:22" },
+    ],
+  },
+  {
+    id: "c5", channel: "instagram", name: "Aisha Khan", handle: "@aisha.home", intent: 52,
+    stage: "Open", unread: false, tag: "Availability", last: "When's the sage colourway back?", time: "5h",
+    avatarBg: "#E7E0FF",
+    messages: [
+      { from: "them", t: "The sage mug keeps selling out! Any restock date?", time: "05:40" },
+    ],
+  },
+  {
+    id: "c6", channel: "x", name: "Tom H.", handle: "@tomhbrews", intent: 20,
+    stage: "Open", unread: false, tag: "Shipping", last: "Do you ship to Canada?", time: "6h",
+    avatarBg: "#E3E3E8",
+    messages: [
+      { from: "them", t: "Do you ship to Canada? 🇨🇦", time: "04:55" },
+    ],
+  },
+];
+
+const AI_DRAFTS = {
+  friendly: {
+    c1: "Hi Priya! So glad the mugs caught your eye 🤍 We'd love to set you up with trade pricing — for 120+ units you'd be looking at 30% off retail, with tiered discounts above 250. Want me to send our wholesale line sheet and a quick form to get you started?",
+    c3: "Hi! Thank you — that means a lot 🌿 We're open to a paid collab for your spring launch. Could you share your audience size, timeline, and what you had in mind? I'll loop in our marketing lead so we can move quickly.",
+    c5: "Hi Aisha! The sage colourway is back in stock next Thursday 🌿 Want me to pop you on the restock list so you're first to know? I can hold a set for 24h once it lands.",
+    default: "Thanks so much for reaching out! Happy to help — could you share a little more so I can point you to the right thing?",
+  },
+  professional: {
+    c1: "Hello Priya, thank you for your interest in Maple & Stone. We do offer trade pricing: orders of 120+ units receive 30% off retail, with additional tiers above 250 units. I'll share our wholesale line sheet and onboarding form shortly.",
+    c3: "Hello, thank you for the kind words. We would be glad to explore a paid collaboration for your spring launch. Could you provide your audience size, proposed timeline, and deliverables? I will coordinate with our marketing team.",
+    c5: "Hello Aisha, the sage colourway returns to stock next Thursday. I'm happy to add you to the restock notification list and reserve a set for 24 hours once it's available.",
+    default: "Thank you for getting in touch. Could you share a little more detail so I can direct you to the right information?",
+  },
+  concise: {
+    c1: "Yes — 30% off retail for 120+ units, more above 250. Sending the wholesale sheet + a quick form now. 🤍",
+    c3: "Yes, we're open to a paid collab! Share your audience size + timeline and I'll get marketing on it. 🌿",
+    c5: "Restock is next Thursday. Want me to add you to the list and hold one for 24h?",
+    default: "Happy to help — can you share a bit more detail?",
+  },
+};
+
+const LEADS = [
+  { id: "l1", name: "Priya Menon", handle: "@priya.makes", ch: "instagram", avatarBg: "#EAD8FF", src: "Wholesale enquiry", intent: 94, status: "Hot", value: 4200, owner: "AR", time: "2m",
+    summary: "Café owner in Portland wants trade pricing on a 120-unit stoneware mug order to start, with intent to reorder quarterly.",
+    signals: ["Named quantity (120+ units)", "Asked about trade pricing", "Mentioned recurring orders"], budget: "$4,000–5,000", timeline: "Wants to order this month" },
+  { id: "l3", name: "The Fern Co.", handle: "@thefernco", ch: "instagram", avatarBg: "#D8F0E4", src: "Bulk order DM", intent: 91, status: "Hot", value: 6100, owner: "AR", time: "2h",
+    summary: "Boutique homeware retailer requesting a bulk wholesale order across three collections for their spring floor set.",
+    signals: ["Multi-collection interest", "Retail buyer", "Requested line sheet"], budget: "$6,000+", timeline: "Spring launch (6 weeks)" },
+  { id: "l5", name: "Nordic Nest", handle: "Nordic Nest", ch: "linkedin", avatarBg: "#D6E4FF", src: "Trade account", intent: 84, status: "Qualified", value: 5400, owner: "AR", time: "1d",
+    summary: "Scandinavian retailer opening a trade account, evaluating stoneware range for a 40-store rollout.",
+    signals: ["Trade account request", "40-store rollout", "Decision-maker engaged"], budget: "$5,000+", timeline: "Q2 rollout" },
+  { id: "l2", name: "leaf & loom", handle: "@leafandloom", ch: "tiktok", avatarBg: "#FFE7D1", src: "Collab request", intent: 78, status: "In conversation", value: 1800, owner: "JS", time: "1h",
+    summary: "Creator proposing a paid collaboration for their spring launch; strong audience overlap with the brand.",
+    signals: ["Paid collab proposed", "Audience overlap", "Spring campaign timing"], budget: "$1,500–2,000", timeline: "Spring campaign" },
+  { id: "l7", name: "Studio Oak", handle: "Studio Oak", ch: "facebook", avatarBg: "#E7E0FF", src: "Gift-set order", intent: 76, status: "Qualified", value: 2900, owner: "AR", time: "4h",
+    summary: "Design studio ordering branded gift sets for a corporate client; repeat potential for seasonal gifting.",
+    signals: ["Corporate gifting", "Repeat potential", "Deadline-driven"], budget: "$2,500–3,000", timeline: "Needs by month-end" },
+  { id: "l6", name: "Daniel Rourke", handle: "+1 (503) 555-0148", ch: "whatsapp", avatarBg: "#D8F0E4", src: "Repeat buyer", intent: 61, status: "Nurturing", value: 380, owner: "JS", time: "1d",
+    summary: "Repeat retail buyer who just received a replacement; good candidate for a loyalty upsell.",
+    signals: ["Repeat buyer", "Positive sentiment"], budget: "$300–500", timeline: "No rush" },
+  { id: "l4", name: "Aisha Khan", handle: "@aisha.home", ch: "instagram", avatarBg: "#E7E0FF", src: "Restock interest", intent: 52, status: "Nurturing", value: 240, owner: "JS", time: "5h",
+    summary: "Interested in the sage colourway restock; added to the restock list and newsletter.",
+    signals: ["Restock interest", "On newsletter"], budget: "$200–300", timeline: "When back in stock" },
+  { id: "l8", name: "Marion Webb", handle: "Marion Webb", ch: "facebook", avatarBg: "#D6E4FF", src: "Dinner set", intent: 30, status: "Won", value: 320, owner: "JS", time: "3d",
+    summary: "Purchased the Fern dinner set after a product question. Closed.",
+    signals: ["Completed purchase"], budget: "—", timeline: "Closed" },
+];
+const STATUS_META = {
+  Hot: { color: "#D6417A", bg: "rgba(214,65,122,.11)" },
+  Qualified: { color: "#E8B06A", bg: "rgba(232,176,106,.13)" },
+  "In conversation": { color: "#F76D9C", bg: "#ECEAFE" },
+  Nurturing: { color: "#8E6BC9", bg: "#E1F5F3" },
+  "With sales": { color: "#C98BA8", bg: "rgba(201,139,168,.12)" },
+  Won: { color: "#C98BA8", bg: "rgba(201,139,168,.12)" },
+};
+const PIPELINE = [
+  { stage: "New", count: 8, value: 12400, color: "#F76D9C" },
+  { stage: "Qualified", count: 5, value: 18600, color: "#E8B06A" },
+  { stage: "With sales", count: 3, value: 15900, color: "#8E6BC9" },
+  { stage: "Won", count: 6, value: 8400, color: "#C98BA8" },
+];
+const STAGES = ["New", "Qualified", "Working", "Won"];
+
+const CAMPAIGNS = [
+  { name: "The Winter Table", status: "Sent", sent: 3820, open: 58, click: 21, date: "Feb 2" },
+  { name: "Restock: Sage & Fern", status: "Sent", sent: 3610, open: 49, click: 17, date: "Jan 24" },
+  { name: "New Year, New Table", status: "Sent", sent: 3402, open: 44, click: 12, date: "Jan 3" },
+  { name: "Spring Preview", status: "Scheduled", sent: 0, open: 0, click: 0, date: "Feb 14" },
+  { name: "Wholesale line sheet", status: "Draft", sent: 0, open: 0, click: 0, date: "—" },
+];
+const SUB_SOURCES = [
+  { s: "Website form", v: 42, c: "#F76D9C" },
+  { s: "Instagram", v: 26, c: "#E1306C" },
+  { s: "Checkout opt-in", v: 18, c: "#8E6BC9" },
+  { s: "TikTok bio", v: 9, c: "#111" },
+  { s: "Other", v: 5, c: "#B9B9C2" },
+];
+const RECENT_SUBS = [
+  { name: "hana.ceramics@gmail.com", src: "instagram", time: "4m" },
+  { name: "greg.willows@outlook.com", src: "website", time: "22m" },
+  { name: "the.oak.table@gmail.com", src: "instagram", time: "38m" },
+  { name: "m.okafor@fastmail.com", src: "checkout", time: "1h" },
+  { name: "studio.linden@gmail.com", src: "tiktok", time: "2h" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Small building blocks                                             */
+/* ------------------------------------------------------------------ */
+function Avatar({ ch, name, bg, size = 40 }) {
+  const c = CH[ch];
+  const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <div className="avaWrap" style={{ width: size, height: size }}>
+      <div className="ava" style={{ width: size, height: size, background: bg || "#ECECEC" }}>{initials}</div>
+      <span className="avaBadge" style={{ background: c.grad || c.color }} title={c.name}>
+        <span className="avaBadgeTxt">{c.abbr}</span>
+      </span>
+    </div>
+  );
+}
+
+function ChannelDot({ ch, size = 20, showName = false }) {
+  const c = CH[ch];
+  return (
+    <span className="chDotRow">
+      <span className="chDot" style={{ width: size, height: size, background: c.grad || c.color }}>
+        <span className="chDotTxt" style={{ fontSize: size * 0.42 }}>{c.abbr}</span>
+      </span>
+      {showName && <span className="chName">{c.name}</span>}
+    </span>
+  );
+}
+
+function Intent({ score }) {
+  const hot = score >= 80, warm = score >= 55;
+  const cls = hot ? "hot" : warm ? "warm" : "cool";
+  return (
+    <span className={`intent ${cls}`}>
+      {hot && <Flame size={11} strokeWidth={2.5} />}
+      {score}
+    </span>
+  );
+}
+
+function Sparkline({ data, color = "#F76D9C", w = 88, h = 30 }) {
+  const max = Math.max(...data), min = Math.min(...data);
+  const rng = max - min || 1;
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / rng) * (h - 4) - 2}`).join(" ");
+  const id = "g" + color.replace("#", "");
+  return (
+    <svg width={w} height={h} className="spark">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#${id})`} />
+    </svg>
+  );
+}
+
+function Delta({ v }) {
+  const up = v >= 0;
+  return (
+    <span className={`delta ${up ? "up" : "down"}`}>
+      {up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+      {Math.abs(v)}%
+    </span>
+  );
+}
+
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+function desat(hex, amt) {
+  const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  const gray = 0.32 * r + 0.52 * g + 0.16 * b; // blend toward each color's own gray -> keeps lightness, drops saturation
+  const mix = (v) => Math.round(v + (gray - v) * amt);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+
+function MetricGraph({ color }) {
+  const W = 300, H = 100, N = 72;
+  const seed = hashStr(color);
+  const phase = ((seed % 100) / 100) * Math.PI * 2;
+  const mid = 60, a1 = 13, a2 = 6;
+  const pts = [];
+  for (let i = 0; i <= N; i++) {
+    const x = (i / N) * (2 * W); // two identical tiles wide, so translating by one tile loops seamlessly
+    const y = mid - (a1 * Math.sin((2 * Math.PI * x) / W + phase) + a2 * Math.sin((4 * Math.PI * x) / W + phase * 1.7));
+    pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  const line = pts.join(" ");
+  const area = `0,${H} ${line} ${2 * W},${H}`;
+  const c = desat(color, 0.62); // reduced saturation
+  const id = "mg" + seed;
+  return (
+    <svg className="metricGraph" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={c} stopOpacity="0.16" />
+          <stop offset="60%" stopColor={c} stopOpacity="0.05" />
+          <stop offset="100%" stopColor={c} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <g className="mgFlow">
+        <polygon points={area} fill={`url(#${id})`} />
+        <polyline points={line} fill="none" stroke={c} strokeOpacity="0.32" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      </g>
+    </svg>
+  );
+}
+
+function MetricCard({ icon: Icon, label, value, delta, spark: sp, color = "#F76D9C" }) {
+  return (
+    <div className="card metric">
+      <MetricGraph data={sp} color={color} />
+      <div className="metricInner">
+        <span className="metricIcon" style={{ background: `${color}18`, color }}><Icon size={18} /></span>
+        <div className="metricText">
+          <span className="metricLabel">{label}</span>
+          <span className="metricVal">{value}</span>
+        </div>
+        <Delta v={delta} />
+      </div>
+    </div>
+  );
+}
+
+const chartTip = ({ active, payload, label, unit }) =>
+  active && payload && payload.length ? (
+    <div className="tip">
+      <div className="tipLabel">{label}</div>
+      {payload.map((p, i) => (
+        <div className="tipRow" key={i}><span className="tipDot" style={{ background: p.color || p.fill }} />{p.name}: <b>{p.value}{unit || ""}</b></div>
+      ))}
+    </div>
+  ) : null;
+
+/* ------------------------------------------------------------------ */
+/*  Pages                                                            */
+/* ------------------------------------------------------------------ */
+function Overview({ go }) {
+  return (
+    <div className="page">
+      <div className="pageHead">
+        <div>
+          <h1>Good morning, Ava</h1>
+          <p className="sub">Here's what's happening across Maple &amp; Stone today · Thursday, 7 Feb</p>
+        </div>
+        <div className="pageHeadActions">
+          <button className="btn ghost"><Calendar size={15} />Last 7 days<ChevronDown size={14} /></button>
+          <button className="btn primary"><Plus size={15} />New campaign</button>
+        </div>
+      </div>
+
+      <div className="grid metrics">
+        <MetricCard icon={Inbox} label="Conversations today" value="64" delta={11} spark={[42,55,48,61,73,58,64]} color="#F76D9C" />
+        <MetricCard icon={Target} label="New leads" value="17" delta={23} spark={[9,12,8,15,19,14,17]} color="#E8B06A" />
+        <MetricCard icon={Clock} label="Avg. first response" value="6m" delta={-38} spark={[14,11,9,12,7,8,6]} color="#8E6BC9" />
+        <MetricCard icon={UserPlus} label="Newsletter sign-ups" value="331" delta={16} spark={[120,168,149,205,238,221,284]} color="#C98BA8" />
+      </div>
+
+      {/* WORTH A LOOK — the key insights piece, full-width standout */}
+      <section className="insightsPanel">
+        <div className="insightsGlow" />
+        <div className="insightsPanelHead">
+          <div className="insightsHeadLeft">
+            <span className="aiPill lg"><Sparkles size={15} />base360 AI</span>
+            <div>
+              <h3 className="insightsH">Worth a look</h3>
+              <span className="cardSub">Signals we spotted across your channels today</span>
+            </div>
+          </div>
+          <span className="signalCount">{INSIGHTS.length} new</span>
+        </div>
+        <div className="insightRail">
+          {INSIGHTS.map((it, i) => {
+            const Icon = it.tone === "up" ? TrendingUp : it.tone === "warn" ? Flame : it.tone === "info" ? Zap : Sparkles;
+            return (
+              <button className={`insight ${it.tone}`} key={i} onClick={() => go(it.cta.includes("lead") ? "leads" : it.cta.includes("campaign") ? "marketing" : it.cta.includes("response") ? "analytics" : "inbox")}>
+                <span className="insightIcon"><Icon size={16} /></span>
+                <div className="insightBody">
+                  <div className="insightTitle">{it.title}</div>
+                  <p>{it.body}</p>
+                  <span className="insightCta">{it.cta}<ArrowRight size={13} /></span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="grid two-one">
+        <div className="card">
+          <div className="cardHead">
+            <div><h3>Daily activity</h3><span className="cardSub">Conversations handled vs. leads created</span></div>
+            <div className="legend">
+              <span><i style={{ background: "#F76D9C" }} />Conversations</span>
+              <span><i style={{ background: "#E8B06A" }} />Leads</span>
+            </div>
+          </div>
+          <div className="chartBox">
+            <ResponsiveContainer width="100%" height={230}>
+              <AreaChart data={ACTIVITY} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="ac" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F76D9C" stopOpacity="0.28" /><stop offset="100%" stopColor="#F76D9C" stopOpacity="0" /></linearGradient>
+                  <linearGradient id="al" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#E8B06A" stopOpacity="0.22" /><stop offset="100%" stopColor="#E8B06A" stopOpacity="0" /></linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="#F6E7E3" />
+                <XAxis dataKey="d" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} width={40} />
+                <Tooltip content={(p) => chartTip({ ...p })} />
+                <Area type="monotone" dataKey="conv" name="Conversations" stroke="#F76D9C" strokeWidth={2.5} fill="url(#ac)" />
+                <Area type="monotone" dataKey="lead" name="Leads" stroke="#E8B06A" strokeWidth={2.5} fill="url(#al)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="cardHead"><div><h3>By channel</h3><span className="cardSub">Messages received today</span></div></div>
+          <div className="chList">
+            {CHANNEL_VOL.map((c) => {
+              const max = Math.max(...CHANNEL_VOL.map((x) => x.v));
+              return (
+                <div className="chListRow" key={c.k}>
+                  <ChannelDot ch={c.k} size={22} />
+                  <span className="chListName">{CH[c.k].name}</span>
+                  <div className="chBarTrack"><div className="chBarFill" style={{ width: `${(c.v / max) * 100}%`, background: CH[c.k].grad || CH[c.k].color }} /></div>
+                  <span className="chListVal">{c.v}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* FUNNEL — ties the three pillars together */}
+      <div className="card funnelCard">
+        <div className="cardHead"><div><h3>Conversation → customer</h3><span className="cardSub">How this week's conversations are converting</span></div></div>
+        <Funnel />
+      </div>
+    </div>
+  );
+}
+
+function Funnel() {
+  const steps = [
+    { label: "Conversations", v: 401, color: "#F76D9C" },
+    { label: "Leads created", v: 94, color: "#E39AB8" },
+    { label: "Qualified", v: 38, color: "#E8B06A" },
+    { label: "Won", v: 12, color: "#C98BA8" },
+  ];
+  const max = steps[0].v;
+  return (
+    <div className="funnel">
+      {steps.map((s, i) => (
+        <div className="funnelRow" key={i}>
+          <div className="funnelMeta">
+            <span className="funnelLabel"><span className="funnelKey" style={{ background: s.color }} />{s.label}</span>
+            <span className="funnelNums">
+              <b>{s.v}</b>
+              {i < steps.length - 1 && <span className="funnelConv">{Math.round((steps[i + 1].v / s.v) * 100)}% to next</span>}
+            </span>
+          </div>
+          <div className="funnelTrack"><div className="funnelFill" style={{ width: `${(s.v / max) * 100}%`, background: s.color }} /></div>
+        </div>
+      ))}
+      <div className="funnelFoot"><span>Est. pipeline value</span><b>$26,140</b></div>
+    </div>
+  );
+}
+
+/* ---------------------------- INBOX ------------------------------- */
+const COMMS = [
+  { icon: Inbox, label: "Open conversations", value: "38", delta: 6, spark: [30,34,31,36,33,37,38], color: "#F76D9C" },
+  { icon: Reply, label: "Awaiting your reply", value: "12", delta: -18, spark: [20,18,16,15,14,13,12], color: "#D6417A" },
+  { icon: Clock, label: "Avg. first response", value: "6m", delta: -38, spark: [14,11,9,12,7,8,6], color: "#8E6BC9" },
+  { icon: CheckCheck, label: "Resolved today", value: "27", delta: 14, spark: [12,16,14,19,22,24,27], color: "#C98BA8" },
+];
+
+function InboxPage() {
+  const [activeId, setActiveId] = useState("c1");
+  const [filter, setFilter] = useState("all");
+  const [mobileThread, setMobileThread] = useState(false);
+  const [closed, setClosed] = useState([]);
+  const [listW, setListW] = useState(340);
+  const inboxRef = useRef(null);
+  const dragging = useRef(false);
+  const list = CONVERSATIONS.filter((c) => !closed.includes(c.id) && (filter === "all" || c.channel === filter));
+  const conv = list.find((c) => c.id === activeId);
+
+  const closeConv = (id) => {
+    const next = list.find((c) => c.id !== id);
+    setClosed((prev) => [...prev, id]);
+    setActiveId(next ? next.id : null);
+    setMobileThread(false);
+  };
+
+  const clampW = (w) => {
+    const rect = inboxRef.current?.getBoundingClientRect();
+    const max = rect ? Math.min(640, rect.width - 400) : 640;
+    return Math.max(280, Math.min(max, w));
+  };
+  useEffect(() => {
+    const move = (e) => {
+      if (!dragging.current || !inboxRef.current) return;
+      setListW(clampW(e.clientX - inboxRef.current.getBoundingClientRect().left));
+    };
+    const up = () => {
+      if (!dragging.current) return;
+      dragging.current = false;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+  }, []);
+  const startDrag = (e) => {
+    dragging.current = true;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    e.preventDefault();
+  };
+  const onResizeKey = (e) => {
+    if (e.key === "ArrowLeft") { setListW((w) => clampW(w - 24)); e.preventDefault(); }
+    if (e.key === "ArrowRight") { setListW((w) => clampW(w + 24)); e.preventDefault(); }
+  };
+
+  return (
+    <div className="inboxPage">
+      {/* top region: 2x2 metrics on the left, By Channel on the right */}
+      <div className="inboxTop">
+        <div className="commsMetrics">
+          {COMMS.map((m, i) => (
+            <MetricCard key={i} icon={m.icon} label={m.label} value={m.value} delta={m.delta} spark={m.spark} color={m.color} />
+          ))}
+        </div>
+        <div className="card inboxChannelCard">
+          <div className="cardHead">
+            <div><h3>By channel</h3><span className="cardSub">Unanswered vs. received today</span></div>
+            <span className="unStat"><b>{CHANNEL_VOL.reduce((a, c) => a + c.un, 0)}</b> unanswered<span className="unStatMuted"> / {CHANNEL_VOL.reduce((a, c) => a + c.v, 0)}</span></span>
+          </div>
+          <div className="chList">
+            {CHANNEL_VOL.map((c) => {
+              const max = Math.max(...CHANNEL_VOL.map((x) => x.v));
+              return (
+                <div className="chListRow" key={c.k}>
+                  <ChannelDot ch={c.k} size={20} />
+                  <span className="chListName">{CH[c.k].name}</span>
+                  <div className="chBarTrack">
+                    <div className="chBarFill" style={{ width: `${(c.v / max) * 100}%`, background: CH[c.k].grad || CH[c.k].color }} />
+                    <div className="chBarUn" style={{ width: `${(c.un / max) * 100}%` }} title={`${c.un} unanswered`} />
+                  </div>
+                  <span className="chListVal"><b className="unNum">{c.un}</b><span className="totNum">/{c.v}</span></span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* inbox panel — filters + search are the panel header, so they read as part of the table */}
+      <div className="inbox">
+        <div className="inboxToolbar">
+          <div className="filterChips">
+            <button className={`fchip ${filter === "all" ? "on" : ""}`} onClick={() => setFilter("all")}>All channels</button>
+            {Object.keys(CH).map((k) => (
+              <button key={k} className={`fchip ${filter === k ? "on" : ""}`} onClick={() => setFilter(k)} title={CH[k].name}>
+                <span className="fchipDot" style={{ background: CH[k].grad || CH[k].color }} />{CH[k].name}
+              </button>
+            ))}
+          </div>
+          <div className="searchMini inboxSearch"><Search size={15} /><input placeholder="Search conversations" /></div>
+        </div>
+
+        <div className={`inboxGrid ${mobileThread ? "showThread" : ""}`} ref={inboxRef} style={{ "--listW": listW + "px" }}>
+          {/* list */}
+          <div className="inboxList">
+            <div className="convScroll">
+              {list.map((c) => (
+                <button key={c.id} className={`convItem ${c.id === activeId ? "active" : ""}`}
+                  onClick={() => { setActiveId(c.id); setMobileThread(true); }}>
+                  <Avatar ch={c.channel} name={c.name} bg={c.avatarBg} />
+                  <div className="convMid">
+                    <div className="convTop"><span className="convName">{c.name}{c.unread && <span className="unreadDot" />}</span><span className="convTime">{c.time}</span></div>
+                    <div className="convPreview">{c.last}</div>
+                    <div className="convTags"><span className="tag">{c.tag}</span>{c.intent >= 80 && <span className="tag hotTag"><Flame size={10} />High intent</span>}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* draggable resizer */}
+          <div className="inboxResizer" onPointerDown={startDrag} onKeyDown={onResizeKey}
+            role="separator" aria-orientation="vertical" aria-label="Resize conversation list" tabIndex={0}>
+            <span className="inboxResizerLine" />
+          </div>
+
+          {/* thread */}
+          {conv ? (
+            <Thread key={conv.id} conv={conv} onBack={() => setMobileThread(false)} onClose={() => closeConv(conv.id)} />
+          ) : (
+            <div className="threadEmpty">
+              <span className="threadEmptyIcon"><Inbox size={26} /></span>
+              <p>You're all caught up</p>
+              <span>No open conversations in this view.</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Thread({ conv, onBack, onClose }) {
+  const [tone, setTone] = useState("friendly");
+  const [draft, setDraft] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [msgs, setMsgs] = useState(conv.messages);
+  const [input, setInput] = useState("");
+  const [showPanel, setShowPanel] = useState(false);
+  const scrollRef = useRef(null);
+
+  const genDraft = (t = tone) => {
+    setThinking(true); setDraft("");
+    setTimeout(() => {
+      const pack = AI_DRAFTS[t] || AI_DRAFTS.friendly;
+      setDraft(pack[conv.id] || pack.default);
+      setThinking(false);
+    }, 700);
+  };
+  const send = (text) => {
+    if (!text.trim()) return;
+    setMsgs((m) => [...m, { from: "me", t: text, time: "now" }]);
+    setInput(""); setDraft("");
+  };
+
+  // On opening a conversation, the AI proactively drafts a suggested reply to review.
+  useEffect(() => { setMsgs(conv.messages); setInput(""); genDraft(tone); /* eslint-disable-line */ }, [conv.id]);
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [msgs]);
+
+  return (
+    <div className="thread">
+      <div className="threadHead">
+        <button className="backBtn" onClick={onBack}><ChevronLeft size={20} /></button>
+        <Avatar ch={conv.channel} name={conv.name} bg={conv.avatarBg} size={38} />
+        <div className="threadWho">
+          <div className="threadName">{conv.name}</div>
+          <div className="threadSub"><ChannelDot ch={conv.channel} size={15} showName />· {conv.handle}</div>
+        </div>
+        <div className="threadActions">
+          <span className="stageChip">{conv.stage}</span>
+          <button className="iconBtn panelToggle" onClick={() => setShowPanel((s) => !s)} title="AI &amp; context"><Sparkles size={16} /></button>
+          <button className="iconBtn"><MoreHorizontal size={18} /></button>
+          <button className="iconBtn closeConv" onClick={onClose} title="Close conversation" aria-label="Close conversation"><X size={18} /></button>
+        </div>
+      </div>
+
+      <div className="threadBody">
+        <div className="msgScroll" ref={scrollRef}>
+          <div className="dayDivider"><span>Today</span></div>
+          {msgs.map((m, i) => (
+            <div key={i} className={`msg ${m.from === "me" ? "mine" : "theirs"}`}>
+              {m.from === "them" && <Avatar ch={conv.channel} name={conv.name} bg={conv.avatarBg} size={28} />}
+              <div className="bubble"><p>{m.t}</p><span className="bubbleTime">{m.time}{m.from === "me" && <CheckCheck size={13} />}</span></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="composer">
+          {(draft || thinking) ? (
+            <div className="aiDraft">
+              <div className="aiDraftHead">
+                <span className="aiPill sm"><Sparkles size={12} />AI suggested reply</span>
+                <div className="toneChips">
+                  {["friendly", "professional", "concise"].map((t) => (
+                    <button key={t} className={`tone ${tone === t ? "on" : ""}`} onClick={() => { setTone(t); genDraft(t); }} disabled={thinking}>{t}</button>
+                  ))}
+                </div>
+              </div>
+              {thinking ? (
+                <div className="aiDraftLoading"><span className="spin"><Sparkles size={15} /></span>Writing a reply based on this conversation…</div>
+              ) : (
+                <>
+                  <textarea className="aiDraftText" value={draft} onChange={(e) => setDraft(e.target.value)} rows={3} />
+                  <div className="aiHint"><Wand2 size={12} />Review or edit, then send — or dismiss to write your own.</div>
+                </>
+              )}
+              <div className="aiDraftActions">
+                <button className="btn ghost sm" onClick={() => genDraft()} disabled={thinking}><RefreshCw size={13} />Regenerate</button>
+                <button className="btn ghost sm" onClick={() => setDraft("")} disabled={thinking}>Dismiss</button>
+                <button className="btn ai sm" onClick={() => send(draft)} disabled={thinking}><Send size={13} />Send reply</button>
+              </div>
+            </div>
+          ) : (
+            <div className="composerBar">
+              <button className="iconBtn"><Paperclip size={18} /></button>
+              <input className="composerInput" placeholder={`Reply to ${conv.name.split(" ")[0]}…`} value={input}
+                onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send(input)} />
+              <button className="iconBtn"><Smile size={18} /></button>
+              <button className="draftBtn" onClick={() => genDraft()}><Wand2 size={14} />Suggest a reply</button>
+              <button className="iconBtn sendBtn" onClick={() => send(input)}><Send size={17} /></button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* context / AI panel */}
+      <div className={`ctxPanel ${showPanel ? "open" : ""}`}>
+        <div className="ctxScroll">
+          <div className="ctxCloseRow"><span className="ctxHeading">Customer</span><button className="iconBtn" onClick={() => setShowPanel(false)}><X size={16} /></button></div>
+          <div className="ctxCard">
+            <Avatar ch={conv.channel} name={conv.name} bg={conv.avatarBg} size={44} />
+            <div><div className="ctxName">{conv.name}</div><div className="ctxHandle">{conv.handle}</div></div>
+          </div>
+          <div className="ctxStat"><span>Lead intent</span><Intent score={conv.intent} /></div>
+          <div className="ctxStat"><span>Stage</span><b>{conv.stage}</b></div>
+          <div className="ctxStat"><span>Channel</span><ChannelDot ch={conv.channel} size={16} showName /></div>
+          <div className="ctxStat"><span>Lifetime value</span><b>$0</b></div>
+
+          <button className="convertBtn"><Zap size={15} />Convert to lead</button>
+
+          <div className="ctxHeading mt">AI summary</div>
+          <div className="aiSummary">
+            <Sparkles size={13} />
+            <p>{conv.tag === "Wholesale" ? "Café owner requesting trade pricing for a 120-unit stoneware order. Strong buying signal — route to sales." :
+              conv.tag === "Collab" ? "Creator proposing a paid collaboration for a spring launch. Marketing opportunity; qualify audience size." :
+              conv.tag === "Order help" ? "Repeat buyer reporting a chipped item. Resolved with a free replacement — good candidate for a loyalty follow-up." :
+              conv.tag === "Availability" ? "Interested in the sage colourway restock. Add to restock list and newsletter." :
+              "General product question. Low buying intent — quick answer likely closes it."}</p>
+          </div>
+
+          <div className="ctxHeading mt">Suggested next steps</div>
+          <ul className="nextSteps">
+            <li><Check size={13} />Send wholesale line sheet</li>
+            <li><Check size={13} />Add to CRM as a lead</li>
+            <li><Check size={13} />Tag for sales follow-up</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------- LEADS ------------------------------- */
+function StatusPill({ status }) {
+  const m = STATUS_META[status] || { color: "#A98A94", bg: "var(--line2)" };
+  return <span className="statusTag" style={{ color: m.color, background: m.bg }}>{status === "Hot" && <Flame size={11} strokeWidth={2.5} />}{status}</span>;
+}
+
+function Likelihood({ score }) {
+  const cls = score >= 80 ? "hot" : score >= 60 ? "warm" : "cool";
+  return (
+    <div className="likeCell">
+      <div className="likeBar"><div className={`likeFill ${cls}`} style={{ width: `${score}%` }} /></div>
+      <span className={`likeNum ${cls}`}>{score}%</span>
+    </div>
+  );
+}
+
+function PipelineByStage() {
+  const max = Math.max(...PIPELINE.map((p) => p.value));
+  const totalVal = PIPELINE.filter((p) => p.stage !== "Won").reduce((a, p) => a + p.value, 0);
+  return (
+    <div className="card">
+      <div className="cardHead"><div><h3>Pipeline by stage</h3><span className="cardSub">Open value across the funnel</span></div><span className="pipeTotal">${(totalVal / 1000).toFixed(1)}k open</span></div>
+      <div className="pipeList">
+        {PIPELINE.map((p) => (
+          <div className="pipeRow" key={p.stage}>
+            <div className="pipeMeta"><span className="pipeStage"><span className="pipeDot" style={{ background: p.color }} />{p.stage}</span><span className="pipeCount">{p.count} leads</span></div>
+            <div className="pipeBarTrack"><div className="pipeBarFill" style={{ width: `${(p.value / max) * 100}%`, background: p.color }} /></div>
+            <span className="pipeVal">${(p.value / 1000).toFixed(1)}k</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SalesSnapshot() {
+  const rows = [
+    { label: "Avg. deal value", value: "$1,940" },
+    { label: "Avg. time to first reply", value: "6 min" },
+    { label: "Lead-to-win rate", value: "12.8%" },
+    { label: "Deals in play", value: "16" },
+    { label: "Sent to sales this week", value: "7" },
+  ];
+  return (
+    <div className="card">
+      <div className="cardHead"><div><h3>Sales snapshot</h3><span className="cardSub">This month</span></div></div>
+      <div className="snapList">{rows.map((r) => (<div className="snapRow" key={r.label}><span>{r.label}</span><b>{r.value}</b></div>))}</div>
+    </div>
+  );
+}
+
+function CustomerModal({ lead, sent, onClose, onSend }) {
+  const eligible = lead.intent >= 75 && lead.status !== "Won";
+  const [assignee, setAssignee] = useState(lead.owner);
+  const reps = [{ id: "AR", name: "Ava Rún" }, { id: "JS", name: "Jae Song" }, { id: "MP", name: "Mara Pace" }];
+  return (
+    <div className="modalScrim" onClick={onClose}>
+      <div className="modal customerModal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="modalHead">
+          <div className="modalTitleRow">
+            <Avatar ch={lead.ch} name={lead.name} bg={lead.avatarBg} size={44} />
+            <div><div className="cmName">{lead.name}<StatusPill status={sent ? "With sales" : lead.status} /></div><div className="handSub"><ChannelDot ch={lead.ch} size={15} showName /> · {lead.handle}</div></div>
+          </div>
+          <button className="iconBtn" onClick={onClose} aria-label="Close"><X size={18} /></button>
+        </div>
+        <div className="modalBody">
+          <div className="cmLikeRow"><span className="cmLikeLabel">Conversion likelihood</span><Likelihood score={lead.intent} /></div>
+          <div className="handGrid">
+            <div><span>Est. value</span><b>${lead.value.toLocaleString()}</b></div>
+            <div><span>Budget</span><b>{lead.budget}</b></div>
+            <div><span>Timeline</span><b>{lead.timeline}</b></div>
+            <div><span>Source</span><b>{lead.src}</b></div>
+          </div>
+          <div className="handSection"><h4>Conversation summary</h4><p>{lead.summary}</p></div>
+          <div className="handSection"><h4>Buying signals</h4>
+            <ul className="signalList">{lead.signals.map((s, i) => (<li key={i}><Check size={13} />{s}</li>))}</ul>
+          </div>
+          <div className="handNote"><Sparkles size={14} /><p>base360 suggests opening with {lead.signals[0].toLowerCase()} and attaching the wholesale line sheet, then confirming their {lead.timeline.toLowerCase()}.</p></div>
+          {eligible && !sent && (
+            <div className="handSection"><h4>Assign to</h4>
+              <div className="assignRow">{reps.map((r) => (
+                <button key={r.id} className={`assignChip ${assignee === r.id ? "on" : ""}`} onClick={() => setAssignee(r.id)}>
+                  <span className="assignAva">{r.id}</span>{r.name}
+                </button>
+              ))}</div>
+            </div>
+          )}
+        </div>
+        <div className="modalFoot">
+          <div className="modalFootNote">
+            {sent ? <span className="withSales"><Check size={13} />Already with sales</span>
+              : !eligible ? <span className="nurtureNote">Not yet ready for sales — keep nurturing.</span> : null}
+          </div>
+          <div className="modalFootBtns">
+            <button className="btn ghost" onClick={onClose}>Close</button>
+            {eligible && !sent && <button className="btn primary" onClick={() => onSend(lead.id, assignee)}><Send size={14} />Send to sales team</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeadsPage() {
+  const [highOnly, setHighOnly] = useState(false);
+  const [sent, setSent] = useState([]);
+  const [detail, setDetail] = useState(null);
+  const [toast, setToast] = useState(null);
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3800); return () => clearTimeout(t); }, [toast]);
+
+  const effStatus = (l) => (sent.includes(l.id) ? "With sales" : l.status);
+  const sorted = [...LEADS].sort((a, b) => b.intent - a.intent);
+  const rows = highOnly ? sorted.filter((l) => l.intent >= 75 && effStatus(l) !== "Won") : sorted;
+  const ready = sorted.filter((l) => l.intent >= 75 && effStatus(l) !== "Won" && effStatus(l) !== "With sales").length;
+  const openVal = PIPELINE.filter((p) => p.stage !== "Won").reduce((a, p) => a + p.value, 0);
+
+  const doSend = (id, assignee) => {
+    const l = LEADS.find((x) => x.id === id);
+    setSent((prev) => [...prev, id]);
+    setDetail(null);
+    setToast(`${l.name} sent to ${assignee}`);
+  };
+
+  return (
+    <div className="page">
+      <div className="pageHead">
+        <div><h1>Leads &amp; sales</h1><p className="sub">Every conversation becomes a lead. The hottest are surfaced and handed to sales.</p></div>
+        <button className="btn ghost"><Calendar size={15} />This month<ChevronDown size={14} /></button>
+      </div>
+
+      <div className="leadsTop">
+        <div className="leadsMetrics">
+          <MetricCard icon={DollarSign} label="Open pipeline" value={`$${(openVal / 1000).toFixed(1)}k`} delta={19} spark={[28,31,30,36,38,42,47]} color="#F76D9C" />
+          <MetricCard icon={Flame} label="Ready for sales" value={ready} delta={33} spark={[1,2,2,3,4,4,5]} color="#D6417A" />
+          <MetricCard icon={Activity} label="Lead-to-win rate" value="12.8%" delta={4} spark={[9,10,11,10,12,12,13]} color="#8E6BC9" />
+          <MetricCard icon={DollarSign} label="Avg. deal value" value="$1,940" delta={8} spark={[15,16,17,16,18,19,19]} color="#C98BA8" />
+        </div>
+        <PipelineByStage />
+        <SalesSnapshot />
+      </div>
+
+      {/* KEY FEATURE: high chance of conversion */}
+      <div className="card tableCard leadsTableCard">
+        <div className="leadsTableHead">
+          <div className="leadsTableTitle">
+            <div className="leadsTitleRow"><span className="leadsTitleIcon"><Target size={16} /></span><h3>Chance of conversion</h3></div>
+            <span className="cardSub">Your decision desk — review each customer, then choose who to send to sales</span>
+          </div>
+          <div className="leadsTableTools">
+            {ready > 0 && <span className="readyPill"><Flame size={12} />{ready} ready for sales</span>}
+            <div className="segmented">
+              <button className={!highOnly ? "on" : ""} onClick={() => setHighOnly(false)}>All leads</button>
+              <button className={highOnly ? "on" : ""} onClick={() => setHighOnly(true)}>High chance</button>
+            </div>
+          </div>
+        </div>
+        <div className="tableScroll">
+          <table className="dataTable leadsTable">
+            <thead><tr><th>Customer</th><th>Channel</th><th>Interest</th><th>Likelihood</th><th>Status</th><th>Value</th><th className="actionCol">Action</th></tr></thead>
+            <tbody>
+              {rows.map((l) => {
+                const st = effStatus(l);
+                return (
+                  <tr key={l.id} className={l.intent >= 80 && st !== "Won" ? "hotRow" : ""}>
+                    <td>
+                      <button className="customerBtn" onClick={() => setDetail(l)}>
+                        <Avatar ch={l.ch} name={l.name} bg={l.avatarBg} size={30} />
+                        <div className="tdLeadWho"><span className="tdLeadName">{l.name}</span><span className="tdLeadHandle">{l.handle}</span></div>
+                        <ChevronRight size={15} className="customerChevron" />
+                      </button>
+                    </td>
+                    <td><ChannelDot ch={l.ch} size={17} /></td>
+                    <td className="muted">{l.src}</td>
+                    <td><Likelihood score={l.intent} /></td>
+                    <td><StatusPill status={st} /></td>
+                    <td><b>${l.value.toLocaleString()}</b></td>
+                    <td className="actionCol">
+                      {st === "With sales" ? (
+                        <button className="withSales asBtn" onClick={() => setDetail(l)}><Check size={13} />With sales</button>
+                      ) : st === "Won" ? (
+                        <span className="wonMark"><Check size={13} />Won</span>
+                      ) : l.intent >= 75 ? (
+                        <button className="sendSales" onClick={() => setDetail(l)}>Send to sales<ArrowRight size={14} /></button>
+                      ) : (
+                        <button className="btn ghost sm" onClick={() => setDetail(l)}>View details</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {detail && <CustomerModal lead={detail} sent={sent.includes(detail.id)} onClose={() => setDetail(null)} onSend={doSend} />}
+      {toast && <div className="toast"><span className="toastIcon"><Check size={14} /></span>{toast} — sales notified</div>}
+    </div>
+  );
+}
+
+/* -------------------------- MARKETING ----------------------------- */
+function MarketingPage() {
+  const [tab, setTab] = useState("campaigns");
+  return (
+    <div className="page">
+      <div className="pageHead">
+        <div><h1>Marketing</h1><p className="sub">Capture subscribers, send campaigns, and track every open and click.</p></div>
+        <button className="btn primary"><Plus size={15} />Compose newsletter</button>
+      </div>
+
+      <div className="grid metrics four">
+        <MetricCard icon={Users} label="Subscribers" value="12,480" delta={16} spark={[120,168,149,205,238,221,284]} color="#F76D9C" />
+        <MetricCard icon={Mail} label="Avg. open rate" value="50.3%" delta={6} spark={[44,49,46,52,55,54,58]} color="#8E6BC9" />
+        <MetricCard icon={MousePointerClick} label="Avg. click rate" value="16.7%" delta={9} spark={[11,13,12,15,17,16,21]} color="#E8B06A" />
+        <MetricCard icon={UserPlus} label="New this week" value="331" delta={21} spark={[30,42,38,55,60,58,72]} color="#C98BA8" />
+      </div>
+
+      <div className="tabsRow">
+        {["campaigns", "subscribers", "compose"].map((t) => (
+          <button key={t} className={`tab ${tab === t ? "on" : ""}`} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>
+        ))}
+      </div>
+
+      {tab === "campaigns" && (
+        <div className="card tableCard">
+          <table className="dataTable campaigns">
+            <thead><tr><th>Campaign</th><th>Status</th><th>Recipients</th><th>Open rate</th><th>Click rate</th><th>Sent</th></tr></thead>
+            <tbody>
+              {CAMPAIGNS.map((c, i) => (
+                <tr key={i}>
+                  <td><div className="tdLead"><span className="campIcon"><Mail size={14} /></span>{c.name}</div></td>
+                  <td><span className={`statusPill ${c.status.toLowerCase()}`}>{c.status}</span></td>
+                  <td className="muted">{c.sent ? c.sent.toLocaleString() : "—"}</td>
+                  <td>{c.sent ? <RateBar v={c.open} color="#8E6BC9" /> : <span className="muted">—</span>}</td>
+                  <td>{c.sent ? <RateBar v={c.click} color="#E8B06A" /> : <span className="muted">—</span>}</td>
+                  <td className="muted">{c.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === "subscribers" && (
+        <div className="grid two-one">
+          <div className="card">
+            <div className="cardHead"><div><h3>Subscriber growth</h3><span className="cardSub">New sign-ups, last 8 weeks</span></div></div>
+            <div className="chartBox">
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={SUB_GROWTH} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="#F6E7E3" />
+                  <XAxis dataKey="w" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} width={40} />
+                  <Tooltip cursor={{ fill: "#F76D9C0d" }} content={(p) => chartTip({ ...p })} />
+                  <Bar dataKey="s" name="Sign-ups" radius={[6, 6, 0, 0]} fill="#F76D9C" barSize={26} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="sourceRow">
+              {SUB_SOURCES.map((s) => (
+                <div className="sourceItem" key={s.s}><span className="sourceDot" style={{ background: s.c }} /><span className="sourceName">{s.s}</span><b>{s.v}%</b></div>
+              ))}
+            </div>
+          </div>
+          <div className="card">
+            <div className="cardHead"><div><h3>Recent sign-ups</h3><span className="cardSub">Tied to the customer record</span></div></div>
+            <div className="subList">
+              {RECENT_SUBS.map((s, i) => (
+                <div className="subItem" key={i}>
+                  <span className="subMail">{s.name}</span>
+                  <span className="subMeta">{s.src === "website" ? <><Globe size={13} />Website</> : s.src === "checkout" ? <><DollarSign size={13} />Checkout</> : <ChannelDot ch={s.src} size={15} showName />}<span className="subTime">{s.time}</span></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "compose" && <Composer />}
+    </div>
+  );
+}
+
+function RateBar({ v, color }) {
+  return <div className="rateBar"><div className="rateTrack"><div className="rateFill" style={{ width: `${v}%`, background: color }} /></div><span className="rateVal">{v}%</span></div>;
+}
+
+function Composer() {
+  const [subject, setSubject] = useState("A little something for your table");
+  return (
+    <div className="grid two-one composeGrid">
+      <div className="card composeSetup">
+        <h3>Campaign setup</h3>
+        <label className="fld"><span>Subject line</span><input value={subject} onChange={(e) => setSubject(e.target.value)} /></label>
+        <label className="fld"><span>Audience</span>
+          <div className="select">All subscribers · 12,480<ChevronDown size={15} /></div>
+        </label>
+        <label className="fld"><span>Send</span>
+          <div className="radioRow"><button className="radio on">Now</button><button className="radio">Schedule</button></div>
+        </label>
+        <div className="aiAssistBox">
+          <span className="aiPill sm"><Sparkles size={12} />AI assist</span>
+          <p>Want 3 subject-line options based on your last campaign's performance?</p>
+          <button className="btn ai sm"><Wand2 size={13} />Suggest subject lines</button>
+        </div>
+        <div className="composeFoot">
+          <button className="btn ghost">Save draft</button>
+          <button className="btn primary"><Send size={14} />Send campaign</button>
+        </div>
+      </div>
+      <div className="card emailPreview">
+        <div className="emailBar"><span className="dots"><i/><i/><i/></span>Preview</div>
+        <div className="emailCanvas">
+          <div className="emailLogo">MAPLE &amp; STONE</div>
+          <div className="emailHero" />
+          <h2 className="emailH">{subject}</h2>
+          <p className="emailP">Our Winter Table collection just landed — hand-glazed stoneware made for slow mornings and long dinners.</p>
+          <button className="emailCta">Shop the collection</button>
+          <p className="emailFine">You're receiving this because you subscribed at maplestone.co · Unsubscribe</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------- ANALYTICS ----------------------------- */
+function AnalyticsPage() {
+  return (
+    <div className="page">
+      <div className="pageHead"><div><h1>Analytics</h1><p className="sub">How your team is performing across every channel.</p></div>
+        <button className="btn ghost"><Calendar size={15} />Last 30 days<ChevronDown size={14} /></button></div>
+
+      <div className="grid two-one">
+        <div className="card">
+          <div className="cardHead"><div><h3>Conversation volume</h3><span className="cardSub">Handled vs. leads created</span></div></div>
+          <div className="chartBox">
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={ACTIVITY} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
+                <defs><linearGradient id="a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F76D9C" stopOpacity="0.3" /><stop offset="100%" stopColor="#F76D9C" stopOpacity="0" /></linearGradient></defs>
+                <CartesianGrid vertical={false} stroke="#F6E7E3" />
+                <XAxis dataKey="d" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} width={40} />
+                <Tooltip content={(p) => chartTip({ ...p })} />
+                <Area type="monotone" dataKey="conv" name="Conversations" stroke="#F76D9C" strokeWidth={2.5} fill="url(#a2)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="card">
+          <div className="cardHead"><div><h3>Median response time</h3><span className="cardSub">Minutes, this week</span></div></div>
+          <div className="chartBox">
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={RESP} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="#F6E7E3" />
+                <XAxis dataKey="d" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#A98A94" }} width={40} />
+                <Tooltip content={(p) => chartTip({ ...p, unit: "m" })} />
+                <Line type="monotone" dataKey="m" name="Response" stroke="#8E6BC9" strokeWidth={2.5} dot={{ r: 3, fill: "#8E6BC9" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="cardHead"><div><h3>Channel performance</h3><span className="cardSub">Volume, response time and lead conversion by platform</span></div></div>
+        <table className="dataTable">
+          <thead><tr><th>Channel</th><th>Messages</th><th>Avg. response</th><th>Leads</th><th>Conversion</th></tr></thead>
+          <tbody>
+            {[["instagram",186,"5m",41,"22%"],["facebook",122,"9m",19,"16%"],["whatsapp",94,"6m",14,"15%"],["tiktok",71,"12m",11,"15%"],["x",44,"14m",6,"14%"],["linkedin",28,"22m",3,"11%"]].map(([k,m,r,l,c]) => (
+              <tr key={k}><td><ChannelDot ch={k} size={18} showName /></td><td><b>{m}</b></td><td className="muted">{r}</td><td>{l}</td><td><span className="convBadge">{c}</span></td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------- CHANNELS ----------------------------- */
+function ChannelsPage() {
+  const connected = ["instagram", "facebook", "whatsapp", "tiktok"];
+  return (
+    <div className="page">
+      <div className="pageHead"><div><h1>Channels</h1><p className="sub">Every platform, in one inbox. Connect a channel to start pulling messages in.</p></div></div>
+      <div className="grid channelGrid">
+        {Object.keys(CH).map((k) => {
+          const on = connected.includes(k);
+          return (
+            <div className={`card channelCard ${on ? "on" : ""}`} key={k}>
+              <div className="channelCardTop"><ChannelDot ch={k} size={40} /><span className={`connState ${on ? "conn" : ""}`}>{on ? <><Check size={12} />Connected</> : "Not connected"}</span></div>
+              <div className="channelCardName">{CH[k].name}</div>
+              <div className="channelCardMeta">{on ? "Syncing DMs, comments & mentions" : "Pull in DMs, comments and mentions"}</div>
+              <button className={`btn ${on ? "ghost" : "primary"} full`}>{on ? "Manage" : <>Connect <ArrowUpRight size={14} /></>}</button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card aiSettings">
+        <div className="cardHead"><div className="insightsTitle"><span className="aiPill"><Sparkles size={13} />AI agent</span><span className="cardSub">How base360 drafts replies for your team</span></div></div>
+        <div className="toggleRow"><div><b>Auto-draft replies</b><p>Suggest a reply the moment a message arrives.</p></div><span className="switch on"><span /></span></div>
+        <div className="toggleRow"><div><b>Auto-score leads</b><p>Detect buying intent and route high-intent messages to sales.</p></div><span className="switch on"><span /></span></div>
+        <div className="toggleRow"><div><b>Send without review</b><p>Let the agent reply to simple questions on its own.</p></div><span className="switch"><span /></span></div>
+        <div className="toneSetting"><span>Default tone</span><div className="toneChips"><button className="tone on">Friendly</button><button className="tone">Professional</button><button className="tone">Concise</button></div></div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shell                                                            */
+/* ------------------------------------------------------------------ */
+const NAV = [
+  { k: "overview", label: "Overview", icon: LayoutDashboard },
+  { k: "inbox", label: "Inbox", icon: Inbox, badge: 2 },
+  { k: "leads", label: "Leads", icon: Target },
+  { k: "marketing", label: "Marketing", icon: Megaphone },
+  { k: "analytics", label: "Analytics", icon: BarChart3 },
+];
+const NAV2 = [
+  { k: "channels", label: "Channels", icon: Link2 },
+  { k: "settings", label: "Settings", icon: Settings },
+];
+
+function App() {
+  const [page, setPage] = useState("overview");
+  const [drawer, setDrawer] = useState(false);
+  const go = (p) => { setPage(p); setDrawer(false); };
+
+  const pageTitle = [...NAV, ...NAV2].find((n) => n.k === page)?.label || "Overview";
+
+  return (
+    <div className="app">
+      <style>{CSS}</style>
+
+      {drawer && <div className="scrim" onClick={() => setDrawer(false)} />}
+
+      {/* SIDEBAR */}
+      <aside className={`sidebar ${drawer ? "open" : ""}`}>
+        <div className="brand">
+          <span className="logo">
+            <svg width="34" height="34" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="sk1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F76D9C" /><stop offset="1" stopColor="#FFB08A" /></linearGradient>
+                <linearGradient id="sk2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#C98BA8" /><stop offset="1" stopColor="#BBA6E8" /></linearGradient>
+              </defs>
+              <circle cx="22" cy="22" r="17" stroke="#F5DDD9" strokeWidth="4" />
+              <path d="M22 5 a17 17 0 0 1 15 26" stroke="url(#sk1)" strokeWidth="4" strokeLinecap="round" />
+              <path d="M37 31 a17 17 0 0 1 -30 0" stroke="url(#sk2)" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="22" cy="22" r="5.5" fill="#F76D9C" />
+            </svg>
+          </span>
+          <span className="brandName">base<span>360</span></span>
+          <span className="brandBiz">Maple &amp; Stone</span>
+        </div>
+
+        <nav className="nav">
+          {NAV.map((n) => (
+            <button key={n.k} className={`navItem ${page === n.k ? "on" : ""}`} onClick={() => go(n.k)}>
+              <n.icon size={18} /><span>{n.label}</span>
+              {n.badge && <span className="navBadge">{n.badge}</span>}
+            </button>
+          ))}
+          <div className="navDivider" />
+          {NAV2.map((n) => (
+            <button key={n.k} className={`navItem ${page === n.k ? "on" : ""}`} onClick={() => go(n.k)}>
+              <n.icon size={18} /><span>{n.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="aiSidebarCard">
+          <div className="aiSidebarTop"><Sparkles size={14} /><b>base360 AI</b><span className="onDot" /></div>
+          <p>Drafting replies &amp; scoring leads across 4 channels.</p>
+        </div>
+
+        <div className="sideTagline">every follower, every sale</div>
+
+        <div className="account">
+          <div className="accAva">AR</div>
+          <div className="accWho"><b>Ava Rún</b><span>Community lead</span></div>
+          <ChevronDown size={16} />
+        </div>
+      </aside>
+
+      {/* MAIN */}
+      <div className="main">
+        <header className="topbar">
+          <button className="hamburger" onClick={() => setDrawer(true)}><Menu size={20} /></button>
+          <div className="topTitle">{pageTitle}</div>
+          <div className="topSearch"><Search size={16} /><input placeholder="Search people, messages, campaigns…" /></div>
+          <div className="topActions">
+            <button className="iconBtn topBtn"><Bell size={18} /><span className="notifDot" /></button>
+            <button className="iconBtn topBtn onlyMobile"><Search size={18} /></button>
+            <div className="accAva sm">AR</div>
+          </div>
+        </header>
+
+        <main className="content">
+          {page === "overview" && <Overview go={go} />}
+          {page === "inbox" && <InboxPage />}
+          {page === "leads" && <LeadsPage />}
+          {page === "marketing" && <MarketingPage />}
+          {page === "analytics" && <AnalyticsPage />}
+          {page === "channels" && <ChannelsPage />}
+          {page === "settings" && <ChannelsPage />}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Styles                                                           */
+/* ------------------------------------------------------------------ */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Poppins:wght@300;400;500;600;700&family=Parisienne&display=swap');
+
+.app *{box-sizing:border-box;margin:0;padding:0}
+.app{
+  --bg:#FBFAF5; --surface:#FFFFFF; --surface2:#FCEFEC;
+  --ink:#43222F; --ink2:#7A5865; --muted:#A98A94;
+  --line:#F5DDD9; --line2:#FBEAE6;
+  --sidebar:#FFFFFF; --sideInk:#43222F; --sideMuted:#A98A94;
+  --accent:#F76D9C; --accentSoft:#FCE4EC; --accentDeep:#D6417A;
+  --ai:#8E6BC9; --aiSoft:#EFE9FB;
+  --up:#9A5A78; --upSoft:rgba(201,139,168,.20); --down:#D6417A; --warn:#C58B4A;
+  --plum:#43222F;
+  --shadow:0 2px 6px rgba(190,110,140,.08), 0 18px 40px -16px rgba(190,110,140,.28);
+  --shadow-sm:0 1px 3px rgba(190,110,140,.08), 0 8px 20px -12px rgba(190,110,140,.20);
+  --fdisp:'Fraunces',Georgia,serif;
+  --fsans:'Poppins',system-ui,-apple-system,sans-serif;
+  --fscript:'Parisienne',cursive;
+  font-family:var(--fsans); color:var(--ink);
+  background:var(--bg);
+  display:flex; height:100vh; width:100%; overflow:hidden;
+  -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.5;
+}
+.app button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.app input,.app textarea{font-family:inherit}
+.app h1,.app h2,.app h3{font-family:var(--fdisp);font-weight:500;letter-spacing:-.015em;color:var(--ink)}
+.app ::-webkit-scrollbar{width:9px;height:9px}
+.app ::-webkit-scrollbar-thumb{background:#EBCFCB;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+.app ::selection{background:var(--accentSoft)}
+.app button:focus-visible,.app input:focus-visible,.app a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+/* ---- sidebar ---- */
+.sidebar{width:256px;flex-shrink:0;background:var(--sidebar);color:var(--sideInk);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px;z-index:60}
+.brand{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:11px;padding:6px 8px 22px}
+.logo{width:34px;height:34px;display:grid;place-items:center}
+.brandName{font-family:var(--fdisp);font-weight:600;font-size:22px;color:var(--ink);letter-spacing:-.02em}
+.brandName span{color:var(--accent)}
+.brandBiz{grid-column:2;font-size:11px;color:var(--sideMuted);margin-top:-4px}
+.nav{display:flex;flex-direction:column;gap:3px;flex:1}
+.navItem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:var(--sideMuted);font-size:14.5px;font-weight:400;transition:.16s;position:relative;width:100%;text-align:left}
+.navItem:hover{background:var(--surface2);color:var(--ink)}
+.navItem.on{background:var(--accentSoft);color:var(--accentDeep);font-weight:600}
+.navItem.on svg{color:var(--accentDeep)}
+.navItem span{flex:1}
+.navBadge{background:var(--accent);color:#fff;font-size:11px;font-weight:600;padding:1px 7px;border-radius:100px;flex:0!important}
+.navDivider{height:1px;background:var(--line);margin:12px 6px}
+.aiSidebarCard{background:var(--aiSoft);border:1px solid #E5DCF6;border-radius:16px;padding:13px;margin-bottom:14px}
+.aiSidebarTop{display:flex;align-items:center;gap:7px;color:var(--ink);font-size:13px}
+.aiSidebarTop svg{color:var(--ai)}
+.aiSidebarTop b{font-weight:600}
+.onDot{width:7px;height:7px;border-radius:50%;background:#78BE97;margin-left:auto;box-shadow:0 0 0 3px rgba(120,190,151,.2)}
+.aiSidebarCard p{font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.4;font-weight:300}
+.account{display:flex;align-items:center;gap:10px;padding:9px;border-radius:14px;border:1px solid var(--line);cursor:pointer}
+.account:hover{background:var(--surface2)}
+.accAva{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F76D9C,#FFB08A);color:#fff;font-weight:600;font-size:13px;display:grid;place-items:center;flex-shrink:0;font-family:var(--fdisp)}
+.accAva.sm{width:32px;height:32px;border-radius:50%}
+.accWho{flex:1;display:flex;flex-direction:column;line-height:1.25}
+.accWho b{font-size:13px;color:var(--ink);font-weight:600}
+.accWho span{font-size:11px;color:var(--sideMuted)}
+.account svg{color:var(--sideMuted)}
+.sideTagline{font-family:var(--fscript);color:var(--accent);font-size:20px;text-align:center;padding:2px 0 14px;line-height:1}
+
+/* ---- main ---- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:64px;flex-shrink:0;background:rgba(251,250,245,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 24px;z-index:40}
+.hamburger{display:none}
+.topTitle{font-family:var(--fdisp);font-weight:600;font-size:19px;letter-spacing:-.02em}
+.topSearch{margin-left:14px;display:flex;align-items:center;gap:9px;background:var(--surface2);border:1.5px solid var(--line);border-radius:100px;padding:9px 15px;width:340px;color:var(--muted);transition:.16s}
+.topSearch:focus-within{border-color:var(--accent);background:#fff}
+.topSearch input{border:none;outline:none;background:none;width:100%;font-size:13.5px;color:var(--ink)}
+.topActions{margin-left:auto;display:flex;align-items:center;gap:10px}
+.iconBtn{width:38px;height:38px;border-radius:100px;display:grid;place-items:center;color:var(--ink2);transition:.16s}
+.iconBtn:hover{background:var(--surface2);color:var(--ink)}
+.topBtn{position:relative;border:1px solid var(--line);background:var(--surface)}
+.notifDot{position:absolute;top:8px;right:9px;width:7px;height:7px;background:var(--down);border-radius:50%;border:1.5px solid var(--surface)}
+.onlyMobile{display:none}
+.content{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* ---- generic ---- */
+.page{max-width:1240px;margin:0 auto;padding:28px 24px 60px}
+.pageHead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.pageHead h1{font-size:30px;font-weight:500}
+.sub{color:var(--ink2);font-size:14px;margin-top:4px;font-weight:300}
+.pageHeadActions{display:flex;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow-sm)}
+.cardHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.cardHead h3{font-size:18px;font-weight:500}
+.cardSub{font-size:12.5px;color:var(--muted);display:block;margin-top:2px;font-weight:300}
+.grid{display:grid;gap:16px;margin-bottom:16px}
+.metrics{grid-template-columns:repeat(4,1fr)}
+.two-one{grid-template-columns:1.7fr 1fr}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:100px;font-size:14px;font-weight:500;transition:transform .14s,box-shadow .14s,border-color .14s;white-space:nowrap}
+.btn.full{width:100%;justify-content:center}
+.btn.sm{padding:8px 14px;font-size:12.5px}
+.btn.primary{background:var(--plum);color:var(--surface2)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accentDeep)}
+.btn.ai{background:linear-gradient(135deg,#F76D9C,#FFB08A);color:#fff;box-shadow:0 8px 20px -8px rgba(247,109,156,.55)}
+.btn.ai:hover{transform:translateY(-2px)}
+
+/* metric card */
+.metric{position:relative;overflow:hidden;padding:16px 18px;min-height:104px}
+.metricGraph{position:absolute;left:0;right:0;bottom:0;width:100%;height:66px;z-index:0;pointer-events:none;opacity:0;animation:mgFade .7s ease forwards}
+@keyframes mgFade{to{opacity:1}}
+.mgFlow{transform:translateX(0);animation:mgFlow 10s linear infinite;will-change:transform}
+@keyframes mgFlow{to{transform:translateX(-300px)}}
+.metrics .metric:nth-child(1) .mgFlow{animation-duration:11s}
+.metrics .metric:nth-child(2) .mgFlow{animation-duration:8s}
+.metrics .metric:nth-child(3) .mgFlow{animation-duration:13s}
+.metrics .metric:nth-child(4) .mgFlow{animation-duration:9.5s}
+.metricInner{position:relative;z-index:1;display:flex;align-items:center;gap:13px}
+.metricIcon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}
+.metricText{display:flex;flex-direction:column;gap:2px;min-width:0}
+.metricLabel{font-size:12.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metricVal{font-family:var(--fdisp);font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1.02}
+.metricInner .delta{margin-left:auto;align-self:flex-start}
+.spark{display:block}
+.delta{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:100px}
+.delta.up{color:var(--up);background:var(--upSoft)}
+.delta.down{color:var(--up);background:var(--upSoft)}
+
+/* legend + charts */
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:3px}
+.chartBox{margin:0 -6px}
+.tip{background:var(--ink);color:#fff;border-radius:10px;padding:8px 11px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.tipLabel{font-weight:600;margin-bottom:4px;font-family:var(--fdisp)}
+.tipRow{display:flex;align-items:center;gap:6px;color:#d5d5db;padding:1px 0}
+.tipRow b{color:#fff}
+.tipDot{width:8px;height:8px;border-radius:2px}
+
+/* channel list */
+.chList{display:flex;flex-direction:column;gap:15px}
+.chListRow{display:grid;grid-template-columns:auto 1fr 90px auto;align-items:center;gap:11px}
+.chListName{font-size:13px;font-weight:500}
+.chBarTrack{height:8px;background:var(--line2);border-radius:20px;overflow:hidden}
+.chBarFill{height:100%;border-radius:20px}
+.chListVal{font-family:var(--fdisp);font-weight:600;font-size:14px;text-align:right}
+.inboxChannelCard .chBarTrack{position:relative}
+.inboxChannelCard .chBarFill{position:absolute;left:0;top:0;opacity:.5}
+.inboxChannelCard .chBarUn{position:absolute;left:0;top:0;height:100%;border-radius:20px;background:var(--down)}
+.inboxChannelCard .chListVal{font-weight:400;font-size:13.5px;white-space:nowrap}
+.unNum{color:var(--down);font-weight:600}
+.totNum{color:var(--muted);font-weight:500}
+.unStat{font-size:12px;color:var(--ink2);white-space:nowrap}
+.unStat b{font-family:var(--fdisp);color:var(--down);font-size:15px}
+.unStatMuted{color:var(--muted)}
+.chDotRow{display:inline-flex;align-items:center;gap:7px}
+.chDot{border-radius:7px;display:grid;place-items:center;flex-shrink:0}
+.chDotTxt{color:#fff;font-weight:700;font-family:var(--fdisp);line-height:1}
+.chName{font-size:13px}
+
+/* aiPill (shared) */
+.insightsTitle{display:flex;flex-direction:column;gap:6px}
+.aiPill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ai);background:var(--aiSoft);padding:4px 10px;border-radius:20px;width:fit-content}
+.aiPill.sm{font-size:11px;padding:3px 8px}
+.aiPill.lg{font-size:13px;padding:7px 13px;box-shadow:0 2px 10px rgba(142,107,201,.18)}
+
+/* insights — WORTH A LOOK, standout key piece */
+.insightsPanel{position:relative;overflow:hidden;margin-bottom:16px;padding:22px 22px 24px;border-radius:20px;
+  background:linear-gradient(135deg,#FDECF2 0%,#FFF6F0 52%,#FCEFF7 100%);
+  border:1px solid #F3D9E4;box-shadow:0 10px 30px rgba(247,109,156,.06)}
+.insightsGlow{position:absolute;top:-90px;right:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(142,107,201,.20),transparent 66%);pointer-events:none;filter:blur(6px)}
+.insightsPanelHead{position:relative;z-index:1;display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.insightsHeadLeft{display:flex;align-items:center;gap:13px}
+.insightsH{font-size:19px;font-weight:600;line-height:1.1}
+.signalCount{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--ai);background:rgba(255,255,255,.75);border:1px solid #E0D4F5;padding:5px 12px;border-radius:20px}
+.insightRail{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+.insight{display:flex;gap:12px;text-align:left;padding:16px;border:1px solid rgba(255,255,255,.9);border-radius:15px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);transition:.18s;align-items:flex-start;box-shadow:0 2px 8px rgba(20,20,30,.04)}
+.insight:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(20,20,30,.1);border-color:#fff}
+.insightIcon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;color:#fff}
+.insight.up .insightIcon{background:linear-gradient(135deg,#D3A0BC,#C98BA8)}
+.insight.warn .insightIcon{background:linear-gradient(135deg,#F2C48E,#E8B06A)}
+.insight.info .insightIcon{background:linear-gradient(135deg,#F98BB0,#F76D9C)}
+.insightBody{min-width:0}
+.insightTitle{font-weight:600;font-size:13.5px;margin-bottom:5px;line-height:1.3}
+.insightBody p{font-size:12px;color:var(--ink2);line-height:1.45}
+.insightCta{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent);margin-top:10px}
+.insight:hover .insightCta svg{transform:translateX(3px)}
+.insightCta svg{transition:transform .18s}
+
+/* funnel */
+.funnelCard{margin-bottom:16px}
+.funnel{display:flex;flex-direction:column;gap:17px}
+.funnelRow{position:relative}
+.funnelMeta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:7px}
+.funnelLabel{display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.funnelKey{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.funnelNums{display:inline-flex;align-items:center;gap:12px}
+.funnelNums b{font-family:var(--fdisp);font-weight:600;font-size:15px}
+.funnelTrack{height:12px;background:var(--line2);border-radius:20px;overflow:hidden}
+.funnelFill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.funnelConv{font-size:11px;color:var(--muted);font-weight:600;background:var(--surface2);border:1px solid var(--line);padding:2px 9px;border-radius:20px;white-space:nowrap}
+.funnelFoot{display:flex;justify-content:space-between;align-items:center;padding-top:15px;margin-top:3px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.funnelFoot b{font-family:var(--fdisp);font-size:22px;font-weight:600;color:var(--accent)}
+
+/* intent */
+.intent{display:inline-flex;align-items:center;gap:3px;font-family:var(--fdisp);font-weight:600;font-size:12.5px;padding:3px 9px;border-radius:8px}
+.intent.hot{color:var(--down);background:rgba(214,65,122,.11)}
+.intent.warm{color:var(--warn);background:rgba(232,176,106,.12)}
+.intent.cool{color:var(--ink2);background:var(--line2)}
+
+/* ============ INBOX ============ */
+.inboxPage{display:flex;flex-direction:column;min-height:100%;padding:22px 24px 24px;min-width:0}
+.commsMetrics{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;margin-bottom:0}
+.commsMetrics .metric{min-height:0;padding:14px 16px}
+.commsMetrics .metricInner{display:flex;align-items:center;gap:12px;height:100%}
+.commsMetrics .metricText{flex-direction:column-reverse;align-items:flex-start;text-align:left;gap:2px}
+.commsMetrics .metricInner .delta{margin-left:auto;align-self:center}
+.commsMetrics .metricIcon{width:34px;height:34px;border-radius:10px}
+.commsMetrics .metricIcon svg{width:16px;height:16px}
+.commsMetrics .metricVal{font-size:23px}
+.commsMetrics .metricLabel{font-size:11.5px;white-space:normal;line-height:1.25}
+.commsMetrics .metricGraph{height:44px}
+.commsMetrics .metric:nth-child(1) .mgFlow{animation-duration:11s}
+.commsMetrics .metric:nth-child(2) .mgFlow{animation-duration:8s}
+.commsMetrics .metric:nth-child(3) .mgFlow{animation-duration:13s}
+.commsMetrics .metric:nth-child(4) .mgFlow{animation-duration:9.5s}
+.inboxTop{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;margin-bottom:14px;align-items:stretch}
+.inboxChannelCard{padding:15px 18px;margin-bottom:0;display:flex;flex-direction:column}
+.inboxChannelCard .cardHead{margin-bottom:13px}
+.inboxChannelCard .chList{display:flex;flex-direction:column;justify-content:space-between;gap:10px;flex:1}
+.inboxToolbar{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:11px 12px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap;border-radius:16px 16px 0 0}
+.inboxToolbar .filterChips{flex:1;flex-wrap:wrap;overflow:visible;min-width:0}
+.inboxSearch{margin-bottom:0;width:250px;flex-shrink:0}
+.inbox{display:flex;flex-direction:column;flex:1;min-height:480px;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.inboxGrid{display:grid;grid-template-columns:var(--listW,340px) 7px 1fr;flex:1;min-height:0;overflow:hidden}
+.inboxResizer{position:relative;cursor:col-resize;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-left:1px solid var(--line);border-right:1px solid var(--line);transition:background .15s;touch-action:none;z-index:6}
+.inboxResizer::after{content:"";position:absolute;top:0;bottom:0;left:-4px;right:-4px}
+.inboxResizer:hover,.inboxResizer:focus-visible{background:var(--accentSoft);outline:none}
+.inboxResizerLine{width:2px;height:34px;border-radius:2px;background:#E6C9C4;transition:.15s;pointer-events:none}
+.inboxResizer:hover .inboxResizerLine,.inboxResizer:focus-visible .inboxResizerLine{background:var(--accent);height:48px}
+.inboxList{border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface);min-width:0}
+.countPill{font-size:11px;font-weight:600;color:var(--accent);background:var(--accentSoft);padding:3px 9px;border-radius:20px}
+.searchMini{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--muted)}
+.searchMini:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentSoft)}
+.searchMini input{border:none;outline:none;background:none;width:100%;font-size:13px;color:var(--ink)}
+.filterChips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filterChips::-webkit-scrollbar{display:none}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:7px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--line);color:var(--ink2);white-space:nowrap;transition:.14s}
+.fchip:hover{border-color:#EAD4D0}
+.fchip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fchipDot{width:9px;height:9px;border-radius:50%}
+.convScroll{overflow-y:auto;flex:1}
+.convItem{display:flex;gap:12px;padding:14px 16px;width:100%;text-align:left;border-bottom:1px solid var(--line2);transition:.14s;position:relative}
+.convItem:hover{background:var(--surface2)}
+.convItem.active{background:var(--accentSoft)}
+.convItem.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.convMid{flex:1;min-width:0}
+.convTop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.convName{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.unreadDot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.convTime{font-size:11px;color:var(--muted);flex-shrink:0}
+.convPreview{font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:3px 0 7px}
+.convTags{display:flex;gap:6px}
+.tag{font-size:10.5px;font-weight:600;color:var(--ink2);background:var(--line2);padding:2px 8px;border-radius:6px}
+.hotTag{display:inline-flex;align-items:center;gap:3px;color:var(--down);background:rgba(214,65,122,.1)}
+
+/* avatar */
+.avaWrap{position:relative;flex-shrink:0}
+.ava{border-radius:11px;display:grid;place-items:center;font-family:var(--fdisp);font-weight:600;font-size:14px;color:#4a4a52}
+.avaBadge{position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:6px;border:2px solid var(--surface);display:grid;place-items:center}
+.avaBadgeTxt{color:#fff;font-size:8px;font-weight:700;font-family:var(--fdisp);line-height:1}
+
+/* thread */
+.thread{display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr;min-width:0;position:relative}
+.threadHead{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.backBtn{display:none;width:36px;height:36px;border-radius:9px;place-items:center;color:var(--ink2)}
+.threadWho{flex:1;min-width:0}
+.threadName{font-weight:600;font-size:15px}
+.threadSub{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);margin-top:1px}
+.threadActions{display:flex;align-items:center;gap:6px}
+.stageChip{font-size:11.5px;font-weight:600;color:var(--accent);background:var(--accentSoft);padding:5px 11px;border-radius:8px}
+.closeConv:hover{background:rgba(214,65,122,.1);color:var(--down)}
+.panelToggle{display:none;border:1px solid var(--line)}
+.threadBody{display:flex;flex-direction:column;min-height:0;background:var(--surface2)}
+.msgScroll{flex:1;overflow-y:auto;padding:22px 20px;display:flex;flex-direction:column;gap:14px}
+.dayDivider{text-align:center;position:relative;margin:2px 0 6px}
+.dayDivider span{font-size:11px;color:var(--muted);background:var(--surface2);padding:0 12px;position:relative;z-index:1;font-weight:500}
+.dayDivider::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.msg{display:flex;gap:9px;max-width:74%}
+.msg.theirs{align-self:flex-start;align-items:flex-end}
+.msg.mine{align-self:flex-end;flex-direction:row-reverse}
+.bubble{padding:11px 15px;border-radius:16px;position:relative}
+.msg.theirs .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.mine .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+.bubble p{font-size:13.5px;line-height:1.5}
+.bubbleTime{display:flex;align-items:center;gap:4px;justify-content:flex-end;font-size:10.5px;margin-top:5px;opacity:.65}
+.msg.mine .bubbleTime{color:#fff}
+.msg.theirs .bubbleTime{color:var(--muted)}
+
+/* composer */
+.composer{border-top:1px solid var(--line);background:var(--surface);padding:14px 18px}
+.composerBar{display:flex;align-items:center;gap:6px}
+.composerInput{flex:1;border:none;outline:none;background:none;font-size:14px;padding:8px 4px}
+.draftBtn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#fff;background:var(--ai);padding:8px 13px;border-radius:10px;transition:.14s;white-space:nowrap;box-shadow:0 2px 8px rgba(142,107,201,.28)}
+.draftBtn:hover{background:#7A57B8}
+.draftBtn:disabled{opacity:.7}
+.sendBtn{background:var(--accent);color:#fff}
+.sendBtn:hover{background:#D6417A;color:#fff}
+.spin{display:inline-flex;animation:spin 1s linear infinite;color:var(--ai)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.aiDraft{position:relative;border:1.5px solid #DDD1F2;background:linear-gradient(180deg,#FAF4FF,#fff);border-radius:14px;padding:14px;box-shadow:0 4px 18px rgba(142,107,201,.12)}
+.aiDraft::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--ai)}
+.aiDraftHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;padding-left:8px}
+.toneChips{display:flex;gap:4px;background:var(--surface2);padding:3px;border-radius:9px;border:1px solid var(--line)}
+.tone{font-size:11.5px;font-weight:500;padding:5px 10px;border-radius:7px;color:var(--ink2);text-transform:capitalize;transition:.14s}
+.tone.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);font-weight:600}
+.tone:disabled{opacity:.5}
+.aiDraftText{width:100%;border:1px solid #E0D4F5;border-radius:10px;padding:11px;font-size:13.5px;line-height:1.5;resize:none;outline:none;color:var(--ink);background:var(--surface)}
+.aiDraftText:focus{border-color:var(--ai);box-shadow:0 0 0 3px rgba(142,107,201,.12)}
+.aiDraftLoading{display:flex;align-items:center;gap:9px;font-size:13px;color:#4A3A6B;padding:14px 4px}
+.aiHint{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin-top:8px}
+.aiDraftActions{display:flex;gap:8px;margin-top:11px;justify-content:flex-end;flex-wrap:wrap}
+.threadEmpty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;color:var(--muted);background:var(--surface2)}
+.threadEmptyIcon{width:56px;height:56px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--ink2);margin-bottom:6px}
+.threadEmpty p{font-family:var(--fdisp);font-weight:600;font-size:16px;color:var(--ink)}
+.threadEmpty span{font-size:13px}
+
+/* ctx panel */
+.ctxPanel{position:absolute;top:0;right:0;bottom:0;width:302px;background:var(--surface);border-left:1px solid var(--line);transform:translateX(100%);transition:.28s cubic-bezier(.4,0,.2,1);z-index:20}
+.ctxPanel.open{transform:translateX(0);box-shadow:-14px 0 40px rgba(0,0,0,.08)}
+.ctxScroll{height:100%;overflow-y:auto;padding:18px}
+.ctxCloseRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ctxHeading{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.ctxHeading.mt{margin-top:22px;margin-bottom:11px;display:block}
+.ctxCard{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface2);border-radius:13px;border:1px solid var(--line);margin-bottom:14px}
+.ctxName{font-weight:600;font-size:14px}
+.ctxHandle{font-size:12px;color:var(--muted)}
+.ctxStat{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line2);font-size:13px;color:var(--ink2)}
+.ctxStat b{color:var(--ink);font-weight:600}
+.convertBtn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:16px;padding:11px;border-radius:11px;background:var(--ink);color:#fff;font-weight:600;font-size:13.5px;transition:.16s}
+.convertBtn:hover{background:#000;transform:translateY(-1px)}
+.aiSummary{display:flex;gap:9px;background:var(--aiSoft);border-radius:11px;padding:12px}
+.aiSummary svg{color:var(--ai);flex-shrink:0;margin-top:2px}
+.aiSummary p{font-size:12.5px;line-height:1.5;color:#4A3A6B}
+.nextSteps{list-style:none;display:flex;flex-direction:column;gap:9px}
+.nextSteps li{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink2)}
+.nextSteps svg{color:var(--up);background:rgba(201,139,168,.13);border-radius:50%;padding:2px;width:18px;height:18px;flex-shrink:0}
+
+/* ============ LEADS ============ */
+.leadsTop{display:grid;grid-template-columns:0.9fr 1.2fr 1fr;gap:16px;align-items:stretch;margin-bottom:18px}
+.leadsMetrics{display:flex;flex-direction:column;gap:10px;align-self:stretch}
+.leadsMetrics .metric{min-height:0;padding:12px 15px;flex:1;display:flex;align-items:center}
+.leadsMetrics .metricInner{width:100%;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:11px;row-gap:2px;align-items:center}
+.leadsMetrics .metricText{display:contents}
+.leadsMetrics .metricIcon{width:32px;height:32px;border-radius:9px;grid-column:1;grid-row:1}
+.leadsMetrics .metricIcon svg{width:16px;height:16px}
+.leadsMetrics .metricVal{font-size:20px;grid-column:2;grid-row:1;justify-self:start}
+.leadsMetrics .metricLabel{font-size:11.5px;white-space:nowrap;line-height:1.2;grid-column:2;grid-row:2;justify-self:start}
+.leadsMetrics .metricInner .delta{grid-column:3;grid-row:1;margin-left:0;align-self:center;justify-self:end}
+.leadsMetrics .metricGraph{height:32px}
+.leadsMetrics .metric:nth-child(1) .mgFlow{animation-duration:11s}
+.leadsMetrics .metric:nth-child(2) .mgFlow{animation-duration:8s}
+.leadsMetrics .metric:nth-child(3) .mgFlow{animation-duration:13s}
+.leadsMetrics .metric:nth-child(4) .mgFlow{animation-duration:9.5s}
+.segmented,.select{user-select:none}
+.segmented{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.segmented button{font-size:13px;font-weight:600;padding:7px 16px;border-radius:8px;color:var(--muted)}
+.segmented button.on{background:var(--ink);color:#fff}
+.metrics.four{grid-template-columns:repeat(4,1fr)}
+.hotStrip{display:flex;align-items:center;gap:12px;padding:13px 16px;background:linear-gradient(90deg,rgba(214,65,122,.06),rgba(214,65,122,0));border:1px solid rgba(214,65,122,.16);border-radius:14px;margin-bottom:18px;overflow-x:auto}
+.hotStripLabel{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--down);white-space:nowrap}
+.hotChip{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:7px 12px;white-space:nowrap}
+.hotName{font-size:13px;font-weight:600}
+.hotVal{font-family:var(--fdisp);font-weight:600;font-size:13px;color:var(--ink2)}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+.boardCol{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.boardColHead{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:4px 6px 12px}
+.boardCount{margin-left:auto;font-size:11.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:1px 8px;border-radius:20px}
+.stageDot{width:9px;height:9px;border-radius:50%}
+.stageDot.new{background:var(--accent)} .stageDot.qualified{background:var(--warn)}
+.stageDot.working{background:#E39AB8} .stageDot.won{background:var(--up)}
+.boardCards{display:flex;flex-direction:column;gap:10px}
+.leadCard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px;transition:.16s;cursor:pointer}
+.leadCard:hover{border-color:#EAD4D0;box-shadow:0 6px 16px rgba(0,0,0,.06);transform:translateY(-2px)}
+.leadCardTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.leadName{font-weight:600;font-size:13.5px}
+.leadSrc{font-size:12px;color:var(--muted);margin:2px 0 11px}
+.leadFoot{display:flex;align-items:center;justify-content:space-between}
+.leadVal{font-family:var(--fdisp);font-weight:600;font-size:14px}
+.leadOwner{width:24px;height:24px;border-radius:7px;background:var(--line2);display:grid;place-items:center;font-size:10.5px;font-weight:600;color:var(--ink2);font-family:var(--fdisp)}
+
+/* table */
+.tableCard{padding:6px 4px}
+.dataTable{width:100%;border-collapse:collapse}
+.dataTable th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:13px 16px;border-bottom:1px solid var(--line)}
+.dataTable td{padding:13px 16px;font-size:13.5px;border-bottom:1px solid var(--line2)}
+.dataTable tr:last-child td{border-bottom:none}
+.dataTable tbody tr{transition:.12s}
+.dataTable tbody tr:hover{background:var(--surface2)}
+.hotRow{background:rgba(214,65,122,.03)}
+.tdLead{display:flex;align-items:center;gap:11px;font-weight:600}
+.muted{color:var(--muted)}
+.stagePill{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:20px}
+.stagePill.new{color:var(--accent);background:var(--accentSoft)}
+.stagePill.qualified{color:var(--warn);background:rgba(232,176,106,.12)}
+.stagePill.working{color:#F76D9C;background:#FCE4EC}
+.stagePill.won{color:var(--up);background:rgba(201,139,168,.12)}
+.ownerAva{width:26px;height:26px;border-radius:7px;background:var(--line2);display:inline-grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink2);font-family:var(--fdisp)}
+.convBadge{font-family:var(--fdisp);font-weight:600;color:var(--ink2)}
+
+/* pipeline by stage */
+.pipeTotal{font-family:var(--fdisp);font-weight:600;font-size:13px;color:var(--accent)}
+.pipeList{display:flex;flex-direction:column;gap:15px}
+.pipeRow{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.pipeMeta{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:2px}
+.pipeStage{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.pipeDot{width:9px;height:9px;border-radius:3px}
+.pipeCount{font-size:11.5px;color:var(--muted);padding-left:17px}
+.pipeVal{grid-column:2;grid-row:1;justify-self:end;font-family:var(--fdisp);font-weight:600;font-size:14px;color:var(--ink2)}
+.pipeBarTrack{grid-column:1 / -1;grid-row:2;height:8px;background:var(--line2);border-radius:20px;overflow:hidden}
+.pipeBarFill{height:100%;border-radius:20px}
+
+/* sales snapshot */
+.snapList{display:flex;flex-direction:column}
+.snapRow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line2);font-size:13px;color:var(--ink2)}
+.snapRow:last-child{border-bottom:none}
+.snapRow b{font-family:var(--fdisp);font-weight:600;font-size:15px;color:var(--ink)}
+
+/* leads table (key feature) */
+.leadsTableCard{padding:0;border-color:#F3D9E4;box-shadow:0 14px 38px rgba(247,109,156,.09)}
+.leadsTitleRow{display:flex;align-items:center;gap:10px}
+.leadsTitleIcon{width:32px;height:32px;border-radius:10px;background:var(--accentSoft);color:var(--accent);display:grid;place-items:center}
+.leadsTableHead{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:linear-gradient(180deg,#FFF7FB,#fff)}
+.leadsTableTitle h3{font-size:18px;font-weight:600}
+.leadsTableTitle .cardSub{margin-top:5px;margin-left:42px}
+.leadsTableTools{display:flex;align-items:center;gap:12px}
+.readyPill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--down);background:rgba(214,65,122,.1);padding:6px 11px;border-radius:20px;white-space:nowrap}
+.tableScroll{overflow-x:auto}
+.leadsTable td{padding:12px 16px}
+.tdLeadWho{display:flex;flex-direction:column;line-height:1.3}
+.tdLeadName{font-weight:600;font-size:13.5px}
+.tdLeadHandle{font-size:11.5px;color:var(--muted);font-weight:400}
+.likeCell{display:flex;align-items:center;gap:9px;min-width:120px}
+.likeBar{flex:1;height:7px;background:var(--line2);border-radius:20px;overflow:hidden;min-width:56px}
+.likeFill{height:100%;border-radius:20px}
+.likeFill.hot{background:var(--down)} .likeFill.warm{background:var(--warn)} .likeFill.cool{background:#B9B9C2}
+.likeNum{font-family:var(--fdisp);font-weight:600;font-size:12.5px;min-width:32px}
+.likeNum.hot{color:var(--down)} .likeNum.warm{color:var(--warn)} .likeNum.cool{color:var(--muted)}
+.statusTag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:20px;white-space:nowrap}
+.actionCol{text-align:right}
+.customerBtn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:2px;border-radius:8px;transition:.14s}
+.customerBtn:hover{background:transparent}
+.customerBtn:hover .tdLeadName{color:var(--accent)}
+.customerChevron{color:var(--muted);margin-left:2px;opacity:0;transform:translateX(-3px);transition:.15s}
+.customerBtn:hover .customerChevron{opacity:1;transform:translateX(0)}
+.cmName{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;font-family:var(--fdisp)}
+.cmLikeRow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;background:var(--surface2);border:1px solid var(--line);border-radius:12px}
+.cmLikeLabel{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.cmLikeRow .likeCell{min-width:150px;flex:0 0 auto}
+.modalFootNote{flex:1;min-width:0}
+.modalFootBtns{display:flex;gap:10px;flex-shrink:0}
+.nurtureNote{font-size:12.5px;color:var(--muted)}
+.withSales.asBtn{cursor:pointer;transition:.14s}
+.withSales.asBtn:hover{background:rgba(201,139,168,.18)}
+.sendSales{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#fff;background:var(--ink);padding:8px 13px;border-radius:9px;transition:.15s;white-space:nowrap}
+.sendSales:hover{background:#000;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.sendSales svg{transition:transform .15s}
+.sendSales:hover svg{transform:translateX(2px)}
+.withSales{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--up);background:rgba(201,139,168,.1);padding:6px 11px;border-radius:9px;white-space:nowrap}
+.wonMark{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+
+/* handoff modal */
+.modalScrim{position:fixed;inset:0;background:rgba(20,20,25,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.32);animation:modalPop .22s cubic-bezier(.22,1,.36,1)}
+@keyframes modalPop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.modalHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.modalTitleRow{display:flex;align-items:center;gap:12px}
+.modalTitleRow h3{font-size:17px;font-weight:600}
+.handIcon{width:38px;height:38px;border-radius:11px;background:var(--ink);color:#fff;display:grid;place-items:center}
+.modalBody{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.handCustomer{display:flex;align-items:center;gap:13px;padding:14px;background:var(--surface2);border:1px solid var(--line);border-radius:13px}
+.handWho{flex:1;min-width:0}
+.handName{font-weight:600;font-size:15px}
+.handSub{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);margin-top:2px}
+.handLike{flex-shrink:0}
+.handGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.handGrid div{background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+.handGrid span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.handGrid b{font-family:var(--fdisp);font-weight:600;font-size:14px}
+.handSection h4{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.handSection p{font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.signalList{list-style:none;display:flex;flex-direction:column;gap:8px}
+.signalList li{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink2)}
+.signalList svg{color:var(--up);background:rgba(201,139,168,.13);border-radius:50%;padding:2px;width:18px;height:18px;flex-shrink:0}
+.handNote{display:flex;gap:9px;background:var(--aiSoft);border-radius:12px;padding:12px 13px}
+.handNote svg{color:var(--ai);flex-shrink:0;margin-top:1px}
+.handNote p{font-size:12.5px;line-height:1.5;color:#4A3A6B}
+.assignRow{display:flex;gap:8px;flex-wrap:wrap}
+.assignChip{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;padding:6px 12px 6px 6px;border:1px solid var(--line);border-radius:20px;color:var(--ink2);transition:.14s}
+.assignChip:hover{border-color:#EAD4D0}
+.assignChip.on{border-color:var(--accent);background:var(--accentSoft);color:var(--accent)}
+.assignAva{width:24px;height:24px;border-radius:50%;background:var(--line2);display:grid;place-items:center;font-size:10.5px;font-weight:600;font-family:var(--fdisp);color:var(--ink2)}
+.assignChip.on .assignAva{background:var(--accent);color:#fff}
+.modalFoot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-top:1px solid var(--line)}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--ink);color:#fff;font-size:13.5px;font-weight:500;padding:12px 18px;border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.3);z-index:210;animation:toastUp .3s cubic-bezier(.22,1,.36,1)}
+@keyframes toastUp{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+.toastIcon{width:22px;height:22px;border-radius:50%;background:var(--up);display:grid;place-items:center;flex-shrink:0}
+
+/* ============ MARKETING ============ */
+.tabsRow{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:4px;width:fit-content;margin-bottom:18px}
+.tab{font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;color:var(--muted);transition:.14s}
+.tab.on{background:var(--accentSoft);color:var(--accent)}
+.statusPill{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:20px}
+.statusPill.sent{color:var(--up);background:rgba(201,139,168,.12)}
+.statusPill.scheduled{color:var(--accent);background:var(--accentSoft)}
+.statusPill.draft{color:var(--muted);background:var(--line2)}
+.campIcon{width:30px;height:30px;border-radius:8px;background:var(--accentSoft);color:var(--accent);display:grid;place-items:center}
+.rateBar{display:flex;align-items:center;gap:9px}
+.rateTrack{width:80px;height:7px;background:var(--line2);border-radius:20px;overflow:hidden}
+.rateFill{height:100%;border-radius:20px}
+.rateVal{font-family:var(--fdisp);font-weight:600;font-size:12.5px;min-width:34px}
+.sourceRow{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.sourceItem{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2)}
+.sourceDot{width:10px;height:10px;border-radius:3px}
+.sourceItem b{color:var(--ink);font-family:var(--fdisp)}
+.subList{display:flex;flex-direction:column}
+.subItem{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line2)}
+.subItem:last-child{border-bottom:none}
+.subMail{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subMeta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-shrink:0}
+.subMeta svg{color:var(--ink2)}
+.subTime{color:var(--muted)}
+
+/* composer (newsletter) */
+.composeGrid{align-items:start}
+.composeSetup h3{margin-bottom:16px}
+.fld{display:block;margin-bottom:15px}
+.fld span{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:7px}
+.fld input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13.5px;outline:none}
+.fld input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentSoft)}
+.select{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13.5px;color:var(--ink2)}
+.radioRow{display:flex;gap:8px}
+.radio{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:var(--ink2)}
+.radio.on{border-color:var(--accent);background:var(--accentSoft);color:var(--accent)}
+.aiAssistBox{background:linear-gradient(180deg,#FBF4FF,#fff);border:1px solid var(--aiSoft);border-radius:12px;padding:14px;margin:6px 0 16px}
+.aiAssistBox p{font-size:12.5px;color:var(--ink2);margin:8px 0 11px;line-height:1.45}
+.composeFoot{display:flex;gap:10px;justify-content:flex-end;padding-top:6px}
+.emailPreview{padding:0;overflow:hidden}
+.emailBar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:500}
+.dots{display:flex;gap:5px}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.emailCanvas{padding:30px 28px 26px;text-align:center}
+.emailLogo{font-family:var(--fdisp);font-weight:600;letter-spacing:.18em;font-size:13px;color:var(--ink)}
+.emailHero{height:150px;border-radius:12px;margin:20px 0;background:linear-gradient(135deg,#E7E0D4,#C9B79E 60%,#A88E6E);position:relative;overflow:hidden}
+.emailHero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 30%,rgba(255,255,255,.4),transparent 55%)}
+.emailH{font-size:21px;font-weight:600;margin-bottom:10px}
+.emailP{font-size:13.5px;color:var(--ink2);line-height:1.55;max-width:340px;margin:0 auto 18px}
+.emailCta{background:var(--ink);color:#fff;font-weight:600;font-size:13px;padding:12px 26px;border-radius:10px}
+.emailFine{font-size:10.5px;color:var(--muted);margin-top:22px}
+
+/* ============ CHANNELS ============ */
+.channelGrid{grid-template-columns:repeat(3,1fr)}
+.channelCard{display:flex;flex-direction:column;gap:4px}
+.channelCard.on{border-color:#EAD4D0}
+.channelCardTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.connState{font-size:11px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.connState.conn{color:var(--up)}
+.channelCardName{font-family:var(--fdisp);font-weight:600;font-size:16px}
+.channelCardMeta{font-size:12.5px;color:var(--muted);margin-bottom:14px;flex:1}
+.aiSettings{margin-top:16px}
+.toggleRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--line2)}
+.toggleRow b{font-size:14px;font-weight:600}
+.toggleRow p{font-size:12.5px;color:var(--muted);margin-top:3px}
+.switch{width:42px;height:24px;border-radius:20px;background:var(--line);position:relative;flex-shrink:0;transition:.2s;cursor:pointer}
+.switch span{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on{background:var(--accent)}
+.switch.on span{left:21px}
+.toneSetting{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:16px}
+.toneSetting span{font-size:14px;font-weight:600}
+
+.scrim{display:none}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:1100px){
+  .metrics,.metrics.four{grid-template-columns:repeat(2,1fr)}
+  .two-one{grid-template-columns:1fr}
+  .board{grid-template-columns:repeat(2,1fr)}
+  .channelGrid{grid-template-columns:repeat(2,1fr)}
+  .insightRail{grid-template-columns:repeat(2,1fr)}
+  .leadsTop{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  .sidebar{position:fixed;top:0;bottom:0;left:0;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+  .sidebar.open{transform:translateX(0);box-shadow:20px 0 50px rgba(0,0,0,.25)}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;backdrop-filter:blur(2px)}
+  .hamburger{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;color:var(--ink2)}
+  .hamburger:hover{background:var(--surface)}
+  .topSearch{display:none}
+  .onlyMobile{display:grid}
+  .topTitle{flex:1}
+  /* inbox: one pane at a time */
+  .inboxPage{padding:16px}
+  .inboxTop{grid-template-columns:1fr}
+  .commsMetrics{grid-template-columns:repeat(2,1fr)}
+  .inbox{min-height:78vh}
+  .inboxGrid{grid-template-columns:1fr}
+  .inboxResizer{display:none}
+  .inboxToolbar .filterChips{flex:1 1 100%}
+  .inboxSearch{width:100%}
+  .inboxGrid .thread{display:none}
+  .inboxGrid.showThread .inboxList{display:none}
+  .inboxGrid.showThread .thread{display:grid}
+  .backBtn{display:grid}
+  .panelToggle{display:grid}
+  .ctxPanel{width:min(320px,88vw)}
+}
+@media (max-width:600px){
+  .metrics,.metrics.four{grid-template-columns:1fr}
+  .board{grid-template-columns:1fr}
+  .channelGrid{grid-template-columns:1fr}
+  .insightRail{grid-template-columns:1fr}
+  .funnelNums{gap:8px}
+  .funnelConv{display:none}
+  .inboxChannelCard .chList{grid-template-columns:1fr}
+  .page{padding:20px 16px 60px}
+  .pageHead h1{font-size:22px}
+  .topbar{padding:0 14px}
+  .content .page .pageHeadActions{width:100%}
+  .msg{max-width:86%}
+  .dataTable{display:block;overflow-x:auto;white-space:nowrap}
+}
+@media (prefers-reduced-motion:reduce){
+  .app *{transition:none!important;animation:none!important}
+}
+`;
+
+createRoot(document.getElementById("root")).render(<App />);
+</script>
+<!-- Back to case study (only when opened full-page, not embedded) -->
+<style>
+  .b360-back{ position:fixed; left:18px; bottom:18px; z-index:9999; display:none;
+    align-items:center; gap:8px; font-family:'Poppins',system-ui,-apple-system,sans-serif;
+    font-size:13px; font-weight:500; color:#43222F; background:#fff;
+    border:1px solid #F5DDD9; border-radius:100px; padding:10px 16px; text-decoration:none;
+    box-shadow:0 10px 26px -10px rgba(190,110,140,.5); transition:transform .14s ease, box-shadow .14s ease, color .14s ease; }
+  .b360-back:hover{ transform:translateY(-2px); color:#D6417A; box-shadow:0 14px 32px -10px rgba(190,110,140,.55); }
+  .b360-back svg{ width:15px; height:15px; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  @media (prefers-reduced-motion:reduce){ .b360-back{ transition:none; } }
+</style>
+<a id="b360Back" class="b360-back" href="case-base360.html"
+   onclick="if(history.length>1){event.preventDefault();history.back();}">
+  <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Case study
+</a>
+<script>
+  (function(){ try{ if(window.self===window.top){ var b=document.getElementById('b360Back'); if(b) b.style.display='inline-flex'; } }catch(e){} })();
+</script>
+
+</body>
+</html>

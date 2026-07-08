@@ -118,7 +118,7 @@
   .card-soon:hover{ transform:none; }
   .card-soon:hover .thumb{ border-color:var(--hairline); }
   .card-soon:hover .read{ color:var(--warm-grey); }
-  .thumb{ aspect-ratio:4/3; border-radius:5px; overflow:hidden;
+  .thumb{ position:relative; aspect-ratio:4/3; border-radius:5px; overflow:hidden;
     background:var(--ivory); border:1px solid var(--hairline);
     display:flex; align-items:center; justify-content:center;
     transition:border-color .4s ease; }
@@ -135,6 +135,18 @@
   .thumb .placeholder .pl{ font-family:var(--sans); font-weight:400;
     font-size:10px; letter-spacing:.2em; text-transform:uppercase;
     color:var(--warm-grey); }
+
+  /* base360 card — the Meridian laptop image with the base360 landing page on its screen */
+  .b360-lap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    padding:8% 9%; background:var(--ivory); }
+  .b360-lap iframe{ pointer-events:none; }
+  .mer-lap{ position:relative; width:100%; }
+  .mer-lap > img{ display:block; width:100%; height:auto; }
+  .mer-screen{ position:absolute; left:11.1%; top:5.8%; width:78.4%; height:79.7%;
+    overflow:hidden; border-radius:4px; background:#0b1119; }
+  .mer-screen iframe{ position:absolute; top:0; left:0; width:1400px; height:875px; border:0;
+    display:block; transform-origin:top left; background:#FBFAF5; }
+  .b360-hit{ position:absolute; inset:0; z-index:3; }   /* keeps the whole card clickable */
 
   .card-body{ padding:20px 4px 0; }
   .card-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
@@ -333,7 +345,26 @@
   <div class="wrap">
     <div class="grid">
 
-      <!-- 0 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
+      <!-- 0 — BASE360 / COMMS + AI PLATFORM -->
+      <a class="card reveal" href="case-base360.html">
+        <div class="thumb" style="padding:0;">
+          <div class="b360-lap">
+            <div class="mer-lap">
+              <img src="images/case-maritime.png" alt="base360 landing page shown on a laptop">
+              <div class="mer-screen"><iframe src="base360-landing.html" title="base360 landing page" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
+            </div>
+            <span class="b360-hit" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Product &amp; Brand Design · Comms + AI</div>
+          <h3>base360</h3>
+          <div class="role">Brand, product &amp; prototyper — one system for every conversation</div>
+          <span class="read">Read case study →</span>
+        </div>
+      </a>
+
+      <!-- 1 — MERIDIAN / AUTONOMOUS MARITIME OPS -->
       <a class="card reveal" href="maritime-prototype.html">
         <div class="thumb thumb-device">
           <img src="images/case-maritime.png" alt="Meridian autonomous maritime operations console in a laptop">
@@ -440,6 +471,21 @@
     function show(){ fb.classList.add('shown'); }
     if(document.readyState === 'complete') setTimeout(show, 350);
     else window.addEventListener('load', () => setTimeout(show, 350));
+  })();
+
+  // base360 card: fit the live landing page (1400px) onto the laptop screen
+  (function(){
+    const screens = document.querySelectorAll('.mer-screen');
+    if(!screens.length) return;
+    function fit(){
+      screens.forEach(function(scr){
+        const f = scr.querySelector('iframe'); if(!f) return;
+        f.style.transform = 'scale(' + (scr.clientWidth / 1400) + ')';
+      });
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(fit); screens.forEach(function(s){ ro.observe(s); }); }
+    window.addEventListener('resize', fit);
+    fit();
   })();
 </script>
 

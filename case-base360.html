@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>base360 — Case Study | Prina Bagia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bone:#FBF9F4; --ivory:#F3EFE6; --sage:#9CA98C; --deep-sage:#6F7A5E;
+    --clay:#8A6253; --deep-clay:#6F4E42; --clay-tint:#E4D8D0;
+    --soft-black:#2E2C28; --warm-grey:#8A867D; --hairline:#D9D4C7;
+    --rose:#F76D9C;                       /* base360 brand pop */
+    --rose-deep:#D6417A;                  /* accessible rose for text/links */
+    --plum:#43222F;                       /* base360 ink */
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --sans:'Jost','Helvetica Neue',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{ font-family:var(--sans); font-weight:300; color:var(--soft-black);
+    background:var(--bone); line-height:1.75; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden; }
+  ::selection{ background:var(--sage); color:var(--bone); }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 7vw; }
+  @media(min-width:900px){ .wrap{ padding:0 64px; } }
+  .narrow{ max-width:760px; }
+
+  .eyebrow{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.34em; text-transform:uppercase; color:var(--deep-sage); }
+  h1,h2,h3{ font-family:var(--serif); font-weight:500; letter-spacing:.01em; }
+  .reveal{ opacity:0; transform:translateY(26px);
+    transition:opacity 1s cubic-bezier(.2,.6,.2,1), transform 1s cubic-bezier(.2,.6,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ---------- NAV ---------- */
+  nav{ position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; gap:28px;
+    padding:18px 7vw; background:rgba(251,249,244,.93);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--hairline); }
+  @media(min-width:900px){ nav{ padding:15px 64px; } }
+  .nav-logo{ display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav-logo .nm{ font-family:var(--serif); font-weight:500; font-size:21px;
+    color:var(--soft-black); letter-spacing:.04em; }
+  .nav-back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    text-decoration:none; display:inline-flex; align-items:center; gap:9px;
+    transition:color .25s; }
+  .nav-back:hover{ color:var(--rose-deep); }
+  .nav-back .ar{ transition:transform .3s; }
+  .nav-back:hover .ar{ transform:translateX(-4px); }
+
+  /* ---------- HERO ---------- */
+  header{ padding:150px 0 70px; }
+  .hero-tag{ font-family:var(--sans); font-weight:400; font-size:10.5px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-sage);
+    margin-bottom:20px; }
+  h1.title{ font-size:clamp(38px,5.6vw,68px); line-height:1.06; font-weight:500;
+    max-width:17ch; }
+  h1.title em{ font-style:italic; color:var(--rose-deep); }
+  .hero-sub{ font-family:var(--sans); font-weight:300;
+    font-size:clamp(15px,1.7vw,18px); color:#43403A; max-width:58ch;
+    margin-top:24px; line-height:1.75; }
+
+  /* ---------- HERO RING (from the base360 landing page) ---------- */
+  .ring-wrap{ --petal:#F5DDD9; --plum-soft:#7A5865; --mauve-gray:#A98A94;
+    position:relative; width:100%; max-width:780px; margin:50px auto 0; aspect-ratio:1000/560; }
+  .wheel{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:40%; max-width:340px; aspect-ratio:1/1; container-type:size; z-index:2; }
+  .halo{ position:absolute; top:50%; left:50%; width:63%; transform:translate(-50%,-50%); z-index:1; }
+  .wheel__track{ position:absolute; inset:10%; border-radius:50%; border:1px solid var(--petal); }
+  .orbit{ position:absolute; inset:0; animation:orbit-spin 44s linear infinite; z-index:2; }
+  .pos{ position:absolute; top:50%; left:50%; width:0; height:0; }
+  .arm{ position:absolute; transform:translate(-50%,-50%) translateY(-40cqmin); }
+  .spin-rev{ animation:orbit-spin 44s linear infinite reverse; display:block; }
+  .tile{ width:17.5cqmin; height:17.5cqmin; border-radius:30%; display:grid; place-items:center;
+    box-shadow:0 6cqmin 12cqmin -6cqmin rgba(190,110,140,.5), 0 1px 2px rgba(190,110,140,.2); }
+  .tile svg{ width:54%; height:54%; display:block; }
+  .wheel:hover .orbit, .wheel:hover .spin-rev{ animation-play-state:paused; }
+  @keyframes orbit-spin{ to{ transform:rotate(360deg); } }
+  /* smoother launch: fade the ring in on opacity only (a translate re-composites the
+     live SVG animation each frame and looks glitchy), and give the rotating rings their own layer */
+  .ring-wrap.reveal{ transform:none; }
+  .orbit{ will-change:transform; backface-visibility:hidden; }
+  .spin-rev{ will-change:transform; backface-visibility:hidden; }
+  /* flowing words that travel a path through the wheel */
+  .flow{ position:absolute; inset:0; width:100%; height:100%; z-index:0; overflow:visible; }
+  .flword{ font-family:var(--sans); font-size:22px; font-weight:500; fill:var(--plum-soft); dominant-baseline:middle; }
+  .flword.alt{ fill:var(--mauve-gray); }
+  .flword.lead{ fill:var(--rose-deep); font-weight:600; font-size:25px; }
+  /* channel gradient tiles */
+  .ig{ background:linear-gradient(135deg,#F76D9C,#FFB08A); }
+  .fb{ background:linear-gradient(135deg,#BBA6E8,#C98BA8); }
+  .msgr{ background:linear-gradient(135deg,#C98BA8,#F76D9C); }
+  .wa{ background:linear-gradient(135deg,#FFB08A,#E8C089); }
+  .tt{ background:linear-gradient(135deg,#43222F,#7A5865); }
+  .msg{ background:linear-gradient(135deg,#BBA6E8,#F76D9C); }
+  .call{ background:linear-gradient(135deg,#C98BA8,#BBA6E8); }
+  .mail{ background:linear-gradient(135deg,#F76D9C,#D6417A); }
+  @media(max-width:920px){ .ring-wrap{ max-width:540px; } .flword{ font-size:25px; } .flword.lead{ font-size:28px; } }
+  @media(prefers-reduced-motion:reduce){ .orbit, .spin-rev{ animation:none; } }
+
+  /* ---------- META STRIP ---------- */
+  .meta{ border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline); margin-top:54px; }
+  .meta-grid{ display:grid; gap:0; }
+  @media(min-width:680px){ .meta-grid{ grid-template-columns:repeat(4,1fr); } }
+  .meta-cell{ padding:26px 0; }
+  @media(min-width:680px){ .meta-cell{ padding:30px 28px 30px 0; } }
+  .meta-cell + .meta-cell{ border-top:1px solid var(--hairline); }
+  @media(min-width:680px){ .meta-cell + .meta-cell{ border-top:0;
+    border-left:1px solid var(--hairline); padding-left:28px; } }
+  .meta-k{ font-family:var(--sans); font-weight:500; font-size:10px;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--deep-clay); }
+  .meta-v{ font-family:var(--serif); font-size:18px; color:var(--soft-black);
+    margin-top:7px; line-height:1.3; }
+
+  /* ---------- SECTION ---------- */
+  section{ padding:clamp(56px,8vh,90px) 0; }
+  .sec-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:18px; }
+  .sec-head .idx{ font-family:var(--serif); font-style:italic; font-size:17px; color:var(--clay); }
+  h2.sec-title{ font-size:clamp(27px,3.4vw,40px); line-height:1.12; max-width:22ch; }
+  h2.sec-title em{ font-style:italic; color:var(--rose-deep); }
+  p.body{ font-size:clamp(15px,1.6vw,16.5px); color:#43403A; line-height:1.8; margin-top:16px; }
+  p.body strong{ font-weight:500; color:var(--soft-black); }
+
+  .band{ background:var(--ivory); }
+
+  /* pull quote / problem statement */
+  .pull{ margin:12px 0 0; padding-left:26px; border-left:2px solid var(--rose); }
+  .pull p{ font-family:var(--serif); font-style:italic;
+    font-size:clamp(22px,3vw,32px); line-height:1.3; color:var(--soft-black); max-width:26ch; }
+  .pull p em{ color:var(--rose-deep); font-style:italic; }
+
+  .tags{ display:flex; flex-wrap:wrap; gap:10px; margin-top:30px; }
+  .tag{ font-family:var(--sans); font-weight:400; font-size:11px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--deep-sage);
+    border:1px solid var(--hairline); border-radius:20px; padding:7px 15px; }
+
+  /* ---------- FEATURE LIST (the four things) ---------- */
+  .feat{ display:grid; gap:1px; margin-top:34px;
+    background:var(--hairline); border:1px solid var(--hairline);
+    border-radius:6px; overflow:hidden; }
+  .feat-row{ background:var(--bone); padding:24px 26px; display:grid; gap:6px 22px; align-items:start; }
+  @media(min-width:720px){ .feat-row{ grid-template-columns:44px 230px 1fr; } }
+  .band .feat-row{ background:#fff; }
+  .feat-n{ font-family:var(--serif); font-style:italic; font-size:26px; color:var(--rose-deep); line-height:1; }
+  .feat-h{ font-family:var(--serif); font-size:20px; color:var(--soft-black); line-height:1.2; }
+  .feat-p{ font-family:var(--sans); font-weight:300; font-size:14.5px; color:#43403A; line-height:1.72; }
+  .feat-p strong{ font-weight:500; color:var(--soft-black); }
+
+  /* ---------- DELIVERABLE SHOWCASES (3 live links) ---------- */
+  .show{ margin-top:40px; }
+  .show + .show{ margin-top:56px; padding-top:56px; border-top:1px solid var(--hairline); }
+  .show-head{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+  .show-k{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--rose-deep); }
+  .show-t{ font-size:clamp(22px,2.6vw,30px); line-height:1.1; }
+  .show-d{ font-family:var(--sans); font-weight:300; font-size:14.5px; color:#43403A;
+    line-height:1.7; max-width:66ch; margin-top:6px; }
+
+  .laptop{ max-width:1000px; margin:24px auto 0; filter:drop-shadow(0 32px 34px rgba(46,44,40,.15)); }
+  .laptop__lid{ position:relative; background:#17171C; padding:1.5%; border-radius:18px 18px 5px 5px; }
+  .laptop__lid::before{ content:""; position:absolute; top:7px; left:50%; transform:translateX(-50%);
+    width:6px; height:6px; border-radius:50%; background:#33333a; }
+  .laptop__screen{ position:relative; width:100%; aspect-ratio:16/10;
+    overflow:hidden; border-radius:6px; background:#FBFAF5; }
+  .laptop__screen iframe{ position:absolute; top:0; left:0; width:1400px; height:875px;
+    border:0; display:block; transform-origin:top left; background:#FBFAF5; }
+  .laptop__base{ position:relative; width:114%; margin-left:-7%; height:18px;
+    background:linear-gradient(180deg,#c8cbd1,#edeff2 18%,#d0d3d9 70%,#b3b6bd);
+    border-radius:2px 2px 13px 13px; }
+  .laptop__base::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:12%; height:46%; background:#1a1a1e; border-radius:0 0 8px 8px; }
+
+  .embed-open{ display:inline-flex; align-items:center; gap:8px; margin-top:18px;
+    font-family:var(--sans); font-weight:400; font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--rose-deep); text-decoration:none;
+    border-bottom:1px solid var(--clay-tint); padding-bottom:3px; transition:.25s; }
+  .embed-open:hover{ color:var(--soft-black); border-color:var(--soft-black); }
+
+  /* ---------- NEXT / FOOTER ---------- */
+  .nextnav{ border-top:1px solid var(--hairline); padding:46px 0; }
+  .nextnav .wrap{ display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+  .nextnav a{ text-decoration:none; }
+  .nextnav .back{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--soft-black);
+    display:inline-flex; align-items:center; gap:9px; transition:color .25s; }
+  .nextnav .back:hover{ color:var(--rose-deep); }
+  .nextnav .cta{ font-family:var(--sans); font-weight:400; font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
+    background:var(--soft-black); padding:15px 28px; border-radius:3px; transition:background .3s; }
+  .nextnav .cta:hover{ background:var(--rose-deep); }
+
+  footer{ background:var(--soft-black); border-top:1px solid rgba(255,255,255,.1); padding:34px 0; }
+  .foot-row{ display:flex; flex-direction:column; gap:14px; align-items:center; text-align:center; }
+  @media(min-width:680px){ .foot-row{ flex-direction:row; justify-content:space-between; } }
+  .foot-row span, .foot-row a{ font-family:var(--sans); font-weight:300;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--warm-grey); text-decoration:none; }
+  .foot-row a:hover{ color:var(--sage); }
+
+</style>
+</head>
+<body>
+
+<!-- petal mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="petalmark">
+      <path d="M40 6 A34 34 0 1 1 39.9 6" fill="none" stroke="#9CA98C"
+        stroke-width="1.8" stroke-dasharray="150 64" stroke-dashoffset="-43"/>
+      <g fill="none" stroke="#B98E80" stroke-width="2.4"
+        transform="translate(0,1) scale(0.86) translate(6.5,6.5)">
+        <path d="M40 40 C26 30 26 14 40 8 C54 14 54 30 40 40 Z"/>
+        <path d="M40 40 C54 30 70 38 72 52 C62 60 46 54 40 40 Z"/>
+        <path d="M40 40 C46 54 38 70 24 72 C16 62 22 46 40 40 Z"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <a href="index.html" class="nav-back"
+     onclick="if (history.length > 1) { event.preventDefault(); history.back(); }"
+     aria-label="Back to previous page"><span class="ar">←</span> Back</a>
+  <a href="index.html" class="nav-logo" aria-label="Prina Bagia home">
+    <svg width="30" height="30" viewBox="0 0 80 80"><use href="#petalmark"/></svg>
+    <span class="nm">Prina Bagia</span>
+  </a>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header>
+  <div class="wrap">
+    <div class="hero-tag reveal">Product &amp; Brand Design · Comms + AI Platform · Concept</div>
+    <h1 class="title reveal" style="transition-delay:.08s">
+      base360 — every conversation, <em>in one system.</em>
+    </h1>
+    <p class="hero-sub reveal" style="transition-delay:.16s">
+      One place for a B2C brand to reach customers, run the team, and close —
+      unifying every comment, DM and channel, automating the work with AI agents,
+      capturing subscribers, and turning every conversation into a tracked lead.
+      Explored end to end: a brand system, a landing page, and a working product.
+    </p>
+  </div>
+
+  <div class="wrap">
+    <div class="ring-wrap reveal" style="transition-delay:.22s">
+      <svg class="flow" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">
+        <defs>
+          <path id="pin1" d="M -110 70 Q 170 110 350 280"/>
+          <path id="pin2" d="M -110 195 Q 180 225 350 280"/>
+          <path id="pin3" d="M -110 365 Q 180 335 350 280"/>
+          <path id="pin4" d="M -110 490 Q 170 450 350 280"/>
+          <path id="pout1" d="M 650 280 Q 830 110 1110 70"/>
+          <path id="pout2" d="M 650 280 Q 830 235 1110 195"/>
+          <path id="pout3" d="M 650 280 Q 830 325 1110 365"/>
+          <path id="pout4" d="M 650 280 Q 830 450 1110 490"/>
+        </defs>
+        <text class="flword" text-anchor="middle" opacity="0">Instagram comment<animateMotion dur="12s" begin="0s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin1" href="#pin1"/></animateMotion><animate attributeName="opacity" dur="12s" begin="0s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword alt" text-anchor="middle" opacity="0">Voicemail<animateMotion dur="12s" begin="-6s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin1" href="#pin1"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-6s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword" text-anchor="middle" opacity="0">WhatsApp message<animateMotion dur="12s" begin="-1.5s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin2" href="#pin2"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-1.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword alt" text-anchor="middle" opacity="0">Ad comment<animateMotion dur="12s" begin="-7.5s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin2" href="#pin2"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-7.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword" text-anchor="middle" opacity="0">TikTok DM<animateMotion dur="12s" begin="-3s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin3" href="#pin3"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword alt" text-anchor="middle" opacity="0">Google review<animateMotion dur="12s" begin="-9s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin3" href="#pin3"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-9s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword" text-anchor="middle" opacity="0">Missed call<animateMotion dur="12s" begin="-4.5s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin4" href="#pin4"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-4.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword alt" text-anchor="middle" opacity="0">SMS<animateMotion dur="12s" begin="-10.5s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pin4" href="#pin4"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-10.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.66;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-0.8s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout1" href="#pout1"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-0.8s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-6.8s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout1" href="#pout1"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-6.8s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-2.3s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout2" href="#pout2"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-2.3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-8.3s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout2" href="#pout2"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-8.3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-3.8s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout3" href="#pout3"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-3.8s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-9.8s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout3" href="#pout3"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-9.8s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-5.3s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout4" href="#pout4"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-5.3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+        <text class="flword lead" text-anchor="middle" opacity="0">Leads<animateMotion dur="12s" begin="-11.3s" repeatCount="indefinite" rotate="0"><mpath xlink:href="#pout4" href="#pout4"/></animateMotion><animate attributeName="opacity" dur="12s" begin="-11.3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.16;0.85;1"/></text>
+      </svg>
+      <div class="wheel" role="img" aria-label="Messages from every channel funnel into the base360 wheel and come out as leads.">
+        <div class="wheel__track"></div>
+        <div class="halo" aria-hidden="true">
+          <svg viewBox="0 0 300 300" fill="none">
+            <defs>
+              <linearGradient id="h1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F76D9C"/><stop offset="1" stop-color="#FFB08A"/></linearGradient>
+              <linearGradient id="h2" x1="1" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FFB08A"/><stop offset="1" stop-color="#E8C089"/></linearGradient>
+              <linearGradient id="h3" x1="1" y1="1" x2="0" y2="0.6"><stop offset="0" stop-color="#C98BA8"/><stop offset="1" stop-color="#BBA6E8"/></linearGradient>
+              <linearGradient id="h4" x1="0" y1="1" x2="0.3" y2="0"><stop offset="0" stop-color="#BBA6E8"/><stop offset="1" stop-color="#F76D9C"/></linearGradient>
+              <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FDE7EE" stop-opacity="0.9"/><stop offset="1" stop-color="#FDE7EE" stop-opacity="0"/></radialGradient>
+            </defs>
+            <circle cx="150" cy="150" r="130" fill="url(#glow)"/>
+            <circle cx="150" cy="150" r="108" stroke="#F5DDD9" stroke-width="14"/>
+            <path d="M150 42 a108 108 0 0 1 93.5 54" stroke="url(#h1)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M243.5 96 a108 108 0 0 1 -16 130" stroke="url(#h2)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M227.5 226 a108 108 0 0 1 -155 0" stroke="url(#h3)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M72.5 226 a108 108 0 0 1 -16 -130" stroke="url(#h4)" stroke-width="14" stroke-linecap="round"/>
+            <circle cx="150" cy="150" r="52" fill="#43222F"/>
+            <text x="150" y="152" text-anchor="middle" dominant-baseline="central" fill="#FCEFEC" font-family="Fraunces, 'Cormorant Garamond', serif" font-weight="500" font-size="34">360</text>
+            <circle cx="150" cy="42" r="8" fill="#F76D9C"/>
+            <circle cx="243.5" cy="96" r="8" fill="#FFB08A"/>
+            <circle cx="227.5" cy="226" r="8" fill="#C98BA8"/>
+            <circle cx="72.5" cy="226" r="8" fill="#BBA6E8"/>
+          </svg>
+        </div>
+        <div class="orbit" aria-hidden="true">
+          <div class="pos" style="transform:rotate(0deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(0deg)">
+            <div class="tile ig"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#fff" stroke-width="2"/><circle cx="16.6" cy="7.4" r="1.25" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(45deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-45deg)">
+            <div class="tile fb"><svg viewBox="0 0 24 24"><path d="M13.2 22v-7.7h2.6l.4-3h-3V9.3c0-.9.3-1.5 1.6-1.5h1.5V5.1C16 5 15.1 5 14.1 5c-2.2 0-3.8 1.4-3.8 3.9v1.4H7.7v3h2.6V22h2.9z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(90deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-90deg)">
+            <div class="tile msgr"><svg viewBox="0 0 24 24"><path d="M12 3C7 3 3 6.7 3 11.3c0 2.6 1.2 4.8 3.1 6.3V21l2.9-1.6c.9.3 1.9.4 3 .4 5 0 9-3.7 9-8.5S17 3 12 3zm.9 11.2-2.4-2.5-4.4 2.5 4.8-5.1 2.4 2.4 4.3-2.4-4.7 5.1z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(135deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-135deg)">
+            <div class="tile wa"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3zm0 16.3c-1.4 0-2.7-.4-3.9-1l-.3-.2-2.6.7.7-2.6-.2-.3A7.3 7.3 0 1 1 12 19.3zm4.1-5.4c-.2-.1-1.3-.7-1.5-.7-.2-.1-.4-.1-.5.1l-.7.9c-.1.1-.3.2-.5.1-.7-.3-1.5-.7-2.1-1.5-.2-.2 0-.4.1-.5l.4-.5c.1-.2 0-.3 0-.5l-.7-1.6c-.2-.4-.3-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.6.6-.8 1.4-.5 2.3.4 1.2 1.2 2.2 2.4 3 .8.5 1.6.8 2.4.9.9.1 1.6-.1 2.1-.6.2-.2.4-.6.5-.9.1-.3.1-.6 0-.7z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(180deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-180deg)">
+            <div class="tile tt"><svg viewBox="0 0 24 24"><path d="M14 4c.3 1.9 1.5 3.3 3.4 3.6v2.4c-1.2 0-2.4-.4-3.4-1v5.7a4.7 4.7 0 1 1-4.7-4.7c.3 0 .6 0 .8.1v2.5a2.2 2.2 0 1 0 1.6 2.1V4H14z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(225deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-225deg)">
+            <div class="tile msg"><svg viewBox="0 0 24 24"><path d="M12 4C7 4 3 7.3 3 11.4c0 2.3 1.3 4.4 3.4 5.7-.1 1-.6 2.1-1.4 3 1.4-.1 2.7-.6 3.8-1.3 1 .3 2.1.4 3.2.4 5 0 9-3.3 9-7.8S17 4 12 4z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(270deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-270deg)">
+            <div class="tile call"><svg viewBox="0 0 24 24"><path d="M6.6 4h2.9l1.5 3.6-1.9 1.3a11 11 0 0 0 4.9 4.9l1.3-1.9 3.6 1.5v2.9c0 .9-.7 1.6-1.6 1.5C10.7 16.6 6.4 12.3 6.1 5.6 6 4.7 6.7 4 6.6 4z" fill="#fff"/></svg></div>
+          </div></div></div></div>
+          <div class="pos" style="transform:rotate(315deg)"><div class="arm"><div class="spin-rev"><div class="upright" style="transform:rotate(-315deg)">
+            <div class="tile mail"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M4.5 7.5 12 12.7 19.5 7.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="meta reveal" style="transition-delay:.3s">
+      <div class="meta-grid">
+        <div class="meta-cell">
+          <div class="meta-k">Type</div>
+          <div class="meta-v">Comms + AI platform</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Role</div>
+          <div class="meta-v">Brand, product<br>&amp; prototype design</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Deliverables</div>
+          <div class="meta-v">Style guide · Landing<br>page · Product</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-k">Status</div>
+          <div class="meta-v">Concept</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= THE PROBLEM ================= -->
+<section style="padding-bottom:48px;">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">01</span>
+        <div class="eyebrow">The problem</div></div>
+      <div class="pull">
+        <p>B2C brands are buried in messages from everywhere — and <em>no one has a single view of the customer.</em></p>
+      </div>
+      <p class="body narrow">Instagram and TikTok comments and DMs, WhatsApp, SMS,
+        calls, email — plus newsletters and marketing in yet another set of tools.
+        <strong>Comments go unanswered, leads slip through, replies come late</strong>,
+        and the context that would close a sale is scattered across a dozen apps.
+        base360 pulls it all into one warm inbox — answered, qualified, and connected
+        to one customer record.</p>
+    </div>
+    <div class="tags reveal">
+      <span class="tag">Unified inbox</span>
+      <span class="tag">AI agents</span>
+      <span class="tag">Sales CRM</span>
+      <span class="tag">Marketing</span>
+      <span class="tag">B2C brands</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE FOUR THINGS ================= -->
+<section class="band">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">02</span>
+        <div class="eyebrow">What it does</div></div>
+      <h2 class="sec-title">Four things, <em>one connected system.</em></h2>
+      <p class="body narrow">Every message becomes a conversation, every conversation
+        a lead, and every customer a single record — so social and sales finally live
+        in the same place.</p>
+    </div>
+
+    <div class="feat reveal">
+      <div class="feat-row">
+        <div class="feat-n">1</div>
+        <div class="feat-h">One unified inbox</div>
+        <div class="feat-p">Every social comment (Meta, TikTok), DMs, WhatsApp, SMS,
+          phone calls and email in one place. <strong>Never miss a comment again</strong> —
+          and reply without logging into a single social platform.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-n">2</div>
+        <div class="feat-h">AI agents that do the work</div>
+        <div class="feat-p">Build AI agents for any task — replying to comments, answering
+          customers, qualifying leads, following up, <strong>even calling with an AI
+          voice</strong>. Your team stops doing the repetitive work.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-n">3</div>
+        <div class="feat-h">A built-in CRM for sales</div>
+        <div class="feat-p">Every conversation becomes a lead. <strong>High-intent leads
+          are surfaced and handed straight to sales</strong>, so nothing gets missed and
+          every opportunity gets worked.</div>
+      </div>
+      <div class="feat-row">
+        <div class="feat-n">4</div>
+        <div class="feat-h">Marketing &amp; subscribers</div>
+        <div class="feat-p">Capture subscribers from your website, design and send
+          newsletters and email campaigns, and track it all — <strong>sign-ups, opens,
+          clicks — tied to the same customer record.</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= THE THREE DELIVERABLES ================= -->
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-head"><span class="idx">03</span>
+        <div class="eyebrow">The work · three artefacts</div></div>
+      <h2 class="sec-title">Brand system, landing page, <em>and the product.</em></h2>
+      <p class="body narrow">I explored base360 across the full assortment — from the
+        foundations that hold it together, to the story that sells it, to the product
+        itself. Each is live below; open any one full-screen.</p>
+    </div>
+
+    <!-- Deliverable 1 · Style guide -->
+    <div class="show reveal">
+      <div class="show-head">
+        <span class="show-k">01 · Foundations</span>
+        <h3 class="show-t">Brand &amp; product style guide</h3>
+      </div>
+      <p class="show-d">The soft, feminine system underneath everything — ivory canvas,
+        warm plum text, one confident rose pop, the 360 halo, and a Fraunces / Poppins /
+        Parisienne type set. Voice, color, logo, components and tokens in one searchable place.</p>
+      <div class="laptop">
+        <div class="laptop__lid">
+          <div class="laptop__screen"><iframe src="base360-styleguide.html" title="base360 style guide" loading="lazy" scrolling="no"></iframe></div>
+        </div>
+        <div class="laptop__base"></div>
+      </div>
+      <a class="embed-open" href="base360-styleguide.html">Open the style guide ↗</a>
+    </div>
+
+    <!-- Deliverable 2 · Landing page -->
+    <div class="show reveal">
+      <div class="show-head">
+        <span class="show-k">02 · Story</span>
+        <h3 class="show-t">The landing page</h3>
+      </div>
+      <p class="show-d">The marketing site that tells the story — a hero where every
+        channel funnels into the 360 halo and fans back out as leads, the four features
+        proven with live UI, how-it-works, pricing, and FAQ. Light and dark themes included.</p>
+      <div class="laptop">
+        <div class="laptop__lid">
+          <div class="laptop__screen"><iframe src="base360-landing.html" title="base360 landing page" loading="lazy" scrolling="no"></iframe></div>
+        </div>
+        <div class="laptop__base"></div>
+      </div>
+      <a class="embed-open" href="base360-landing.html">Open the landing page ↗</a>
+    </div>
+
+    <!-- Deliverable 3 · Product -->
+    <div class="show reveal">
+      <div class="show-head">
+        <span class="show-k">03 · Product</span>
+        <h3 class="show-t">The dashboard</h3>
+      </div>
+      <p class="show-d">The working product — a unified inbox with AI-drafted replies,
+        a leads &amp; sales desk that scores intent and hands off to the team, marketing
+        with campaigns and subscribers, analytics, and channel connections. Fully interactive.</p>
+      <div class="laptop">
+        <div class="laptop__lid">
+          <div class="laptop__screen"><iframe src="base360-app.html" title="base360 dashboard" loading="lazy"></iframe></div>
+        </div>
+        <div class="laptop__base"></div>
+      </div>
+      <a class="embed-open" href="base360-app.html">Open the product ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEXT NAV ================= -->
+<div class="nextnav">
+  <div class="wrap">
+    <a href="work.html" class="back"><span>←</span> All work</a>
+    <a href="portfolio.html#contact" class="cta">Get in touch</a>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <span>Prina Bagia — Product Designer · UX / UI</span>
+      <a href="portfolio.html">← Back to home</a>
+      <span>© 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    const reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    function check(){
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for(let i = reveals.length - 1; i >= 0; i--){
+        const el = reveals[i];
+        const r = el.getBoundingClientRect();
+        if(r.top < vh * 0.92 && r.bottom > 0){ el.classList.add('in'); reveals.splice(i, 1); }
+      }
+      if(!reveals.length){ window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); }
+    }
+    let ticking = false;
+    function onScroll(){ if(ticking) return; ticking = true; requestAnimationFrame(function(){ check(); ticking = false; }); }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', onScroll);
+    check();
+  })();
+
+  /* fit each deliverable's full-width page into its laptop screen */
+  (function(){
+    const stages = document.querySelectorAll('.laptop__screen');
+    if(!stages.length) return;
+    const LW = 1400;
+    function fit(){
+      stages.forEach(function(st){
+        const f = st.querySelector('iframe'); if(!f) return;
+        f.style.transform = 'scale(' + (st.clientWidth / LW) + ')';
+      });
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(fit); stages.forEach(function(s){ ro.observe(s); }); }
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+
+  /* pause the hero word-flow when reduced motion is preferred */
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const flow = document.querySelector('.flow');
+    if (flow && flow.pauseAnimations) flow.pauseAnimations();
+  }
+
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('load', function(){ window.scrollTo(0, 0); });
+</script>
+</body>
+</html>
