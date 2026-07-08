@@ -136,6 +136,17 @@
     font-size:10px; letter-spacing:.2em; text-transform:uppercase;
     color:var(--warm-grey); }
 
+  /* base360 card — the Meridian laptop image with the base360 landing page on its screen */
+  .b360-lap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    padding:8% 9%; background:var(--ivory); }
+  .b360-lap iframe{ pointer-events:none; }
+  .mer-lap{ position:relative; width:100%; }
+  .mer-lap > img{ display:block; width:100%; height:auto; }
+  .mer-screen{ position:absolute; left:11.1%; top:5.8%; width:78.4%; height:79.7%;
+    overflow:hidden; border-radius:4px; background:#0b1119; }
+  .mer-screen iframe{ position:absolute; top:0; left:0; width:1400px; height:875px; border:0;
+    display:block; transform-origin:top left; background:#FBFAF5; }
+  .b360-hit{ position:absolute; inset:0; z-index:3; }   /* keeps the whole card clickable */
   /* Courtside card — live hero shot: laptop (console) + phone (fan app), to scale */
   .cst{ position:absolute; inset:0; background:var(--ivory); overflow:hidden; }
   .cst iframe{ pointer-events:none; }
@@ -353,6 +364,25 @@
   <div class="wrap">
     <div class="grid">
 
+      <!-- 0 — BASE360 / COMMS + AI PLATFORM -->
+      <a class="card reveal" href="case-base360.html">
+        <div class="thumb" style="padding:0;">
+          <div class="b360-lap">
+            <div class="mer-lap">
+              <img src="images/case-maritime.png" alt="base360 landing page shown on a laptop">
+              <div class="mer-screen"><iframe src="base360-landing.html" title="base360 landing page" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
+            </div>
+            <span class="b360-hit" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-tag">Product &amp; Brand Design · Comms + AI</div>
+          <h3>base360</h3>
+          <div class="role">Brand, product &amp; prototyper — one system for every conversation</div>
+          <span class="read">Read case study →</span>
+        </div>
+      </a>
+
       <!-- 0 — COURTSIDE / LIVE SPORTS PLATFORM -->
       <a class="card reveal" href="case-courtside.html">
         <div class="thumb" style="padding:0;">
@@ -489,14 +519,14 @@
     else window.addEventListener('load', () => setTimeout(show, 350));
   })();
 
-  // Courtside card: fit the live console (1280px) + fan app (392px) into their device screens
+  // Fit live iframes into device screens on work cards.
   (function(){
-    const screens = document.querySelectorAll('.cst-lap__scr, .cst-phone__scr');
+    const screens = document.querySelectorAll('.mer-screen, .cst-lap__scr, .cst-phone__scr');
     if(!screens.length) return;
     function fit(){
       screens.forEach(function(scr){
         const f = scr.querySelector('iframe'); if(!f) return;
-        const lw = scr.classList.contains('cst-phone__scr') ? 392 : 1280;
+        const lw = scr.classList.contains('mer-screen') ? 1400 : (scr.classList.contains('cst-phone__scr') ? 392 : 1280);
         f.style.transform = 'scale(' + (scr.clientWidth / lw) + ')';
       });
     }

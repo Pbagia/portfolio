@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>base 360 — Brand & Product Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Poppins:wght@300;400;500;600;700&family=Parisienne&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Core — soft & feminine */
+    --plum:      #43222F;   /* text — warm aubergine, softer than black */
+    --plum-soft: #7A5865;   /* secondary text */
+    --mauve-gray:#A98A94;   /* muted / captions */
+    --ivory:     #FFFAF6;   /* app + page background — the base canvas */
+    --paper:     #FFFFFF;   /* raised surfaces / cards */
+    --blush:     #FCEFEC;   /* soft tint — inputs, chips, fills */
+    --petal:     #F5DDD9;   /* hairlines, borders, tracks */
+
+    /* Brand accents */
+    --rose:      #F76D9C;   /* primary brand pop */
+    --rose-deep: #D6417A;   /* accessible rose for text on light */
+    --mauve:     #C98BA8;   /* secondary accent */
+    --champagne: #E8C4A0;   /* rose-gold warmth */
+
+    /* 360 gradient — charts & channels (soft set) */
+    --g-rose:  #F76D9C;
+    --g-peach: #FFB08A;
+    --g-mauve: #C98BA8;
+    --g-lav:   #BBA6E8;
+    --g-gold:  #E8C089;
+
+    --side:      272px;   /* left panel width */
+    --radius:    24px;
+    --radius-sm: 14px;
+    --shadow:    0 2px 6px rgba(190,110,140,.08), 0 18px 40px -16px rgba(190,110,140,.30);
+    --shadow-sm: 0 1px 3px rgba(190,110,140,.08), 0 8px 20px -12px rgba(190,110,140,.22);
+    --maxw:      1080px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 80% -5%, #FDE7EE 0%, rgba(253,231,238,0) 55%),
+      radial-gradient(900px 500px at 0% 5%, #FBEFE4 0%, rgba(251,239,228,0) 50%),
+      var(--ivory);
+    color:var(--plum);
+    font-family:'Poppins',system-ui,sans-serif;
+    font-size:17px;
+    font-weight:400;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px;}
+
+  /* ---------- Type primitives ---------- */
+  .display{font-family:'Fraunces',serif;font-weight:500;letter-spacing:-.015em;line-height:1.02;}
+  .script{font-family:'Parisienne',cursive;font-weight:400;}
+  .eyebrow{
+    font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;
+    letter-spacing:.28em;text-transform:uppercase;color:var(--rose-deep);
+  }
+
+  /* ---------- Cover ---------- */
+  .cover{padding:92px 0 70px;position:relative;overflow:hidden;}
+  .cover-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:48px;align-items:center;}
+  .brandline{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
+  .wordmark{font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.02em;}
+  .wordmark span{color:var(--rose);}
+  .cover h1{font-size:clamp(46px,6.5vw,80px);margin:0 0 8px;font-weight:400;}
+  .cover h1 em{font-style:italic;color:var(--rose-deep);font-weight:500;}
+  .cover .flourish{font-family:'Parisienne',cursive;font-size:clamp(34px,5vw,58px);color:var(--rose);line-height:1;margin:0 0 26px;}
+  .cover p.lede{font-size:19px;color:var(--plum-soft);max-width:36ch;margin:0 0 30px;}
+  .tagpill{
+    display:inline-flex;align-items:center;gap:10px;background:var(--plum);color:var(--blush);
+    font-size:13px;font-weight:500;letter-spacing:.02em;
+    padding:10px 18px;border-radius:100px;
+  }
+  .tagpill i{width:7px;height:7px;border-radius:50%;background:var(--rose);display:inline-block;}
+  .ring-hero{display:flex;justify-content:center;}
+
+  /* ---------- Section scaffolding ---------- */
+  section{padding:68px 0;border-top:1px solid var(--petal);}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:14px;}
+  .sec-num{font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--mauve);font-weight:400;}
+  .sec-head h2{font-family:'Fraunces',serif;font-weight:500;font-size:36px;letter-spacing:-.02em;margin:0;}
+  .sec-sub{color:var(--plum-soft);max-width:62ch;margin:0 0 36px;font-weight:300;}
+
+  /* ---------- Color ---------- */
+  .swatch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .swatch{background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--petal);}
+  .swatch .chip{height:118px;}
+  .swatch .meta{padding:16px 20px 20px;}
+  .swatch .name{font-family:'Fraunces',serif;font-weight:500;font-size:18px;}
+  .swatch .role{color:var(--mauve-gray);font-size:13.5px;line-height:1.45;margin-top:3px;font-weight:300;}
+  .swatch .hex{font-size:12.5px;font-weight:500;color:var(--plum-soft);margin-top:12px;display:inline-block;background:var(--blush);padding:4px 10px;border-radius:100px;letter-spacing:.02em;}
+
+  .grad-strip{height:60px;border-radius:100px;margin-top:26px;background:linear-gradient(90deg,var(--g-rose),var(--g-peach),var(--g-gold),var(--g-mauve),var(--g-lav));box-shadow:var(--shadow-sm);}
+  .spectrum-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;}
+  .spectrum{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .spectrum .dot{width:54px;height:54px;border-radius:50%;box-shadow:var(--shadow-sm);}
+  .spectrum .lbl{font-size:11.5px;color:var(--mauve-gray);font-weight:500;}
+
+  /* ---------- Type specimens ---------- */
+  .type-card{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius);padding:30px 34px;margin-bottom:20px;box-shadow:var(--shadow-sm);}
+  .type-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px;border-bottom:1px solid var(--petal);padding-bottom:14px;}
+  .type-label .fam{font-family:'Fraunces',serif;font-weight:500;font-size:17px;}
+  .type-label .use{font-size:11.5px;color:var(--mauve-gray);letter-spacing:.08em;text-transform:uppercase;font-weight:500;}
+  .scale-row{display:flex;align-items:baseline;gap:22px;padding:9px 0;}
+  .scale-row .tk{font-size:11px;color:var(--mauve-gray);width:92px;flex-shrink:0;font-weight:500;letter-spacing:.04em;}
+
+  /* ---------- Logo / mark ---------- */
+  .logo-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .logo-cell{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius);padding:36px;display:flex;flex-direction:column;gap:22px;box-shadow:var(--shadow-sm);}
+  .logo-cell.dark{background:var(--plum);border-color:var(--plum);}
+  .logo-cell.dark .cap{color:var(--mauve-gray);}
+  .logo-cell.rose{background:linear-gradient(135deg,var(--g-rose),var(--g-peach));border:none;}
+  .logo-cell .cap{font-size:11.5px;color:var(--mauve-gray);letter-spacing:.08em;text-transform:uppercase;font-weight:500;}
+  .lockup{display:flex;align-items:center;gap:14px;}
+  .lockup .txt{font-family:'Fraunces',serif;font-weight:600;font-size:28px;letter-spacing:-.02em;}
+  .dark .lockup .txt{color:var(--blush);}
+  .dark .lockup .txt span{color:var(--rose);}
+  .rose .lockup .txt{color:#fff;}
+  .rose .cap{color:rgba(255,255,255,.85);}
+
+  .dont-list{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;}
+  .rule{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius-sm);padding:16px 18px;font-size:14.5px;box-shadow:var(--shadow-sm);font-weight:300;}
+  .rule .mk{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:600;color:#fff;margin-top:1px;}
+  .rule.do .mk{background:var(--mauve);}
+  .rule.dont .mk{background:var(--rose);}
+
+  /* ---------- Components ---------- */
+  .comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+  .panel{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm);}
+  .panel h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px;margin:0 0 22px;}
+  .panel h3 .k{font-family:'Poppins',sans-serif;font-size:11px;color:var(--mauve-gray);font-weight:500;margin-left:8px;letter-spacing:.08em;text-transform:uppercase;}
+
+  .btn{font-family:'Poppins',sans-serif;font-weight:500;font-size:15px;border:none;border-radius:100px;padding:12px 24px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease;display:inline-flex;align-items:center;gap:8px;}
+  .btn:hover{transform:translateY(-2px);}
+  .btn:focus-visible{outline:3px solid var(--rose);outline-offset:3px;}
+  .btn-primary{background:var(--plum);color:var(--blush);}
+  .btn-primary:hover{box-shadow:var(--shadow);}
+  .btn-accent{background:linear-gradient(135deg,var(--g-rose),var(--g-peach));color:#fff;box-shadow:0 8px 20px -8px rgba(247,109,156,.6);}
+  .btn-ghost{background:transparent;color:var(--plum);border:1.5px solid var(--petal);}
+  .btn-ghost:hover{border-color:var(--rose);color:var(--rose-deep);}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;padding:6px 14px;border-radius:100px;}
+  .pill i{width:8px;height:8px;border-radius:50%;}
+  .pill.up{background:rgba(201,139,168,.18);color:#8a4d6c;}
+  .pill.up i{background:var(--mauve);}
+  .pill.down{background:rgba(247,109,156,.15);color:var(--rose-deep);}
+  .pill.down i{background:var(--rose);}
+  .pill.chan{background:var(--blush);color:var(--plum-soft);border:1px solid var(--petal);}
+
+  .field{display:flex;flex-direction:column;gap:8px;}
+  .field label{font-size:13.5px;font-weight:500;}
+  .field input{font-family:'Poppins',sans-serif;font-size:15px;padding:13px 16px;border-radius:var(--radius-sm);border:1.5px solid var(--petal);background:var(--blush);color:var(--plum);font-weight:400;}
+  .field input:focus{outline:none;border-color:var(--rose);background:#fff;}
+  .field .hint{font-size:12.5px;color:var(--mauve-gray);font-weight:300;}
+
+  /* KPI cards */
+  .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+  .kpi{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+  .kpi .klabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve-gray);font-weight:600;}
+  .kpi .kval{font-family:'Fraunces',serif;font-weight:500;font-size:42px;letter-spacing:-.02em;margin:12px 0 10px;}
+  .kpi .kfoot{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--plum-soft);font-weight:300;}
+  .kpi .accentbar{position:absolute;left:0;top:0;bottom:0;width:5px;}
+
+  /* donut demo */
+  .chart-wrap{display:flex;gap:28px;align-items:center;flex-wrap:wrap;}
+  .legend{display:flex;flex-direction:column;gap:12px;}
+  .legend .li{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:300;}
+  .legend .li i{width:12px;height:12px;border-radius:50%;}
+  .legend .li b{font-weight:600;margin-left:auto;padding-left:18px;}
+
+  /* tokens */
+  .token-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .token{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius-sm);padding:20px;box-shadow:var(--shadow-sm);}
+  .token .tv{font-family:'Fraunces',serif;font-size:19px;font-weight:500;}
+  .token .tn{font-size:12.5px;color:var(--mauve-gray);margin-top:4px;font-weight:300;}
+  .radius-demo{height:44px;background:linear-gradient(120deg,var(--g-rose),var(--g-lav));margin-top:14px;}
+
+  /* voice */
+  .voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .voice-card{background:var(--paper);border:1px solid var(--petal);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow-sm);}
+  .voice-card .vt{font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin-bottom:8px;}
+  .voice-card .vd{color:var(--plum-soft);font-size:14.5px;margin-bottom:18px;font-weight:300;}
+  .voice-ex{font-size:14px;border-left:2px solid var(--petal);padding-left:13px;margin-bottom:10px;font-weight:300;}
+  .voice-ex.yes{border-color:var(--mauve);}
+  .voice-ex.no{border-color:var(--rose);color:var(--mauve-gray);}
+  .voice-ex .tg{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:2px;font-weight:600;}
+  .voice-ex.yes .tg{color:#8a4d6c;}
+  .voice-ex.no .tg{color:var(--rose-deep);}
+
+  footer{padding:56px 0 76px;border-top:1px solid var(--petal);color:var(--mauve-gray);font-size:13.5px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;font-weight:300;}
+  footer .script{font-size:26px;color:var(--rose);}
+
+  @media (max-width:820px){
+    .cover-grid{grid-template-columns:1fr;}
+    .ring-hero{order:-1;}
+    .swatch-grid,.kpi-grid,.token-grid{grid-template-columns:1fr 1fr;}
+    .comp-grid,.logo-grid,.voice-grid,.dont-list{grid-template-columns:1fr;}
+  }
+  @media (max-width:520px){
+    .wrap{padding:0 20px;}
+    .swatch-grid,.kpi-grid,.token-grid{grid-template-columns:1fr;}
+  }
+  /* ---------- App shell + left panel ---------- */
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;width:var(--side);
+    background:var(--paper);border-right:1px solid var(--petal);
+    display:flex;flex-direction:column;overflow-y:auto;z-index:20;
+  }
+  .side-brand{display:flex;align-items:center;gap:12px;padding:24px 22px 16px;}
+  .side-brand .txt{font-family:'Fraunces',serif;font-weight:600;font-size:23px;letter-spacing:-.02em;}
+  .side-brand .txt span{color:var(--rose);}
+  .side-search{padding:0 18px 16px;}
+  .search-field{position:relative;}
+  .search-field input{
+    width:100%;font-family:'Poppins',sans-serif;font-size:14px;color:var(--plum);font-weight:400;
+    padding:11px 38px 11px 40px;border-radius:100px;border:1.5px solid var(--petal);background:var(--blush);
+  }
+  .search-field input::placeholder{color:var(--mauve-gray);}
+  .search-field input:focus{outline:none;border-color:var(--rose);background:#fff;}
+  .search-field .mag{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--mauve-gray);}
+  .search-field .kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mauve-gray);border:1px solid var(--petal);border-radius:6px;padding:1px 7px;background:#fff;font-weight:500;}
+  .side-nav{padding:4px 12px 18px;flex:1;}
+  .nav-group{margin-bottom:16px;}
+  .nav-title{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve-gray);padding:6px 12px;}
+  .nav-item{display:block;text-decoration:none;color:var(--plum-soft);font-size:14.5px;font-weight:400;padding:8px 12px;border-radius:12px;transition:background .12s,color .12s;}
+  .nav-item:hover{background:var(--blush);color:var(--plum);}
+  .nav-item.active{background:rgba(247,109,156,.12);color:var(--rose-deep);font-weight:600;}
+  .nav-item.is-hidden,.nav-group.is-hidden{display:none;}
+  .nav-empty{padding:10px 12px;color:var(--mauve-gray);font-size:14px;font-weight:300;}
+  .side-foot{padding:16px 22px 24px;border-top:1px solid var(--petal);font-size:12px;color:var(--mauve-gray);font-weight:300;}
+  .side-foot .script{font-size:20px;color:var(--rose);display:block;margin-top:2px;}
+
+  .content{margin-left:var(--side);}
+  .content .wrap{max-width:940px;}
+  section,.kpi-grid,.panel{scroll-margin-top:26px;}
+
+  @media (max-width:900px){
+    .sidebar{position:static;width:auto;border-right:none;border-bottom:1px solid var(--petal);}
+    .content{margin-left:0;}
+    .side-foot{display:none;}
+    .side-brand{padding-bottom:12px;}
+    .side-nav{display:flex;overflow-x:auto;gap:8px;padding:2px 16px 14px;}
+    .nav-group{display:flex;align-items:center;gap:8px;margin:0;}
+    .nav-title{display:none;}
+    .nav-item{white-space:nowrap;padding:7px 15px;background:var(--blush);}
+    .search-field .kbd{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== LEFT PANEL ===================== -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <svg width="30" height="30" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sk1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F76D9C"/><stop offset="1" stop-color="#FFB08A"/></linearGradient>
+          <linearGradient id="sk2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98BA8"/><stop offset="1" stop-color="#BBA6E8"/></linearGradient>
+        </defs>
+        <circle cx="22" cy="22" r="17" stroke="var(--petal)" stroke-width="4"/>
+        <path d="M22 5 a17 17 0 0 1 15 26" stroke="url(#sk1)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M37 31 a17 17 0 0 1 -30 0" stroke="url(#sk2)" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="22" cy="22" r="5.5" fill="var(--rose)"/>
+      </svg>
+      <span class="txt">base<span>360</span></span>
+    </div>
+
+    <div class="side-search">
+      <div class="search-field">
+        <svg class="mag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="nav-search" type="text" placeholder="Search the system…" autocomplete="off" aria-label="Search the style guide">
+        <span class="kbd">/</span>
+      </div>
+    </div>
+
+    <nav class="side-nav" aria-label="Style guide sections">
+      <div class="nav-group">
+        <div class="nav-title">Foundations</div>
+        <a class="nav-item" href="#voice">Voice &amp; personality</a>
+        <a class="nav-item" href="#color">Color</a>
+        <a class="nav-item" href="#type">Typography</a>
+        <a class="nav-item" href="#tokens">Spacing &amp; shape</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">Brand</div>
+        <a class="nav-item" href="#logo">Logo &amp; the 360 halo</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">Components</div>
+        <a class="nav-item" href="#kpi">KPI cards</a>
+        <a class="nav-item" href="#buttons">Buttons</a>
+        <a class="nav-item" href="#tags">Tags &amp; status</a>
+        <a class="nav-item" href="#inputs">Inputs</a>
+        <a class="nav-item" href="#charts">Charts</a>
+      </div>
+      <div class="nav-empty" id="nav-empty" hidden>No matches — try another word.</div>
+    </nav>
+
+    <div class="side-foot">
+      Brand &amp; product style guide · v2.0
+      <span class="script">every follower, every sale</span>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTENT ===================== -->
+  <div class="content">
+
+<!-- ===================== COVER ===================== -->
+<header class="cover">
+  <div class="wrap cover-grid">
+    <div>
+      <div class="brandline">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="mk1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#F76D9C"/><stop offset="1" stop-color="#FFB08A"/>
+            </linearGradient>
+            <linearGradient id="mk2" x1="1" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#C98BA8"/><stop offset="1" stop-color="#BBA6E8"/>
+            </linearGradient>
+          </defs>
+          <circle cx="22" cy="22" r="17" stroke="var(--petal)" stroke-width="4"/>
+          <path d="M22 5 a17 17 0 0 1 15 26" stroke="url(#mk1)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M37 31 a17 17 0 0 1 -30 0" stroke="url(#mk2)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="22" cy="22" r="5.5" fill="var(--rose)"/>
+        </svg>
+        <span class="wordmark">base<span>360</span></span>
+      </div>
+      <p class="eyebrow">Brand &amp; product style guide</p>
+      <h1 class="display">One view of your<br><em>whole</em> creator world,</h1>
+      <p class="flourish">all the way around.</p>
+      <p class="lede">The soft, considered system behind base 360 — where every follower connects to every sale.</p>
+      <span class="tagpill"><i></i>Version 2.0 · Social + sales, beautifully together</span>
+    </div>
+
+    <div class="ring-hero">
+      <svg width="300" height="300" viewBox="0 0 300 300" fill="none" aria-label="The base 360 halo">
+        <defs>
+          <linearGradient id="h1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F76D9C"/><stop offset="1" stop-color="#FFB08A"/>
+          </linearGradient>
+          <linearGradient id="h2" x1="1" y1="0" x2="0.4" y2="1">
+            <stop offset="0" stop-color="#FFB08A"/><stop offset="1" stop-color="#E8C089"/>
+          </linearGradient>
+          <linearGradient id="h3" x1="1" y1="1" x2="0" y2="0.6">
+            <stop offset="0" stop-color="#C98BA8"/><stop offset="1" stop-color="#BBA6E8"/>
+          </linearGradient>
+          <linearGradient id="h4" x1="0" y1="1" x2="0.3" y2="0">
+            <stop offset="0" stop-color="#BBA6E8"/><stop offset="1" stop-color="#F76D9C"/>
+          </linearGradient>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#FDE7EE" stop-opacity="0.9"/><stop offset="1" stop-color="#FDE7EE" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="150" cy="150" r="130" fill="url(#glow)"/>
+        <circle cx="150" cy="150" r="108" stroke="var(--petal)" stroke-width="14"/>
+        <path d="M150 42 a108 108 0 0 1 93.5 54" stroke="url(#h1)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M243.5 96 a108 108 0 0 1 -16 130" stroke="url(#h2)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M227.5 226 a108 108 0 0 1 -155 0" stroke="url(#h3)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M72.5 226 a108 108 0 0 1 -16 -130" stroke="url(#h4)" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="150" cy="150" r="52" fill="var(--plum)"/>
+        <text x="150" y="152" text-anchor="middle" dominant-baseline="central" fill="var(--blush)" font-family="Fraunces" font-weight="500" font-size="34">360</text>
+        <circle cx="150" cy="42" r="8" fill="#F76D9C"/>
+        <circle cx="243.5" cy="96" r="8" fill="#FFB08A"/>
+        <circle cx="227.5" cy="226" r="8" fill="#C98BA8"/>
+        <circle cx="72.5" cy="226" r="8" fill="#BBA6E8"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===================== 01 VOICE ===================== -->
+  <section id="voice">
+    <div class="sec-head"><span class="sec-num">i.</span><h2>Voice &amp; personality</h2></div>
+    <p class="sec-sub">base 360 speaks like a smart best friend who happens to love spreadsheets — warm, encouraging, and clear. It celebrates real wins without the hype, and turns every number into a next move. Sentence case everywhere.</p>
+    <div class="voice-grid">
+      <div class="voice-card">
+        <div class="vt">Warm &amp; encouraging</div>
+        <div class="vd">Cheer the real result. No pressure, no panic.</div>
+        <div class="voice-ex yes"><span class="tg">Say</span>Your best week yet — up 24%</div>
+        <div class="voice-ex no"><span class="tg">Not</span>Conversion rate exceeded threshold</div>
+      </div>
+      <div class="voice-card">
+        <div class="vt">Clear over clever</div>
+        <div class="vd">Name things creators recognize. Hide the plumbing.</div>
+        <div class="voice-ex yes"><span class="tg">Say</span>Revenue from this post</div>
+        <div class="voice-ex no"><span class="tg">Not</span>Attributed conversion value</div>
+      </div>
+      <div class="voice-card">
+        <div class="vt">Always a next move</div>
+        <div class="vd">Every insight points somewhere. Empty screens invite.</div>
+        <div class="voice-ex yes"><span class="tg">Say</span>Link TikTok to see your full reach</div>
+        <div class="voice-ex no"><span class="tg">Not</span>No data available</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 02 COLOR ===================== -->
+  <section id="color">
+    <div class="sec-head"><span class="sec-num">ii.</span><h2>Color</h2></div>
+    <p class="sec-sub">An ivory base with crisp white surfaces keeps everything soft and pretty, while warm plum replaces harsh black for text. Blush drops back to a gentle tint, and rose is the one confident pop — used for brand moments, momentum, and highlights, always paired with plum for anything you need to read.</p>
+
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="chip" style="background:#FFFAF6;border-bottom:1px solid var(--petal)"></div>
+        <div class="meta"><div class="name">Ivory</div><div class="role">App and page background. The base canvas.</div><span class="hex">#FFFAF6</span></div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#FFFFFF;box-shadow:inset 0 0 0 1px var(--petal)"></div>
+        <div class="meta"><div class="name">Paper</div><div class="role">Raised surfaces — cards, panels, modals.</div><span class="hex">#FFFFFF</span></div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#FCEFEC;border-bottom:1px solid var(--petal)"></div>
+        <div class="meta"><div class="name">Blush</div><div class="role">Soft tint for inputs, chips, and gentle fills.</div><span class="hex">#FCEFEC</span></div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#43222F"></div>
+        <div class="meta"><div class="name">Plum</div><div class="role">All text and primary buttons. Soft, warm, not black.</div><span class="hex">#43222F</span></div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#F76D9C"></div>
+        <div class="meta"><div class="name">Rose</div><div class="role">Primary pop. Brand moments, momentum, highlights.</div><span class="hex">#F76D9C</span></div>
+      </div>
+      <div class="swatch">
+        <div class="chip" style="background:#C98BA8"></div>
+        <div class="meta"><div class="name">Mauve</div><div class="role">Secondary accent, gentle positive signals.</div><span class="hex">#C98BA8</span></div>
+      </div>
+    </div>
+
+    <p class="eyebrow" style="margin-top:40px;">The 360 gradient · charts &amp; channels</p>
+    <div class="grad-strip"></div>
+    <div class="spectrum-row">
+      <div class="spectrum"><div class="dot" style="background:var(--g-rose)"></div><span class="lbl">#F76D9C</span></div>
+      <div class="spectrum"><div class="dot" style="background:var(--g-peach)"></div><span class="lbl">#FFB08A</span></div>
+      <div class="spectrum"><div class="dot" style="background:var(--g-gold)"></div><span class="lbl">#E8C089</span></div>
+      <div class="spectrum"><div class="dot" style="background:var(--g-mauve)"></div><span class="lbl">#C98BA8</span></div>
+      <div class="spectrum"><div class="dot" style="background:var(--g-lav)"></div><span class="lbl">#BBA6E8</span></div>
+    </div>
+    <p class="sec-sub" style="margin-top:22px;margin-bottom:0;">These five map to channels and chart series in a fixed, pretty order. They live only in charts and the ring — never as text or button colors, so dashboards stay calm and legible.</p>
+  </section>
+
+  <!-- ===================== 03 TYPOGRAPHY ===================== -->
+  <section id="type">
+    <div class="sec-head"><span class="sec-num">iii.</span><h2>Typography</h2></div>
+    <p class="sec-sub">Fraunces brings soft, editorial elegance to headlines and big numbers. Poppins keeps the interface friendly and rounded for everything you read and tap. Parisienne appears once or twice as a delicate script flourish — a signature, never a workhorse.</p>
+
+    <div class="type-card">
+      <div class="type-label"><span class="fam">Fraunces</span><span class="use">Display · headlines · metrics</span></div>
+      <div class="scale-row"><span class="tk">500 · 54px</span><span class="display" style="font-size:54px;">All the way around</span></div>
+      <div class="scale-row"><span class="tk">italic · 34px</span><span class="display" style="font-style:italic;font-size:34px;">your creator world</span></div>
+    </div>
+
+    <div class="type-card">
+      <div class="type-label"><span class="fam">Poppins</span><span class="use">Body · UI · buttons</span></div>
+      <div class="scale-row"><span class="tk">500 · 20px</span><span style="font-weight:500;font-size:20px;">Connect a channel to start tracking</span></div>
+      <div class="scale-row"><span class="tk">400 · 17px</span><span style="font-size:17px;">Every post links to the revenue it drives, so you can see which content actually sells.</span></div>
+      <div class="scale-row"><span class="tk">300 · 14px</span><span style="font-weight:300;font-size:14px;color:var(--plum-soft)">Light helper text sits softly here.</span></div>
+    </div>
+
+    <div class="type-card">
+      <div class="type-label"><span class="fam">Parisienne</span><span class="use">Signature flourish · sparingly</span></div>
+      <div class="scale-row"><span class="tk">44px</span><span class="script" style="font-size:44px;color:var(--rose);">all the way around</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== 04 LOGO ===================== -->
+  <section id="logo">
+    <div class="sec-head"><span class="sec-num">iv.</span><h2>Logo &amp; the 360 halo</h2></div>
+    <p class="sec-sub">The halo is a soft gradient ring — every channel blooming into one center. It reads as a full circle, a glow, and a sun-flare all at once. The wordmark sets <b>base</b> in plum and <b>360</b> in rose.</p>
+
+    <div class="logo-grid">
+      <div class="logo-cell">
+        <span class="cap">Primary lockup · on blush</span>
+        <div class="lockup">
+          <svg width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <circle cx="22" cy="22" r="17" stroke="var(--petal)" stroke-width="4"/>
+            <path d="M22 5 a17 17 0 0 1 15 26" stroke="url(#mk1)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M37 31 a17 17 0 0 1 -30 0" stroke="url(#mk2)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="22" cy="22" r="5.5" fill="var(--rose)"/>
+          </svg>
+          <span class="txt">base<span style="color:var(--rose)">360</span></span>
+        </div>
+      </div>
+      <div class="logo-cell dark">
+        <span class="cap">Reversed · on plum</span>
+        <div class="lockup">
+          <svg width="40" height="40" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <circle cx="22" cy="22" r="17" stroke="rgba(255,255,255,.18)" stroke-width="4"/>
+            <path d="M22 5 a17 17 0 0 1 15 26" stroke="url(#mk1)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M37 31 a17 17 0 0 1 -30 0" stroke="url(#mk2)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="22" cy="22" r="5.5" fill="var(--rose)"/>
+          </svg>
+          <span class="txt">base<span>360</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dont-list">
+      <div class="rule do"><span class="mk">✓</span><div>Keep clear space equal to the halo's diameter on every side.</div></div>
+      <div class="rule do"><span class="mk">✓</span><div>Use the halo solo as an app icon, avatar, or favicon.</div></div>
+      <div class="rule dont"><span class="mk">✕</span><div>Don't swap the gradient for flat neon or bubblegum pink.</div></div>
+      <div class="rule dont"><span class="mk">✕</span><div>Don't stretch, rotate, or add a hard drop shadow.</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== 05 COMPONENTS ===================== -->
+  <section id="components">
+    <div class="sec-head"><span class="sec-num">v.</span><h2>Core components</h2></div>
+    <p class="sec-sub">Generous 24px radii, soft blush-tinted shadows, and pill-shaped actions give the product its gentle, pretty feel. Primary actions use plum for contrast; the rose gradient is saved for one hero moment per screen.</p>
+
+    <div class="kpi-grid" id="kpi">
+      <div class="kpi">
+        <span class="accentbar" style="background:var(--g-rose)"></span>
+        <div class="klabel">Followers</div>
+        <div class="kval">128.4k</div>
+        <div class="kfoot"><span class="pill up"><i></i>+3.2%</span> this week</div>
+      </div>
+      <div class="kpi">
+        <span class="accentbar" style="background:var(--g-mauve)"></span>
+        <div class="klabel">Engagement</div>
+        <div class="kval">6.1%</div>
+        <div class="kfoot"><span class="pill up"><i></i>+0.4pt</span> vs last week</div>
+      </div>
+      <div class="kpi">
+        <span class="accentbar" style="background:var(--g-gold)"></span>
+        <div class="klabel">Revenue</div>
+        <div class="kval">$48.2k</div>
+        <div class="kfoot"><span class="pill down"><i></i>−5.1%</span> this week</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="panel" id="buttons">
+        <h3>Buttons <span class="k">actions</span></h3>
+        <div class="btn-row" style="margin-bottom:14px;">
+          <button class="btn btn-primary">Connect a channel</button>
+          <button class="btn btn-accent">Upgrade ✨</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost">View report</button>
+          <button class="btn btn-ghost">Export</button>
+        </div>
+      </div>
+
+      <div class="panel" id="tags">
+        <h3>Tags &amp; status <span class="k">signals</span></h3>
+        <div class="btn-row" style="margin-bottom:14px;">
+          <span class="pill up"><i></i>Trending up</span>
+          <span class="pill down"><i></i>Needs love</span>
+        </div>
+        <div class="btn-row">
+          <span class="pill chan">Instagram</span>
+          <span class="pill chan">TikTok</span>
+          <span class="pill chan">YouTube</span>
+          <span class="pill chan">Shopify</span>
+        </div>
+      </div>
+
+      <div class="panel" id="inputs">
+        <h3>Input <span class="k">forms</span></h3>
+        <div class="field">
+          <label for="h">Store link</label>
+          <input id="h" type="text" value="basegoods.shop">
+          <span class="hint">We'll match sales back to the posts that drove them.</span>
+        </div>
+      </div>
+
+      <div class="panel" id="charts">
+        <h3>Revenue by channel <span class="k">chart</span></h3>
+        <div class="chart-wrap">
+          <svg width="120" height="120" viewBox="0 0 42 42" aria-label="Revenue split donut">
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--petal)" stroke-width="5"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--g-rose)" stroke-width="5" stroke-dasharray="42 58" stroke-dashoffset="25" stroke-linecap="round"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--g-peach)" stroke-width="5" stroke-dasharray="28 72" stroke-dashoffset="-17" stroke-linecap="round"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--g-mauve)" stroke-width="5" stroke-dasharray="18 82" stroke-dashoffset="-45" stroke-linecap="round"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--g-lav)" stroke-width="5" stroke-dasharray="12 88" stroke-dashoffset="-63" stroke-linecap="round"/>
+          </svg>
+          <div class="legend">
+            <div class="li"><i style="background:var(--g-rose)"></i>Instagram <b>42%</b></div>
+            <div class="li"><i style="background:var(--g-peach)"></i>TikTok <b>28%</b></div>
+            <div class="li"><i style="background:var(--g-mauve)"></i>YouTube <b>18%</b></div>
+            <div class="li"><i style="background:var(--g-lav)"></i>Other <b>12%</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 06 TOKENS ===================== -->
+  <section id="tokens">
+    <div class="sec-head"><span class="sec-num">vi.</span><h2>Spacing &amp; shape</h2></div>
+    <p class="sec-sub">An 8-point rhythm and soft, generous corners keep everything feeling gentle. Cards round at 24px, inner controls at 14px, and anything tappable becomes a full pill. Shadows stay low and blush-tinted — a whisper of depth, never a thud.</p>
+    <div class="token-grid">
+      <div class="token"><div class="tv">4 · 8 · 16 · 24 · 32</div><div class="tn">Spacing scale (px)</div></div>
+      <div class="token"><div class="tv">24px</div><div class="tn">Card &amp; panel radius</div><div class="radius-demo" style="border-radius:24px;"></div></div>
+      <div class="token"><div class="tv">14px</div><div class="tn">Input &amp; inner radius</div><div class="radius-demo" style="border-radius:14px;"></div></div>
+      <div class="token"><div class="tv">100px</div><div class="tn">Pills &amp; buttons</div><div class="radius-demo" style="border-radius:100px;"></div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <div>
+    <div class="wordmark" style="font-size:22px;">base<span>360</span></div>
+    <div style="margin-top:6px;">Brand &amp; product style guide · v2.0</div>
+  </div>
+  <div class="script">every follower, every sale</div>
+</footer>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+  (function(){
+    var search = document.getElementById('nav-search');
+    var items  = Array.prototype.slice.call(document.querySelectorAll('.nav-item'));
+    var groups = Array.prototype.slice.call(document.querySelectorAll('.nav-group'));
+    var empty  = document.getElementById('nav-empty');
+
+    /* ---- live search filter ---- */
+    function filter(q){
+      q = (q || '').trim().toLowerCase();
+      items.forEach(function(i){
+        var hit = i.textContent.toLowerCase().indexOf(q) !== -1;
+        i.classList.toggle('is-hidden', !hit);
+      });
+      var any = false;
+      groups.forEach(function(g){
+        var visible = g.querySelector('.nav-item:not(.is-hidden)') !== null;
+        g.classList.toggle('is-hidden', !visible);
+        if (visible) any = true;
+      });
+      empty.hidden = any || q === '';
+    }
+    search.addEventListener('input', function(e){ filter(e.target.value); });
+
+    /* ---- keyboard: "/" focuses search, Esc clears ---- */
+    document.addEventListener('keydown', function(e){
+      if (e.key === '/' && document.activeElement !== search){ e.preventDefault(); search.focus(); }
+      else if (e.key === 'Escape' && document.activeElement === search){ search.value = ''; filter(''); search.blur(); }
+    });
+
+    /* ---- click jumps to the section (works even in sandboxed previews) ---- */
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    items.forEach(function(i){
+      i.addEventListener('click', function(e){
+        var id = i.getAttribute('href').slice(1);
+        var target = document.getElementById(id);
+        if (target){
+          e.preventDefault();
+          target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+          items.forEach(function(x){ x.classList.remove('active'); });
+          i.classList.add('active');
+          if (history.replaceState) history.replaceState(null, '', '#' + id);
+        }
+      });
+    });
+
+    /* ---- scroll spy: highlight the section in view ---- */
+    var byId = {};
+    items.forEach(function(i){ byId[i.getAttribute('href').slice(1)] = i; });
+    var targets = items.map(function(i){ return document.getElementById(i.getAttribute('href').slice(1)); }).filter(Boolean);
+    if ('IntersectionObserver' in window){
+      var obs = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (en.isIntersecting && byId[en.target.id]){
+            items.forEach(function(x){ x.classList.remove('active'); });
+            byId[en.target.id].classList.add('active');
+          }
+        });
+      }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+      targets.forEach(function(t){ obs.observe(t); });
+    }
+  })();
+</script>
+
+<!-- Back to case study (only when opened full-page, not embedded) -->
+<style>
+  .b360-back{ position:fixed; left:18px; bottom:18px; z-index:9999; display:none;
+    align-items:center; gap:8px; font-family:'Poppins',system-ui,-apple-system,sans-serif;
+    font-size:13px; font-weight:500; color:#43222F; background:#fff;
+    border:1px solid #F5DDD9; border-radius:100px; padding:10px 16px; text-decoration:none;
+    box-shadow:0 10px 26px -10px rgba(190,110,140,.5); transition:transform .14s ease, box-shadow .14s ease, color .14s ease; }
+  .b360-back:hover{ transform:translateY(-2px); color:#D6417A; box-shadow:0 14px 32px -10px rgba(190,110,140,.55); }
+  .b360-back svg{ width:15px; height:15px; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  @media (prefers-reduced-motion:reduce){ .b360-back{ transition:none; } }
+</style>
+<a id="b360Back" class="b360-back" href="case-base360.html"
+   onclick="if(history.length>1){event.preventDefault();history.back();}">
+  <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Case study
+</a>
+<script>
+  (function(){ try{ if(window.self===window.top){ var b=document.getElementById('b360Back'); if(b) b.style.display='inline-flex'; } }catch(e){} })();
+</script>
+
+</body>
+</html>
